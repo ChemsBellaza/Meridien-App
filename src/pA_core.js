@@ -5,8 +5,9 @@ const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate(
 const parseKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
 const addDays = (k, n) => { const d = parseKey(k); d.setDate(d.getDate() + n); return keyOf(d); };
 const diffDays = (a, b) => Math.round((parseKey(b) - parseKey(a)) / 864e5);
-const today = () => keyOf(new Date());
-const minutesNow = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+// En ligne, le jour et l'heure viennent du SERVEUR (srvToday / srvMinutes, pS_server.js) : changer la date du téléphone ne sert plus à rien.
+const today = () => (typeof srvToday === "function" && srvToday()) || keyOf(new Date());
+const minutesNow = () => { const m = typeof srvMinutes === "function" ? srvMinutes() : null; if (m !== null) return m; const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 const hm = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
 const mod = (a, n) => ((a % n) + n) % n;
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
@@ -69,7 +70,7 @@ const capKeys = c => [c.cap, ...c.capAlt].filter(Boolean).map(norm);
 /* ---------- stockage local ---------- */
 const LS_KEY = "meridien.v1";
 const SCHEMA = 4;
-const emptyStore = () => ({ v: SCHEMA, profile: null, plays: {}, chat: {}, carnet: {}, spent: 0, stats: { fmts: {}, perfect: 0, best: {} }, react: {}, ach: {}, prefs: { time: 1 } });
+const emptyStore = () => ({ v: SCHEMA, profile: null, plays: {}, chat: {}, carnet: {}, spent: 0, stats: { fmts: {}, perfect: 0, best: {} }, react: {}, ach: {}, prefs: { time: 1 }, pending: [] });
 // migrations : chaque entrée fait passer de la version N à N+1 sans jamais effacer le profil
 // v2 → v3 : les profils existants n'ont pas de tutoriel et gardent tous les systèmes débloqués (`legacy`)
 const MIGRATIONS = {
@@ -176,7 +177,7 @@ function manchesOf(seed, fmt) {
 }
 
 /* ---------- joueurs simulés ---------- */
-function players() { return [{ id: "me", name: store.profile.name, color: ME_COLOR, me: true, pet: store.profile.pet, photo: store.profile.photo }, ...BOTS]; }
+function players() { if (srvOn()) return onlinePlayers(); return [{ id: "me", name: store.profile.name, color: ME_COLOR, me: true, pet: store.profile.pet, photo: store.profile.photo }, ...BOTS]; }
 
 function simTry(skill, k, tag) {
   const F = FORMATS[fmtOf(k)], r = rng(`${k}|${tag}|try`);
@@ -207,6 +208,7 @@ function myPlays(k) {
 
 /* ---------- résultats du jour et saison ---------- */
 function dayResults(k) {
+  if (srvOn()) return onlineDayResults(k);
   const live = k === today(), now = minutesNow();
   const rows = players().map(p => {
     let plays = p.me ? myPlays(k) : botPlays(p, k);
@@ -241,6 +243,7 @@ function standings(upTo) {
 
 /* ---------- progression du familier ---------- */
 function progress() {
+  if (srvOn()) return onlineProgress();
   const k = today();
   let gems = 0, wins = 0;
   for (let d = CONFIG.seasonAnchor; d <= k; d = addDays(d, 1)) {
@@ -253,7 +256,7 @@ function progress() {
   const games = Object.values(store.stats.fmts || {}).reduce((n, v) => n + v, 0);
   return { gems, wins, streak, plays, games, carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };
 }
-const wallet = prog => Math.max(0, (prog || progress()).gems - (store.spent || 0));
+const wallet = prog => srvOn() ? onlineWallet() : Math.max(0, (prog || progress()).gems - (store.spent || 0));
 const isUnlocked = (it, prog) => !it.need || prog[it.need.k] >= it.need.v;
 function unlockedIds(prog) {
   const out = [];
@@ -272,6 +275,7 @@ function nextUnlock(prog) {
 
 /* ---------- fil de discussion ---------- */
 function feed(k) {
+  if (srvOn()) return onlineFeed(k);
   const live = k === today(), now = minutesNow(), ev = [];
   const res = dayResults(k);
   res.played.forEach(p => p.plays.forEach((pl, i) => ev.push({ id: `s-${p.id}-${i}`, type: "score", at: pl.at, p, score: pl.score, best: pl.score === p.best && p.plays.findIndex(x => x.score === p.best) === i })));

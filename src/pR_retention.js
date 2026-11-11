@@ -49,6 +49,7 @@ function achStats() {
   const p = progress(), played = Object.values(store.stats.fmts || {}).reduce((a, b) => a + b, 0);
   let d = today(), streak = 0; if (!(store.plays[d] || []).length) d = addDays(d, -1);
   while ((store.plays[d] || []).length) { streak++; d = addDays(d, -1); }
+  if (srvOn()) streak = p.streak; // en ligne : série calculée par le serveur
   return { ...p, plays: Math.max(p.plays, played), streak, perfect: store.stats.perfect || 0 };
 }
 function checkAchievements() {
@@ -92,6 +93,7 @@ function reactionsOf(k, ev) {
   return { counts, mine };
 }
 function reactRow(k, ev) {
+  if (srvOn()) return ""; // réactions réelles : étape 6 (les réactions simulées sont retirées en ligne)
   const { counts, mine } = reactionsOf(k, ev), keys = Object.keys(counts);
   const open = ui.reactOpen === ev.id;
   return `${keys.length ? `<span class="reacts">${keys.map(e => `<button class="rx ${mine === e ? "me" : ""}" data-act="react" data-v="${ev.id}|${e}" aria-label="${e} ${counts[e]}">${e}<b class="num">${counts[e]}</b></button>`).join("")}</span>` : ""}

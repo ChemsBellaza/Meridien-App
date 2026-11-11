@@ -85,6 +85,20 @@ Check "pastille « temps rallongé » visible pour Alice, pas pour Bob" ($ali.sl
 Check "résultats provisoires (jour non clos)" ($bob.is_final -eq $false) ($dr | ConvertTo-Json -Compress)
 $drc = Rpc $C "day_results"
 Check "Carol (hors groupe) ne voit aucun résultat" ((N $drc) -eq 0) ($drc | ConvertTo-Json -Compress)
+"--- Classement de la saison, résumé, horloge (migration 20261113) ---"
+$sn = Rpc $B "server_now"
+Check "heure du serveur lisible et proche de l'heure réelle" ($sn -and [math]::Abs(([datetimeoffset]::Parse(($sn -replace '(\.\d{3})\d+', '$1')) - [datetimeoffset]::UtcNow).TotalSeconds) -lt 120) ("$sn")
+$so = Rpc $B "season_overview"
+$sb = $so | Where-Object { $_.pseudo -eq "Bob" }; $sa = $so | Where-Object { $_.pseudo -eq "Alice" }
+Check "saison : une ligne par joueur et par jour joué (2)" (@($so).Count -eq 2) ($so | ConvertTo-Json -Compress)
+Check "saison : Bob 1er (+32) et Alice 2e (+16) sur 2 joueurs" ($sb.pos -eq 1 -and $sb.gems -eq 32 -and $sa.pos -eq 2 -and $sa.gems -eq 16 -and $sb.n -eq 2) ($so | ConvertTo-Json -Compress)
+Check "saison : aucune ligne pour Carol (hors groupe)" ((N (Rpc $C "season_overview")) -eq 0) ""
+$sm = Rpc $B "my_summary"
+Check "résumé de Bob : 32 boussoles, 1 victoire, 1 jour, série 1, solde 0 (non réglé)" ($sm.gems_total -eq 32 -and $sm.wins -eq 1 -and $sm.days -eq 1 -and $sm.streak -eq 1 -and $sm.wallet -eq 0) ($sm | ConvertTo-Json -Compress)
+$sma = Rpc $A "my_summary"
+Check "résumé d'Alice : 16 boussoles, 0 victoire" ($sma.gems_total -eq 16 -and $sma.wins -eq 0) ($sma | ConvertTo-Json -Compress)
+$ic = Rpc $A "_group_scores" @{ gid = $gid; d1 = "2000-01-01"; d2 = "2100-01-01" }
+Check "la fonction interne _group_scores n'est pas appelable par l'application" ($ic.__http_error -ge 400) ($ic | ConvertTo-Json -Compress)
 Check "série d'Alice = 1" ((Rpc $A "my_streak") -eq 1) ("" + (Rpc $A "my_streak"))
 Check "portefeuille vide avant règlement" ((Rpc $B "my_wallet") -eq 0) ("" + (Rpc $B "my_wallet"))
 $sp = Rpc $B "spend_gems" @{ p_reason = "joker" }

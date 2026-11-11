@@ -5,14 +5,21 @@ document.addEventListener("click", e => {
   const a = el.dataset.g, v = el.dataset.v, g = game;
   if (a === "quit") {
     if (g.phase === "intro" || g.phase === "end") { exitGame(); return; }
-    ui.confirm = { title: g.tuto ? "Quitter le tutoriel ?" : "Quitter la partie ?", text: g.tuto ? "Tu pourras le revoir plus tard depuis le menu." : g.practice ? "Ta partie d'entraînement sera perdue." : `Cet essai reste compté avec les ${fmtNum(g.score)} points déjà gagnés.`, yes: "Quitter", no: "Continuer", run: () => { stopTimer(); exitGame(); } };
+    ui.confirm = { title: g.tuto ? "Quitter le tutoriel ?" : "Quitter la partie ?", text: g.tuto ? "Tu pourras le revoir plus tard depuis le menu." : g.practice ? "Ta partie d'entraînement sera perdue." : `Cet essai reste compté avec les ${fmtNum(g.score)} points déjà gagnés.`, yes: "Quitter", no: "Continuer", run: () => { stopTimer(); if (g.online) srvSubmit(g); exitGame(); } }; // en ligne : les points déjà gagnés sont enregistrés
     renderGame(); return;
   }
-  if (a === "start") { beginTry(); g.phase = "diff"; renderGame(); return; }
+  if (a === "start") {
+    if (g.online) { // l'essai est compté par le serveur au moment où il démarre
+      if (g.starting) return; g.starting = true; el.disabled = true;
+      srvBeginTry(g).then(r => { g.starting = false; if (game !== g) return; if (!r || !r.ok) { const m = srvStartFailed(r); exitGame(); srvHomeMsg(m); return; } g.phase = "diff"; renderGame(); });
+      return;
+    }
+    beginTry(); g.phase = "diff"; renderGame(); return;
+  }
   if (a === "diff") { chooseDiff(+v); return; }
   if (a === "next") { nextStep(); return; }
   if (a === "exit") { exitGame(); return; }
-  if (a === "replay") { exitGame(); startGame(false); return; }
+  if (a === "replay") { const on = g.online; exitGame(); if (on) playToday(); else startGame(false); return; }
   if (a === "topet") { exitGame(); go("pet", { prevView: "group" }); return; }
   if (a === "share" || a === "challenge") { shareResult(a === "challenge"); return; }
   if (a === "joker") { useJoker(); return; }
@@ -42,10 +49,20 @@ document.addEventListener("keydown", e => {
 
 function useJoker() {
   const g = game, J = E().joker; if (!J || g.phase !== "q" || g.jokers[g.round]) return;
-  if (!g.practice) { if (wallet() < CONFIG.jokerCost) return; store.spent = (store.spent || 0) + CONFIG.jokerCost; save(); }
-  g.jokers[g.round] = true;
-  J.use(g);
-  if (g.phase === "q") { const jl = document.querySelector(".jokerline"); if (jl) jl.innerHTML = jokerBtn(); }
+  const apply = () => { g.jokers[g.round] = true; J.use(g); if (g.phase === "q") { const jl = document.querySelector(".jokerline"); if (jl) jl.innerHTML = jokerBtn(); } };
+  if (g.practice) return apply();
+  if (wallet() < CONFIG.jokerCost) return;
+  if (g.online) { // les boussoles se dépensent côté serveur : solde vérifié là-bas
+    if (g.jokerBusy) return; g.jokerBusy = true;
+    srvRpc("spend_gems", { p_reason: "joker" }).then(r => {
+      g.jokerBusy = false; if (game !== g || g.phase !== "q") return;
+      if (r && r.ok) { if (SRV.sum) SRV.sum.wallet = r.balance; apply(); }
+      else { ui.toast = r && r.error === "not_enough_gems" ? "Pas assez de boussoles." : srvMsg(r && r.error); renderGame(); }
+    });
+    return;
+  }
+  store.spent = (store.spent || 0) + CONFIG.jokerCost; save();
+  apply();
 }
 function exitGame() {
   const wasPractice = game.practice;

@@ -50,7 +50,7 @@ document.addEventListener("submit", e => {
 let lastMinute = minutesNow(), lastDay = today();
 function updateCountdown() {
   const cd = document.getElementById("cd"); if (!cd) return;
-  const d = new Date(), s = 86400 - (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds());
+  const d = new Date(), sv = typeof srvSecondsLeft === "function" ? srvSecondsLeft() : null, s = sv !== null ? sv : 86400 - (d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds()); // en ligne : minuit du serveur
   cd.textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
 }
 setInterval(() => {

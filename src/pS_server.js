@@ -220,6 +220,164 @@ function accountSheetBlock() {
     <div><div class="kicker" style="margin-bottom:6px">Sauvegarde du compte</div>${mail}</div>`;
 }
 
+/* =================== MODE EN LIGNE : horloge, classement, essais, scores (lot 3, étape 4) ===================
+   Un profil lié à un compte (store.profile.srv) lit TOUT ce qui se compare sur le serveur : jour et heure, essais restants,
+   classement du jour et de la saison, boussoles, série. Les fonctions players / dayResults / progress / wallet / feed de pA_core.js
+   y renvoient dès que srvOn() est vrai ; les écrans ne changent pas. Plus aucun joueur simulé pour ces profils. */
+function srvOn() { try { return !!(store.profile && store.profile.srv); } catch (e) { return false; } }
+const myUid = () => (store.profile && store.profile.srv && store.profile.srv.uid) || (SRV.sess && SRV.sess.user && SRV.sess.user.id) || "";
+const SRV_TZ = "Europe/Paris", SRV_COLORS = ["#EF6F68", "#17977F", "#F0993B", "#4A86EE", "#D9579E", "#7A9E2E", "#8D78F0", "#2BA3B8"];
+const colorOf = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SRV_COLORS[h % SRV_COLORS.length]; };
+
+/* horloge : heure du serveur + temps écoulé mesuré par le navigateur (insensible aux changements de date du téléphone) */
+let srvFmtCache = null;
+function srvParts(ms) {
+  srvFmtCache = srvFmtCache || new Intl.DateTimeFormat("en-CA", { timeZone: SRV_TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  const o = {}; srvFmtCache.formatToParts(new Date(ms)).forEach(p => { o[p.type] = p.value; }); return o;
+}
+const srvNowMs = () => SRV.base ? SRV.base.server + (performance.now() - SRV.base.perf) : null;
+function srvToday() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; const p = srvParts(n); return `${p.year}-${p.month}-${p.day}`; } catch (e) { return null; } }
+function srvMinutes() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; const p = srvParts(n); return (+p.hour % 24) * 60 + +p.minute; } catch (e) { return null; } }
+function srvSecondsLeft() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; const p = srvParts(n); return 86400 - ((+p.hour % 24) * 3600 + +p.minute * 60 + +p.second); } catch (e) { return null; } }
+function minutesOfIso(iso) { try { const p = srvParts(Date.parse(String(iso).replace(/(\.\d{3})\d+/, "$1"))); return (+p.hour % 24) * 60 + +p.minute; } catch (e) { return 0; } }
+async function srvSyncClock() {
+  const t0 = performance.now(), r = await srvRpc("server_now");
+  if (typeof r !== "string") return false;
+  const t1 = performance.now(), ms = Date.parse(r.replace(/(\.\d{3})\d+/, "$1"));
+  if (!isFinite(ms)) return false;
+  SRV.base = { server: ms + (t1 - t0) / 2, perf: t1 }; return true;
+}
+
+/* données de la saison du groupe, lues sur le serveur et mises en cache (SRV.ov, SRV.members, SRV.attempts, SRV.sum) */
+SRV.attempts = {}; SRV.ov = null; SRV.sum = null;
+async function srvSync(force) {
+  if (!srvOn() || srvLost()) return false;
+  if (SRV.syncing) return SRV.syncing;
+  if (!force && SRV.syncedAt && performance.now() - SRV.syncedAt < 4000) return true;
+  SRV.syncing = (async () => {
+    try {
+      const tok = await srvToken(); if (!tok) return false;
+      if (!(await srvSyncClock())) return false;
+      await srvFlushPending();
+      const day = srvToday();
+      const [mem, ov, att, sum] = await Promise.all([
+        srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet)&order=joined_at"),
+        srvRpc("season_overview"),
+        srvGet("/rest/v1/attempts?select=day,try_idx,score,submitted_at,fmt,slow&day=eq." + day + "&order=try_idx"),
+        srvRpc("my_summary")
+      ]);
+      if (mem.ok && Array.isArray(mem.data)) SRV.members = mem.data;
+      if (Array.isArray(ov)) SRV.ov = ov;
+      if (att.ok && Array.isArray(att.data)) SRV.attempts[day] = att.data;
+      if (sum && sum.gems_total !== undefined) SRV.sum = sum;
+      SRV.syncedAt = performance.now();
+      return true;
+    } catch (e) { return false; }
+    finally { SRV.syncing = null; }
+  })();
+  const ok = await SRV.syncing;
+  if (ok) srvRepaint();
+  return ok;
+}
+function srvRepaint() { // redessine l'écran courant sans casser une saisie en cours
+  try {
+    if (typeof game !== "undefined" && game) return;
+    const a = document.activeElement; if (a && a.matches && a.matches("input,textarea")) return;
+    if (ui.view === "welcome") return;
+    render();
+  } catch (e) {}
+}
+window.addEventListener("load", () => { setTimeout(() => srvSync(true), 50); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) srvSync(true); });
+setInterval(() => { if (!document.hidden && srvOn() && (typeof game === "undefined" || !game)) srvSync(); }, 45000);
+
+/* fournisseurs de données (mêmes formes que la version locale : les écrans n'ont pas à changer) */
+function onlinePlayers() {
+  const me = { id: "me", name: store.profile.name, color: ME_COLOR, me: true, pet: store.profile.pet, photo: store.profile.photo }, uid = myUid();
+  const others = (SRV.members || []).filter(m => m.user_id !== uid).map(m => ({ id: m.user_id, name: m.profiles ? m.profiles.pseudo : "Joueur", color: colorOf(m.user_id), pet: (m.profiles && m.profiles.pet) || defaultPet("renard") }));
+  return [me, ...others];
+}
+function onlineDayResults(k) {
+  const pl = onlinePlayers(), uid = myUid(), rows = (SRV.ov || []).filter(r => r.play_day === k);
+  const played = rows.map(r => {
+    const p = r.player_id === uid ? pl[0] : (pl.find(x => x.id === r.player_id) || { id: r.player_id, name: r.pseudo, color: colorOf(r.player_id), pet: defaultPet("renard") });
+    return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, win: r.pos === 1 && r.n >= 2, slow: !!r.slow };
+  }).sort((a, b) => a.pos - b.pos || String(a.name).localeCompare(String(b.name), "fr"));
+  const ids = new Set(played.map(p => p.id));
+  return { played, waiting: pl.filter(p => !ids.has(p.id)), N: played.length };
+}
+function onlineFeed(k) {
+  const res = onlineDayResults(k), ev = res.played.map(p => ({ id: `s-${p.id}-0`, type: "score", at: p.plays[0].at, p, score: p.best, best: p.pos === 1 && res.N >= 2 }));
+  ev.sort((a, b) => a.at - b.at);
+  if (ev.length) ev.unshift({ id: "launch", type: "launch", at: ev[0].at, p: ev[0].p });
+  return ev;
+}
+function onlineProgress() {
+  const s = SRV.sum || { gems_total: 0, wins: 0, days: 0, wallet: 0, streak: 0 };
+  return { gems: s.gems_total, wins: s.wins, streak: s.streak, plays: s.days, games: Object.values(store.stats.fmts || {}).reduce((n, v) => n + v, 0), carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };
+}
+const onlineWallet = () => (SRV.sum ? SRV.sum.wallet : 0);
+// essais du jour (liste de { score }) : serveur en ligne, sauvegarde locale sinon ; l'essai en cours compte avec son score actuel
+function playsOf(k) {
+  if (!srvOn()) return store.plays[k] || [];
+  return (SRV.attempts[k] || []).map(a => ({ score: a.score || 0, at: a.submitted_at ? minutesOfIso(a.submitted_at) : 0 }));
+}
+
+/* jouer le défi du jour : synchronisation avec le serveur d'abord (jour, essais restants) */
+function srvHomeMsg(m) { ui.homeMsg = m; if (!game) render(); clearTimeout(srvHomeMsg._t); srvHomeMsg._t = setTimeout(() => { ui.homeMsg = ""; if (!game && ui.view === "group") render(); }, 7000); }
+const SRV_PLAYMSG = { no_tries_left: "Tu as déjà joué tes 2 essais aujourd'hui. Reviens demain !", no_profile: "Ton profil n'existe pas encore en ligne." };
+async function playToday() {
+  if (!srvOn()) return startGame(false);
+  if (ui.busyPlay) return;
+  ui.busyPlay = true; render();
+  const ok = await srvSync(true);
+  ui.busyPlay = false;
+  if (!ok) { render(); return srvHomeMsg(srvLost() ? srvMsg("session") : "Connexion nécessaire pour jouer le défi du jour. Tu peux t'entraîner hors ligne depuis le menu."); }
+  if (playsOf(today()).length >= CONFIG.tries) { render(); return srvHomeMsg(SRV_PLAYMSG.no_tries_left); }
+  startGame(false);
+}
+// « C'est parti » : l'essai est compté par le serveur (jour et jeu décidés par lui)
+async function srvBeginTry(g) {
+  const r = await srvRpc("start_try");
+  if (!r || !r.ok) return r || { ok: false, error: "server" };
+  if (r.day !== g.k || r.fmt !== g.fmt) return { ok: false, error: "day_changed" };
+  g.attemptId = r.attempt_id; g.slow = timeFactor();
+  (SRV.attempts[r.day] = SRV.attempts[r.day] || []).push({ day: r.day, try_idx: r.try_idx, score: null, submitted_at: null, fmt: r.fmt, slow: g.slow });
+  return r;
+}
+function srvStartFailed(r) {
+  return r && r.error === "day_changed" ? "Le jour a changé pendant que tu te préparais. Relance le défi." : (SRV_PLAYMSG[r && r.error] || srvMsg(r && r.error));
+}
+
+/* envoi du score : le serveur recalcule le total ; en cas de coupure, l'envoi est remis à plus tard (store.pending) */
+async function srvTrySubmit(job) {
+  const r = await srvRpc("submit_score", { p_attempt: job.attempt, p_rounds: job.rounds, p_slow: job.slow });
+  if (r && r.ok) { const row = (SRV.attempts[job.day] || []).find(a => a.try_idx === job.try); if (row) row.score = r.score; return { state: "ok", score: r.score }; }
+  const retry = !r || ["offline", "server", "session"].includes(r.error);
+  if (retry) return { state: "retry", error: r && r.error };
+  return { state: r.error === "already_submitted" ? "ok" : "drop", error: r.error };
+}
+function srvSubmit(g) {
+  if (!g.attemptId || g.submit) return;
+  g.submit = "pending";
+  const job = { attempt: g.attemptId, day: g.k, try: g.tryIdx, slow: g.slow || 1, rounds: [0, 1, 2].map(i => ({ m: (g.manches[i] && g.manches[i].key) || "", diff: g.diffs[i] != null ? g.diffs[i] : 0, pts: g.roundPts[i] || 0 })) };
+  srvTrySubmit(job).then(async r => {
+    if (r.state === "retry") { store.pending = store.pending || []; if (!store.pending.some(p => p.attempt === job.attempt)) { store.pending.push(job); save(); } g.submit = "queued"; }
+    else g.submit = r.state === "ok" ? "ok" : "fail:" + r.error;
+    await srvSync(true);
+    if (game === g && g.phase === "end") renderGame();
+  });
+}
+async function srvFlushPending() {
+  const q = (store.pending || []).slice(); if (!q.length) return;
+  for (const job of q) {
+    const r = await srvTrySubmit(job);
+    if (r.state !== "retry") store.pending = (store.pending || []).filter(p => p.attempt !== job.attempt);
+  }
+  save();
+}
+const srvSubmitNote = g => g.submit === "pending" ? "Enregistrement de ton score…" : g.submit === "queued" ? "Score en attente d'envoi : pas de réseau pour l'instant. Il sera envoyé automatiquement." : String(g.submit || "").startsWith("fail:") ? "Ton score n'a pas pu être enregistré. Reviens demain pour un nouveau défi." : "";
+
 /* ---------- formulaires (en plus des écouteurs de pC_events.js) ---------- */
 document.addEventListener("submit", async e => {
   const id = e.target.id;

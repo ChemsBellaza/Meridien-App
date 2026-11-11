@@ -2,14 +2,15 @@
 function startGame(practice, fmtForced) {
   const k = today();
   const fmt = practice ? fmtForced : fmtOf(k);
+  const online = !practice && srvOn(); // en ligne : essais et jour décidés par le serveur
   let tryIdx = 0;
   if (!practice) {
-    const mine = store.plays[k] = store.plays[k] || [];
+    const mine = online ? (SRV.attempts[k] || []) : (store.plays[k] = store.plays[k] || []);
     if (mine.length >= CONFIG.tries) return;
     tryIdx = mine.length;
   }
   const seed = practice ? "p" + Date.now() : k;
-  game = { k, fmt, seed, practice, tryIdx, manches: manchesOf(seed, fmt), round: 0, phase: "intro", diffs: [], qs: [], qi: 0, score: 0, roundPts: [0, 0, 0],
+  game = { k, fmt, seed, practice, online, tryIdx, manches: manchesOf(seed, fmt), round: 0, phase: "intro", diffs: [], qs: [], qi: 0, score: 0, roundPts: [0, 0, 0],
     learned: [], answer: null, playIdx: null, newUnlocks: [], newAch: [], jokers: [false, false, false], stamps: [], mlabel: [], grid: [], usedLetters: [] };
   renderGame();
 }
@@ -29,7 +30,7 @@ function beginTry() {
   if (!game.practice) { const mine = store.plays[game.k]; mine.push({ at: minutesNow(), score: 0, rounds: [] }); game.playIdx = mine.length - 1; save(); }
 }
 function persistScore() {
-  if (game.practice) return;
+  if (game.practice || game.online) return; // en ligne, le score n'est enregistré qu'à la fin, par le serveur (srvSubmit)
   const p = store.plays[game.k][game.playIdx];
   p.score = game.score; p.rounds = game.manches.map((m, i) => ({ m: m.key, diff: game.diffs[i] ?? null, pts: game.roundPts[i] }));
   save();
@@ -108,7 +109,8 @@ function finishTry() {
     const evo = g.newUnlocks.filter(u => u.cat === "stage").map(u => +u.it.id);
     if (evo.length && store.profile.pet) store.profile.pet.stage = String(Math.max(...evo));
   }
-  if (!g.practice) {
+  if (g.online) srvSubmit(g); // score envoyé au serveur (recalculé et plafonné là-bas)
+  if (!g.practice && !g.online) {
     persistScore();
     const res = dayResults(g.k), me = res.played.find(r => r.me), r = rng(g.k + "|react|" + g.tryIdx);
     const others = BOTS.filter(b => res.played.some(p => p.id === b.id));

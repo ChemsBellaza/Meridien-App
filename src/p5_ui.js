@@ -88,7 +88,7 @@ function vPickPet() {
 }
 
 function myToday() {
-  const k = today(), mine = store.plays[k] || [];
+  const k = today(), mine = playsOf(k);
   return { used: mine.length, best: mine.length ? Math.max(...mine.map(p => p.score)) : null };
 }
 
@@ -97,7 +97,8 @@ function vGroup() {
   const st = standings(k), me = st.list.find(r => r.me), prog = progress();
   const mt = myToday(), left = CONFIG.tries - mt.used, pet = store.profile.pet, S = SPECIES[pet.species];
   let btn;
-  if (left === CONFIG.tries) btn = `<button class="btn" data-act="play"><span class="stack">Jouer<small>${CONFIG.tries} essais · le meilleur compte</small></span></button>`;
+  if (ui.busyPlay) btn = `<button class="btn" disabled><span class="stack">Connexion…<small>Vérification de ton défi du jour</small></span></button>`;
+  else if (left === CONFIG.tries) btn = `<button class="btn" data-act="play"><span class="stack">Jouer<small>${CONFIG.tries} essais · le meilleur compte</small></span></button>`;
   else if (left > 0) btn = `<button class="btn" data-act="play"><span class="stack">Rejouer<small>Dernier essai · nouvelles questions · meilleur : ${fmtNum(mt.best)} pts</small></span></button>`;
   else btn = `<button class="btn" disabled><span class="stack">Défi terminé<small>Ton meilleur score : ${fmtNum(mt.best)} pts</small></span></button>`;
   const hello = mt.used ? (left > 0 ? petLine(pet.species, "mid", k) : petLine(pet.species, mt.best >= 400 ? "good" : "mid", k + "d")) : petLine(pet.species, "hello", k);
@@ -120,19 +121,21 @@ function vGroup() {
       <p class="sub">${fr(F.sub)}</p>
       <div class="rounds">${mans.map((m, i) => roundChip(m, i)).join("")}</div>
       ${btn}
+      ${ui.homeMsg ? `<p class="err" role="alert">${esc(ui.homeMsg)}</p>` : ""}
       <div class="countdown">Prochain défi dans <b id="cd" class="num">--:--:--</b></div>
     </div>
   </section>
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
-  ${ui.tab === "chat" ? `<div class="composer"><form id="msgForm"><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
+  ${ui.tab === "chat" && !srvOn() ? `<div class="composer"><form id="msgForm"><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
 }
 
 function vFeed(k) {
   const ev = feed(k), lead = dayResults(k).played[0];
-  if (!ev.length) return `<div class="feed"><p class="note center">Personne n'a encore joué aujourd'hui. Lance le défi !</p></div>`;
-  return `<div class="feed">${ev.map(e => {
+  const soon = srvOn() ? `<p class="note center">Les messages et les réactions entre amis arrivent bientôt.</p>` : "";
+  if (!ev.length) return `<div class="feed"><p class="note center">Personne n'a encore joué aujourd'hui. Lance le défi !</p>${soon}</div>`;
+  return `<div class="feed">${soon}${ev.map(e => {
     if (e.type === "launch") return `<div class="fpill">${avatar(e.p, "sm")}<span><b>Défi lancé</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></div>`;
     if (e.type === "score") return `<div class="fitem"><button class="fpill ${e.best && lead && e.p.id === lead.id ? "best" : ""}" data-act="reactopen" data-v="${e.id}" aria-label="Réagir au score de ${esc(e.p.name)}">${avatar(e.p, "sm")}<span><b>Score : ${fmtNum(e.score)} pts</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></button>${reactRow(k, e)}</div>`;
     return `<div class="msg ${e.mine ? "me" : ""}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx">${esc(e.text)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
@@ -206,7 +209,7 @@ function vSeason() {
     const mv = pr ? (pr.rank > r.rank ? `<span class="up" aria-label="monte">↑</span>` : pr.rank < r.rank ? `<span class="down" aria-label="descend">↓</span>` : "") : "";
     return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">#${r.rank} ${mv}${r.me ? toi : ""}</div><b>${esc(r.name)}</b><span>${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""} (sur ${r.played})</span></div><div class="tot">${I.compass(34)}<b class="num">${fmtNum(r.total)}</b></div></div>`;
   }).join("")}
-  <p class="note center light">Chaque jour, ${CONFIG.gemsPerRank} boussoles par place devancée. Les jours précédant ton arrivée sont simulés pour la démo.</p></div>`;
+  <p class="note center light">Chaque jour, ${CONFIG.gemsPerRank} boussoles par place devancée${srvOn() ? ". Les boussoles du jour sont provisoires jusqu'à la fin de la journée." : ". Les jours précédant ton arrivée sont simulés pour la démo."}</p></div>`;
 }
 
 function vPet() {
@@ -337,7 +340,7 @@ document.addEventListener("click", e => {
     case "tutostart": case "tuto": startTuto(); break;
     case "tutoskip": tutoDone(); go("group"); break;
     case "tutoseen": { const t = store.profile.tuto; if (t) { t.seen = t.seen || {}; t.seen[v] = true; if (v === "carnet") t.seen.trophees = true; save(); } render(); break; }
-    case "play": startGame(false); break;
+    case "play": playToday(); break;
     case "practice": ui.sheet = false; startGame(true, v); break;
     case "copy": copyCode(); break;
     case "askreset": ui.sheet = false; ui.confirm = { title: "Réinitialiser ?", text: store.profile && store.profile.srv ? "Ton compte en ligne, ta place dans le groupe, ton familier et tes scores seront supprimés, ici et sur le serveur. Cette action est définitive." : "Ton pseudo, ta photo, ton groupe, ton familier, tes scores et tes messages seront effacés de cet appareil.", yes: "Effacer", no: "Annuler", run: () => { srvResetAccount(); store = emptyStore(); save(); ui.view = "onboard"; ui.onbStep = "pet"; ui.draftPet = "renard"; ui.draftName = ""; ui.draftPhoto = null; } }; render(); break;

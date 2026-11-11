@@ -92,7 +92,7 @@ function endProgress() {
 
 function vEnd() {
   if (game.tuto) return vEndTuto();
-  const g = game, F = FORMATS[g.fmt], mine = g.practice ? [] : store.plays[g.k];
+  const g = game, F = FORMATS[g.fmt], mine = g.practice ? [] : g.online ? playsOf(g.k).map((p, i) => i === g.tryIdx ? { score: g.score } : p) : store.plays[g.k];
   const best = g.practice ? g.score : Math.max(...mine.map(p => p.score));
   const res = g.practice ? null : dayResults(g.k);
   const me = res && res.played.find(r => r.me);
@@ -113,6 +113,7 @@ function vEnd() {
       ${record ? `<span class="recordtag">${I.trophy(16)}Nouveau record du jour</span>` : ""}
       ${!g.practice && !record && best > g.score ? `<p class="muted endnote">Ton meilleur score du jour reste ${fmtNum(best)} pts.</p>` : ""}
     </section>
+    ${g.online && srvSubmitNote(g) ? `<p class="note center" role="status">${esc(srvSubmitNote(g))}</p>` : ""}
     ${tiles}
     ${(g.newAch || []).map(a => `<div class="unlock ach"><span class="medal">${achIcon(a, 46)}</span><div><span class="mono">Succès débloqué</span><b>${esc(a.label)}</b><span class="usub">${esc(a.desc)}</span></div></div>`).join("")}
     ${g.newUnlocks.filter(u => u.cat === "stage").map(u => `<div class="unlock evolve" style="--c:${TYPES[Sp.type].color}"><span class="evopair">${petAv({ ...pet, stage: String(+u.it.id - 1) }, "lg", "Avant")}<i aria-hidden="true">›</i>${petAv({ ...pet, stage: u.it.id }, "lg", "Après")}</span><div><span class="mono">Évolution !</span><b>${esc(Sp.names[+u.it.id - 2])} évolue en ${esc(Sp.names[+u.it.id - 1])}</b><span class="usub">Stade ${u.it.id} · ${reqText(u.it.need)}</span></div></div>`).join("")}
