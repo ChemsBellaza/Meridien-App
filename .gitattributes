@@ -1,0 +1,3 @@
+* text=auto eol=lf
+src/d6_lex.js -diff linguist-generated
+src/d7_map.js -diff linguist-generated

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+tests/out/
+*.log
+.DS_Store
+Thumbs.db
+meridien-lexique.json
+meridien-carte.json
+*.tmp

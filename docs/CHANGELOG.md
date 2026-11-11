@@ -1,0 +1,8 @@
+# Journal des versions
+
+- **v12** — Carte du monde embarquée (plus de CDN) ; correction de l'ordre d'initialisation de la carte.
+- **v11 (lot 1)** — Sauvegarde avec alerte et migrations de schéma ; accessibilité : `lang="fr"`, contrastes AA, textes ≥ 12 px, fenêtres modales (focus piégé, Échap, retour du focus), focus conservé au re-rendu, annonces lecteur d'écran, chrono `role="timer"` ; registre de minuteries ; compte à rebours suspendu en arrière-plan ; dictionnaire du petit bac décodé en tâche de fond.
+- **v10** — Crédit Wiktionnaire dans le menu.
+- **v9** — Refonte des familiers (10 créatures originales de style Pokémon, 3 évolutions, variantes chromatiques, fiche détaillée) ; petit bac : lexique Wiktionnaire (~77 000 mots), mots inventés à 0 point, mot d'une autre catégorie refusé avec la raison, affichage compact des catégories.
+- **v8** — Design épuré façon Playus ; 7 nouveaux jeux : Pays mystère, Qui est né avant ?, Chaîne de mots, Anagrammes, Le compte est bon, Sigles, Distance.
+- **v1–v7** — Prototype : formats, manches et difficultés, groupe simulé, saisons, boussoles et jokers, carnet de voyage, succès, première génération de familiers.
