@@ -28,4 +28,6 @@ const html = Buffer.concat([
 ]);
 const out = path.join(ROOT, "dist", "meridien.html");
 fs.writeFileSync(out, html);
+fs.writeFileSync(path.join(ROOT, "dist", "index.html"), html); // page d'accueil des hébergeurs (GitHub Pages…)
+if (fs.existsSync(path.join(ROOT, "public"))) fs.cpSync(path.join(ROOT, "public"), path.join(ROOT, "dist"), { recursive: true }); // manifeste, service worker, icônes
 console.log(`dist/meridien.html : ${(html.length / 1024).toFixed(0)} Ko (${ORDER.length} fichiers)`);

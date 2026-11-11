@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v13 (lot 2b, partie 1)** — PWA installable : `public/` (manifeste, service worker « réseau d'abord », icônes 192/512/maskable/Apple générées par `scripts/make-icons.py`) copié dans `dist/` par les trois builds, qui écrivent aussi `dist/index.html` (GitHub Pages). Vérifié : service worker actif, cache de 6 fichiers, page ouverte serveur coupé. Restent : polices embarquées, drapeaux SVG.
+
 - **v12.1** — Page autonome valide : `head.html` déclare désormais doctype, `lang="fr"`, `<meta charset="utf-8">` et viewport (jusque-là fournis par l'artefact claude.ai ; sans eux, l'écran restait vide hors artefact quand le serveur n'indiquait pas l'encodage).
 
 - **v12** — Carte du monde embarquée (plus de CDN) ; correction de l'ordre d'initialisation de la carte.

@@ -96,6 +96,7 @@ function showSaveWarn(on) {
   el.textContent = "Sauvegarde impossible : l'espace de ton appareil est plein ou bloqué. Tes progrès risquent d'être perdus.";
 }
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {} // demande un stockage non purgeable
+try { if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {} // hors ligne (PWA)
 
 /* ---------- accessibilité : langue, annonces, minuteries, focus ---------- */
 document.documentElement.lang = "fr";

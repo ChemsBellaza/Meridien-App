@@ -20,4 +20,7 @@ $distDir = Join-Path $root "dist"
 New-Item -ItemType Directory -Force $distDir | Out-Null
 $out = Join-Path $distDir "meridien.html"
 [IO.File]::WriteAllBytes($out, $ms.ToArray())
+[IO.File]::WriteAllBytes((Join-Path $distDir "index.html"), $ms.ToArray())  # page d'accueil des hébergeurs (GitHub Pages…)
+$pub = Join-Path $root "public"  # manifeste, service worker, icônes : copiés tels quels dans dist\
+if (Test-Path $pub) { Copy-Item -Path (Join-Path $pub "*") -Destination $distDir -Recurse -Force }
 "dist\meridien.html : {0} Ko ({1} fichiers)" -f [int]($ms.Length / 1024), $order.Count

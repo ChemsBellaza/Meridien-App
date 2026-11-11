@@ -30,6 +30,9 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 ## Piège : fichier autonome
 `src/head.html` doit rester un document complet (doctype, `lang`, charset, viewport) : l'artefact claude.ai les ajoutait avant, mais pas un serveur, une PWA ni un store. Aperçu local : `.claude/launch.json` (serveur Python sur `dist/`, port 8000). Pour republier l'artefact, vérifier d'abord que le wrapper accepte un document complet.
 
+## PWA
+Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `dist/` par les builds ; `dist/` entier est à publier (GitHub Pages), pas seulement le HTML. Le service worker (seule exception à « pas de fetch », uniquement pour les fichiers de l'appli) est « réseau d'abord » ; changer `CACHE` dans `sw.js` pour vider les caches. Les icônes se régénèrent avec `python scripts/make-icons.py` (Pillow).
+
 ## Publication
 - Version de test en ligne : artefact claude.ai https://claude.ai/artifact/N8GkW6nxPUin8HEqqo37wL (republier `dist/meridien.html` au même lien ; dernière version publiée : v12).
 - Publication mobile : voir `docs/ROADMAP.md` (PWA puis Capacitor).

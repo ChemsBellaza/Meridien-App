@@ -14,4 +14,8 @@ html = read(src("head.html")) + b'<div id="app" class="app"></div>\n<script>\n' 
 os.makedirs(os.path.join(ROOT, "dist"), exist_ok=True)
 out = os.path.join(ROOT, "dist", "meridien.html")
 open(out, "wb").write(html)
+open(os.path.join(ROOT, "dist", "index.html"), "wb").write(html)  # page d'accueil des hébergeurs (GitHub Pages…)
+import shutil
+pub = os.path.join(ROOT, "public")  # manifeste, service worker, icônes : copiés tels quels dans dist/
+if os.path.isdir(pub): shutil.copytree(pub, os.path.join(ROOT, "dist"), dirs_exist_ok=True)
 print("dist/meridien.html : %d Ko (%d fichiers)" % (len(html) // 1024, len(order)))
