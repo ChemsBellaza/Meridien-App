@@ -9,8 +9,8 @@ $base = $env:MERIDIEN_SUPABASE_URL; $key = $env:MERIDIEN_SUPABASE_KEY
 if (-not $base -or -not $key) { Write-Host "Définir MERIDIEN_SUPABASE_URL et MERIDIEN_SUPABASE_KEY (voir l'en-tête du fichier)."; exit 2 }
 $fails = @(); $users = @{}
 function Call($tok, $method, $path, $body, $extra) {
-  $h = @{ apikey = $key; "Content-Type" = "application/json" }; if ($tok) { $h.Authorization = "Bearer $tok" }; if ($extra) { $extra.GetEnumerator() | ForEach-Object { $h[$_.Key] = $_.Value } }
-  try { if ($body -ne $null) { return Invoke-RestMethod -Uri "$base$path" -Method $method -Headers $h -Body ($body | ConvertTo-Json -Depth 8 -Compress) -TimeoutSec 40 } else { return Invoke-RestMethod -Uri "$base$path" -Method $method -Headers $h -TimeoutSec 40 } }
+  $h = @{ apikey = $key; "Content-Type" = "application/json; charset=utf-8" }; if ($tok) { $h.Authorization = "Bearer $tok" }; if ($extra) { $extra.GetEnumerator() | ForEach-Object { $h[$_.Key] = $_.Value } }
+  try { if ($body -ne $null) { return Invoke-RestMethod -Uri "$base$path" -Method $method -Headers $h -Body ([Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Depth 8 -Compress))) -TimeoutSec 40 } else { return Invoke-RestMethod -Uri "$base$path" -Method $method -Headers $h -TimeoutSec 40 } }
   catch { $resp = $_.Exception.Response; $b = ""; if ($resp) { try { $b = (New-Object IO.StreamReader($resp.GetResponseStream())).ReadToEnd() } catch {} }; return [pscustomobject]@{ __http_error = $(if ($resp) { [int]$resp.StatusCode } else { 0 }); body = $b } }
 }
 function Check($name, $cond, $detail) { if ($cond) { "OK    $name" } else { "ECHEC $name :: $detail"; $script:fails += $name } }
@@ -128,8 +128,8 @@ $rx4 = Call $C "Post" "/rest/v1/reactions" @{ group_id = $gid; user_id = $users.
 Check "Carol (hors groupe) ne peut pas réagir" ($rx4.__http_error -ge 400) ($rx4 | ConvertTo-Json -Compress)
 $rx5 = Call $B "Post" "/rest/v1/reactions" @{ group_id = $gid; user_id = $users.Alice.id; target_type = "message"; target_id = $mid; emoji = "😮" } @{ Prefer = "return=minimal" }
 Check "réagir au nom d'un autre joueur : interdit" ($rx5.__http_error -ge 400) ($rx5 | ConvertTo-Json -Compress)
-Check "les membres lisent les réactions de leur groupe (2)" ((Cnt $B "/rest/v1/reactions?select=emoji") -eq 2) ("" + (Cnt $B "/rest/v1/reactions?select=emoji"))
-Check "Carol ne lit aucune réaction" ((Cnt $C "/rest/v1/reactions?select=emoji") -eq 0) ""
+Check "les membres lisent les réactions de leur groupe (2)" ((Cnt $B "/rest/v1/reactions?select=target_id") -eq 2) ("" + (Cnt $B "/rest/v1/reactions?select=target_id"))
+Check "Carol ne lit aucune réaction" ((Cnt $C "/rest/v1/reactions?select=target_id") -eq 0) ""
 $pg = Rpc $A "purge_old_chat"
 Check "le nettoyage des vieux messages n'est pas appelable par l'application" ($pg.__http_error -ge 400) ($pg | ConvertTo-Json -Compress)
 $rp = Call $B "Post" "/rest/v1/reports" @{ reporter_id = $users.Bob.id; message_id = $mid; reason = "test" } @{ Prefer = "return=minimal" }
