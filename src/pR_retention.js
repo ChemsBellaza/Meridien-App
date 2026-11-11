@@ -29,7 +29,7 @@ Object.assign(BOT_LINES, {
 
 /* ---------- succès ---------- */
 const ACH = [
-  { id: "first", label: "Premier départ", desc: "Termine ta première partie, entraînement compris.", ico: "compass", test: p => p.plays >= 1 },
+  { id: "first", label: "Premier départ", desc: "Termine ta première partie.", ico: "compass", test: p => p.plays >= 1 },
   { id: "plays10", label: "Habitué", desc: "Joue 10 parties.", ico: "retry", test: p => p.plays >= 10 },
   { id: "plays30", label: "Pilier du groupe", desc: "Joue 30 parties.", ico: "retry", test: p => p.plays >= 30 },
   { id: "streak3", label: "Sur la lancée", desc: "Joue 3 jours de suite.", ico: "fire", test: p => p.streak >= 3 },

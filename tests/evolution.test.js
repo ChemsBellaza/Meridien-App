@@ -10,7 +10,7 @@ const { chromium, URL: APP, OUT } = require('./lib');
     await page.screenshot({ path: P + 'e_onb.png' });
     await page.click('[data-act=onbnext]'); await page.fill('#pseudo', 'Chems'); await page.click('button[type=submit]'); await page.waitForTimeout(200);
     await page.evaluate(() => { store.stats.fmts = { quiz: 7 }; save(); render(); });
-    await page.click('[data-act=menu]'); await page.click('[data-act=practice][data-v=petitbac]'); await page.click('[data-g=start]'); // entraînement : indépendant du jeu du jour
+    await page.evaluate(() => { startGame(true, 'petitbac'); }); await page.click('[data-g=start]'); // partie interne (plus d'entraînement dans le menu) : indépendante du jeu du jour
     for (let r = 0; r < 3; r++) { await page.click(`[data-g=diff][data-v="${r}"]`); await page.fill('#pb0', 'Paris'); await page.click('[data-g=pbdone]'); await page.click('[data-g=next]'); }
     await page.waitForTimeout(150);
     await page.screenshot({ path: P + 'e_end.png', fullPage: true });

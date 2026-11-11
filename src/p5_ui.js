@@ -161,17 +161,20 @@ function vRanking(k) {
 function vHistory() {
   const k = today(), S = seasonOf(k), days = [];
   for (let d = k; d >= S.start; d = addDays(d, -1)) days.push(d);
+  // jeux déjà joués par le groupe ; le jeu du jour n'apparaît qu'une fois joué (la surprise reste entière)
+  const past = days.map(d => { const res = dayResults(d); return { d, res, f: fmtOf(d), me: res.played.find(r => r.me) }; }).filter(x => x.res.N > 0 && (x.d !== k || x.me));
   return `<div class="sheetpage">
     <button class="closepill" data-act="back">${I.down}<span>Fermer</span></button>
     <div class="sheetbody">
       <h1 class="bigtitle">Jeux précédents</h1><div class="spaced">Saison ${S.n}</div>
       <button class="row" data-act="season">${I.trophy(26)}<span class="grow">Stats de la saison</span>${I.chev}</button>
-      <div class="list">${days.map(d => {
-        const res = dayResults(d), f = fmtOf(d);
-        return `<button class="hcard" data-act="day" data-v="${d}" aria-label="${FORMATS[f].name}, ${longDate(d)}">${art(f, d)}
+      <p class="note center">Un seul jeu par jour, et c'est la surprise : les jeux passés se consultent, mais ne se rejouent pas.</p>
+      ${past.length ? `<div class="list">${past.map(({ d, res, f, me }) => {
+        const mine = me ? `${fmtNum(me.best)} pts` : "non joué";
+        return `<button class="hcard" data-act="day" data-v="${d}" aria-label="${FORMATS[f].name}, ${longDate(d)}, ${res.N} joueur${res.N > 1 ? "s" : ""}, ${me ? "ton score : " + fmtNum(me.best) + " points" : "tu n'as pas joué"}">${art(f, d)}
           <span class="avrow">${res.played.slice(0, 6).map(p => avatar(p, "md")).join("")}</span>
-          ${labels(`${res.N} joueur${res.N > 1 ? "s" : ""} · ${d === k ? "aujourd'hui" : shortDate(d)}`, FORMATS[f].name)}</button>`;
-      }).join("")}</div>
+          ${labels(`${d === k ? "aujourd'hui" : shortDate(d)} · ${mine}`, FORMATS[f].name)}</button>`;
+      }).join("")}</div>` : `<p class="note center">Aucun jeu précédent pour l'instant. Reviens demain !</p>`}
     </div></div>`;
 }
 
@@ -183,6 +186,7 @@ function vDay(d) {
       <div class="hcard static">${art(f, d)}${labels(`Défi n°${issueNo(d)} · ${longDate(d)}`, FORMATS[f].name)}</div>
       <div class="rounds center">${manchesOf(d, f).map((m, i) => roundChip(m, i)).join("")}</div>
       ${vRanking(d)}
+      <p class="note center">Ce jeu ne se rejoue pas : un nouveau défi t'attend chaque jour.</p>
     </div></div>`;
 }
 
@@ -260,7 +264,6 @@ function vSheet() {
     ${mobileSheetBlocks()}
     ${accountSheetBlock()}
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
-    <div><div class="kicker" style="margin-bottom:8px">Entraînement · non compté</div><div class="fmtgrid">${Object.keys(FORMATS).map(f => `<button class="fmtbtn" data-act="practice" data-v="${f}">${art(f, "p" + f)}<span class="lab">${FORMATS[f].name}</span></button>`).join("")}</div></div>
     <button class="smallbtn" data-act="tuto">Revoir le tutoriel</button>
     <button class="btn ghost" data-act="closesheet">Fermer</button>
     <p class="note center">Dictionnaire du petit bac enrichi grâce au Wiktionnaire (licence CC BY-SA).</p>
@@ -341,7 +344,6 @@ document.addEventListener("click", e => {
     case "tutoskip": tutoDone(); go("group"); break;
     case "tutoseen": { const t = store.profile.tuto; if (t) { t.seen = t.seen || {}; t.seen[v] = true; if (v === "carnet") t.seen.trophees = true; save(); } render(); break; }
     case "play": playToday(); break;
-    case "practice": ui.sheet = false; startGame(true, v); break;
     case "copy": copyCode(); break;
     case "askreset": ui.sheet = false; ui.confirm = { title: "Réinitialiser ?", text: store.profile && store.profile.srv ? "Ton compte en ligne, ta place dans le groupe, ton familier et tes scores seront supprimés, ici et sur le serveur. Cette action est définitive." : "Ton pseudo, ta photo, ton groupe, ton familier, tes scores et tes messages seront effacés de cet appareil.", yes: "Effacer", no: "Annuler", run: () => { srvResetAccount(); store = emptyStore(); save(); ui.view = "onboard"; ui.onbStep = "pet"; ui.draftPet = "renard"; ui.draftName = ""; ui.draftPhoto = null; } }; render(); break;
     case "confirm-no": ui.confirm = null; game ? renderGame() : render(); break;

@@ -72,5 +72,7 @@ Source : `public/logo.svg` (globe + ombre + étincelle ; couleurs `#6B5BE2`, `#4
 
 ## État et décisions
 - Dernière version : **v12** (lot 1 terminé : accessibilité, sauvegarde fiable, carte embarquée).
+- **Décision (12 nov. 2026, comme Playus) : un seul jeu jouable par jour, c'est la surprise.** Pas d'entraînement libre ni de liste des 28 jeux dans l'interface ; l'historique (« Jeux précédents ») se consulte en lecture seule (classement, ton score) sans jamais rejouer. Le jeu du jour n'apparaît dans l'historique qu'une fois joué. `startGame(true, fmt)` reste un outil interne (tutoriel, développement), jamais exposé à un bouton. Conséquence : l'évolution du familier (8 puis 30 parties) se gagne au rythme de 1 à 2 parties par jour.
+- **Tests automatiques (`tests/`) : en retard depuis le lot 3** (la création de profil passe par le serveur ; les tests bloquent le réseau). À réparer avec un profil local injecté (`store.profile = …`) quand Node portable sera disponible. Vérification actuelle : navigateur intégré + `supabase/tests/e2e.ps1`.
 - Décisions du propriétaire : pas de « duel entre amis » ; **multijoueur réel reporté** (les groupes sont aujourd'hui simulés par des « bots ») ; nom de l'application **non décidé** (« Méridien » est provisoire).
 - Limites connues : voir `docs/ROADMAP.md`.

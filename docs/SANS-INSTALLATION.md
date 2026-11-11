@@ -18,7 +18,7 @@ Résultat : `dist\meridien.html` (≈ 1,2 Mo). Les trois méthodes produisent ex
 - **Liste de vérification rapide (3 minutes)** :
   1. F12 → onglet Console : aucune ligne rouge au chargement.
   2. Créer un profil, choisir un familier, ouvrir le menu (☰), fermer avec Échap : le focus revient sur ☰.
-  3. Menu → Entraînement → jouer un jeu complet (3 manches) : aucune erreur, l'écran de fin s'affiche.
+  3. Jouer le défi du jour en entier (3 manches) : aucune erreur, l'écran de fin s'affiche. (Il n'y a plus d'entraînement libre : un seul jeu par jour. Pour tester un autre jeu en développement : console du navigateur, `startGame(true, 'quiz')`.)
   4. Pays mystère et un jeu de carte : la carte s'affiche, même réseau coupé.
   5. Petit bac : un mot inventé donne 0 point.
   6. Mode sombre (réglage du système) : textes lisibles.
