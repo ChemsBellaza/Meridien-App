@@ -140,6 +140,21 @@ Check "après blocage, Bob ne voit plus les messages d'Alice" ((Cnt $B "/rest/v1
 $rd = Call $B "Get" "/rest/v1/reports?select=*" $null $null
 Check "les signalements ne sont pas lisibles par les joueurs" (@($rd).Count -eq 0 -or $rd.__http_error) ($rd | ConvertTo-Json -Compress)
 
+"--- Photo de profil (migration 20261116) ---"
+$jpg = "data:image/jpeg;base64," + ("QUJD" * 200)
+$ph = Call $B "Patch" "/rest/v1/profiles?id=eq.$($users.Bob.id)" @{ photo = $jpg; photo_v = 1700000000 } @{ Prefer = "return=minimal" }
+Check "Bob enregistre sa photo (JPEG)" (-not $ph.__http_error) ($ph | ConvertTo-Json -Compress)
+$ra = Call $A "Get" "/rest/v1/profiles?select=photo_v,photo&id=eq.$($users.Bob.id)" $null $null
+Check "Alice (même groupe) voit la photo de Bob" ($ra -and $ra.photo_v -eq 1700000000 -and $ra.photo.StartsWith("data:image/jpeg")) (($ra | ConvertTo-Json -Compress).Substring(0, 80))
+$rc = Call $C "Get" "/rest/v1/profiles?select=photo&id=eq.$($users.Bob.id)" $null $null
+Check "Carol (hors groupe) ne voit pas la photo de Bob" ((Cnt $C "/rest/v1/profiles?select=photo&id=eq.$($users.Bob.id)") -eq 0) ""
+$bad1 = Call $B "Patch" "/rest/v1/profiles?id=eq.$($users.Bob.id)" @{ photo = "data:text/html;base64,PHNjcmlwdD4=" } @{ Prefer = "return=minimal" }
+Check "un fichier qui n'est pas un JPEG est refusé" ($bad1.__http_error -ge 400) ($bad1 | ConvertTo-Json -Compress)
+$bad2 = Call $B "Patch" "/rest/v1/profiles?id=eq.$($users.Bob.id)" @{ photo = ("data:image/jpeg;base64," + ("A" * 70000)) } @{ Prefer = "return=minimal" }
+Check "une photo trop lourde (> 60 Ko) est refusée" ($bad2.__http_error -ge 400) ($bad2 | ConvertTo-Json -Compress)
+$bad3 = Call $A "Patch" "/rest/v1/profiles?id=eq.$($users.Bob.id)" @{ photo = $null } @{ Prefer = "return=representation" }
+$still = Call $A "Get" "/rest/v1/profiles?select=photo_v&id=eq.$($users.Bob.id)" $null $null
+Check "Alice ne peut pas modifier la photo de Bob" ($still.photo_v -eq 1700000000) ($still | ConvertTo-Json -Compress)
 "--- Propriété du groupe ---"
 $rm = Rpc $B "remove_member" @{ p_user = $users.Alice.id }
 Check "un simple membre ne peut pas retirer un joueur" ($rm.error -eq "not_owner") ($rm | ConvertTo-Json -Compress)

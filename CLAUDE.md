@@ -53,7 +53,7 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 ## Accessibilité : acquis à ne pas casser
 - Texte violet : `var(--purple-t)` (≥ 4,5:1 clair et sombre), jamais `var(--purple)` pour du texte.
 - Une carte avec toucher (`E().onTap`) est focusable (`#mapwrap`) et pilotable au clavier via `bindMapKeys` : tout nouveau jeu à carte doit passer par `bindMap(svg)`.
-- Les chronos passent par `startTimer` (qui applique `timeFactor()`, réglage `store.prefs.time`) ; tout bonus de rapidité se calcule sur `g.T.ms + g.T.bonus`, jamais sur `FORMATS[..].secs`.
+- Les chronos passent par `startTimer` ; tout bonus de rapidité se calcule sur `g.T.ms + g.T.bonus`, jamais sur `FORMATS[..].secs`. **Chaque jeu a un chrono** : un jeu sans minuteur propre reçoit celui de `CHRONO` (pJ_game.js) avec sa fin de chrono dans `chronoTimeout` ; tout nouveau jeu doit y figurer. Le réglage « temps de réflexion » est **annulé** (décision du propriétaire) : ne pas le rétablir.
 - Un état ne se signale jamais par la couleur seule : ajouter symbole ou mot (✓/✗, « Brûlant »…).
 - Le familier se décrit avec `petDesc(pet)` dans les `aria-label`.
 
@@ -62,6 +62,9 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 
 ## Évolutions des familiers
 Chaque espèce garde son dessin (`DRAW[espèce]`) ; `evoFX()` (p4_draw.js) ajoute par-dessus aura, rayons, anneaux, éléments du type (`EVO_PAL`) et étincelles selon le stade. Nouvelle espèce : ajouter son type dans `EVO_PAL` et le `case` correspondant. Les silhouettes verrouillées (`opt.sil`) n'ont pas d'effets. L'animation (`pV_evo.js`) s'ouvre par `openEvo(pet, from, to)` ; son CSS est écrit pour que l'état de base soit l'état final (règle « réduire les animations »).
+
+## Chat : photos et autocollants
+Les photos de profil se partagent via `profiles.photo` / `photo_v` (téléchargées seulement quand la version change, cache `meridien.photos`). Les autocollants sont des messages `::s:<id>` dessinés avec le familier de l'auteur (`pK_stickers.js`, placé avant `p5_ui.js` dans `order.json` à cause de l'initialisation). Une bibliothèque de GIF externe (Giphy/Tenor) demanderait une clé au nom du propriétaire : non faite.
 
 ## Drapeaux
 Les données gardent des emojis (`flagOf`) ; `src/pF_flags.js` les remplace à l'écran par `public/flags/*.svg` (Twemoji, CC BY 4.0 : mention obligatoire, déjà dans le menu et `CREDITS.md`). Ne pas écrire `<img>` à la main dans les moteurs. Le texte partagé (messageries) garde l'emoji.

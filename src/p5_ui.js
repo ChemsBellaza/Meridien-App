@@ -5,8 +5,8 @@ let game = null;
 function go(view, extra = {}) { Object.assign(ui, { view, ...extra }); window.scrollTo(0, 0); render(); }
 function captureDrafts() {
   const v = id => { const el = document.getElementById(id); return el ? el.value : null; };
-  const a = v("pseudo"), b = v("gname"), c = v("gcode");
-  if (a !== null) ui.draftName = a; if (b !== null) ui.draftGroup = b; if (c !== null) ui.draftCode = c;
+  const a = v("pseudo"), b = v("gname"), c = v("gcode"), m = v("obmail");
+  if (a !== null) ui.draftName = a; if (b !== null) ui.draftGroup = b; if (c !== null) ui.draftCode = c; if (m !== null) ui.draftMail = m;
 }
 const meP = () => players()[0];
 
@@ -19,6 +19,7 @@ function render() {
   }
   let html = "";
   if (ui.view === "recover") html = vRecover();
+  else if (ui.view === "emailcode" && store.profile) html = vEmailCode();
   else if (!store.profile) html = vOnboard();
   else if (!store.profile.pet) html = vPickPet();
   else if (ui.view === "online") html = vOnline();
@@ -65,6 +66,7 @@ function vOnboard() {
       <div class="chosen">${avatar(preview, "xl")}<div class="grow"><b>${esc(S.names[0])}</b> ${typeBadge(S.type, 12)}<p class="note">${ui.draftPhoto ? `Ta photo, avec ${esc(S.names[0])} en médaillon.` : `Ajoute une photo si tu veux : ${esc(S.names[0])} se posera dessus.`}</p>
         <div class="btnline">${photoBtn(ui.draftPhoto ? "Changer" : "Ajouter ma photo")}${ui.draftPhoto ? `<button type="button" class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
       <div class="field"><label for="pseudo">Ton pseudo</label><input id="pseudo" maxlength="16" autocomplete="nickname" placeholder="Ex. : Chems" value="${esc(ui.draftName)}"></div>
+      <div class="field"><label for="obmail">E-mail <small>(facultatif)</small></label><input id="obmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Pour retrouver ton compte si tu changes de téléphone" value="${esc(ui.draftMail || "")}"></div>
       <div class="seg light" role="group" aria-label="Groupe">
         <button type="button" data-act="onbtab" data-v="create" aria-pressed="${t === "create"}">Créer un groupe</button>
         <button type="button" data-act="onbtab" data-v="join" aria-pressed="${t === "join"}">Rejoindre</button>
@@ -129,7 +131,7 @@ function vGroup() {
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
-  ${ui.tab === "chat" ? `<div class="composer">${ui.chatMsg ? `<p class="chatmsg" id="chatmsg" role="status">${esc(ui.chatMsg)}</p>` : ""}<form id="msgForm"><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
+  ${ui.tab === "chat" ? `<div class="composer">${ui.chatMsg ? `<p class="chatmsg" id="chatmsg" role="status">${esc(ui.chatMsg)}</p>` : ""}${ui.stickers ? stickerPanel() : ""}<form id="msgForm"><button type="button" class="stkopen" data-act="stkopen" aria-label="Autocollants" aria-expanded="${!!ui.stickers}">😀</button><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
 }
 
 function vFeed(k) {
@@ -138,7 +140,7 @@ function vFeed(k) {
   return `<div class="feed">${ev.map(e => {
     if (e.type === "launch") return `<div class="fpill">${avatar(e.p, "sm")}<span><b>Défi lancé</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></div>`;
     if (e.type === "score") return `<div class="fitem"><button class="fpill ${e.best && lead && e.p.id === lead.id ? "best" : ""}" data-act="reactopen" data-v="${e.id}" aria-label="Réagir au score de ${esc(e.p.name)}">${avatar(e.p, "sm")}<span><b>Score : ${fmtNum(e.score)} pts</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></button>${reactRow(k, e)}</div>`;
-    return `<div class="msg ${e.mine ? "me" : ""}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx">${esc(e.text)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
+    return `<div class="msg ${e.mine ? "me" : ""}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx ${stickerOf(e.text) ? "sticker" : ""}">${msgBody(e)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
   }).join("")}</div>`;
 }
 
@@ -258,9 +260,6 @@ function vSheet() {
     <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">${esc(store.profile.group)}</div></div></div>
     <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button>${featureOn("carnet") ? `<button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button>` : ""}${featureOn("trophees") ? `<button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button>` : ""}</div>
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
-    <div><div class="kicker" style="margin-bottom:6px">Temps de réflexion</div>
-      <div class="seg light three" role="group" aria-label="Temps de réflexion">${[[1, "Normal"], [1.5, "× 1,5"], [2, "× 2"]].map(([v, l]) => `<button data-act="timepref" data-v="${v}" aria-pressed="${timeFactor() === v}">${l}</button>`).join("")}</div>
-      <p class="note">Allonge tous les chronos pour jouer à ton rythme. Le bonus de rapidité se calcule sur le temps que tu as.</p></div>
     ${mobileSheetBlocks()}
     ${accountSheetBlock()}
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
@@ -299,7 +298,7 @@ document.addEventListener("change", e => {
   captureDrafts();
   readPhoto(e.target.files[0], url => {
     if (!url) return;
-    if (store.profile) { store.profile.photo = url; save(); } else ui.draftPhoto = url;
+    if (store.profile) { store.profile.photo = url; save(); srvPushPhoto(); } else ui.draftPhoto = url; // en ligne : la photo est envoyée au serveur pour que les amis la voient
     render();
   });
 });
@@ -317,11 +316,14 @@ document.addEventListener("click", e => {
     case "onbnext": ui.onbStep = "form"; render(); break;
     case "onbback": captureDrafts(); ui.onbStep = "pet"; render(); break;
     case "pickpet-ok": store.profile.pet = defaultPet(ui.draftPet); store.profile.seen = unlockedIds(progress()); save(); go("group"); break;
-    case "photo-rm": captureDrafts(); if (store.profile) { delete store.profile.photo; save(); } else ui.draftPhoto = null; render(); break;
+    case "photo-rm": captureDrafts(); if (store.profile) { delete store.profile.photo; save(); srvPushPhoto(); } else ui.draftPhoto = null; render(); break;
     case "evoclose": ui.evo = null; game ? renderGame() : render(); break;
     case "evoreplay": { const pet = store.profile.pet, st = stageOf(pet); if (st > 1) { openEvo(pet, st - 1, st); render(); } break; }
     case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); break;
     case "goonline": ui.sheet = false; go("online"); break;
+    case "emailskip": go("welcome"); break;
+    case "stkopen": ui.stickers = !ui.stickers; render(); break;
+    case "stksend": sendSticker(v); break;
     case "recover": ui.sheet = false; ui.rec = { step: 0, email: "", msg: "" }; go("recover"); break;
     case "recoverback": ui.rec = null; ui.view = store.profile ? "group" : "onboard"; go(ui.view); break;
     case "recoveragain": ui.rec = { step: 0, email: (ui.rec && ui.rec.email) || "", msg: "" }; render(); break;
@@ -343,7 +345,6 @@ document.addEventListener("click", e => {
     case "back": go(["season", "pet", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : "group") : "group"); break;
     case "day": go("day", { dayKey: v }); break;
     case "tab": ui.tab = v; render(); break;
-    case "timepref": store.prefs = Object.assign({ time: 1 }, store.prefs, { time: +v }); save(); render(); announce(+v === 1 ? "Temps normal" : `Temps multiplié par ${String(+v).replace(".", ",")}`); break;
     case "hapticpref": store.prefs = Object.assign({ time: 1 }, store.prefs, { haptics: v === "true" }); save(); render(); buzz(30); break;
     case "install": installNow(); break;
     case "tutostart": case "tuto": startTuto(); break;

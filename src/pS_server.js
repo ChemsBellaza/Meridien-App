@@ -145,11 +145,12 @@ async function srvVerifyLoginCode(email, code) {
 // reconstruit le profil local à partir du compte en ligne (pseudo, familier, groupe)
 async function srvRestoreProfile() {
   const uid = SRV.sess.user.id;
-  const pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,created_at&id=eq." + uid);
+  const pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,created_at,photo&id=eq." + uid);
   if (!pr.ok || !Array.isArray(pr.data) || !pr.data.length) return { ok: false, error: pr.error || "no_profile" };
   const g = await srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members)");
   const grp = g.ok && Array.isArray(g.data) && g.data[0] ? g.data[0].groups : null, p = pr.data[0];
   store.profile = { name: p.pseudo, group: grp ? grp.name : "Sans groupe", code: grp ? grp.code : "", created: (p.created_at || "").slice(0, 10) || today(), pet: p.pet, tuto: { done: true, seen: { joker: true, carnet: true, trophees: true } }, srv: { uid }, seen: [] };
+  if (p.photo) store.profile.photo = p.photo; // ma photo suit mon compte
   store.profile.seen = unlockedIds(progress());
   save(); SRV.group = grp; SRV.members = null;
   return { ok: true };
@@ -172,6 +173,17 @@ function vRecover() {
   </div>`;
 }
 
+function vEmailCode() { // juste après la création du profil : confirmer l'e-mail donné au départ
+  const a = ui.acct || { email: "", msg: "" };
+  return `<div class="onb">
+    <div class="ohead"><span class="brand">${logoMark(52)}</span><h1 class="display">Confirme ton e-mail</h1>
+      <p class="qsub">Un code à 6 chiffres vient d'être envoyé à ${esc(a.email)}. Entre-le pour sécuriser ton compte (il peut mettre une minute à arriver).</p></div>
+    <form class="form" id="acctForm2" novalidate><div class="field"><label for="acctCode">Code à 6 chiffres</label><input id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*"></div>
+      ${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<button class="btn" type="submit">Valider</button></form>
+    <button class="linkbtn plainlink" data-act="emailskip">Plus tard</button>
+    <p class="note center">Tu pourras le faire depuis le menu. Sans e-mail, tu ne pourras pas retrouver ton compte si tu changes de téléphone.</p>
+  </div>`;
+}
 function vOnline() { // profil créé avant le mode en ligne : choisir un groupe réel
   const t = ui.onbTab, p = store.profile;
   return `<div class="onb">
@@ -262,7 +274,7 @@ async function srvSync(force) {
       await srvFlushPending();
       const day = srvToday();
       const [mem, ov, att, sum, grp] = await Promise.all([
-        srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet)&order=joined_at"),
+        srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet,photo_v)&order=joined_at"),
         srvRpc("season_overview"),
         srvGet("/rest/v1/attempts?select=day,try_idx,score,submitted_at,fmt,slow&day=eq." + day + "&order=try_idx"),
         srvRpc("my_summary"),
@@ -270,7 +282,7 @@ async function srvSync(force) {
         srvLoadChat()
       ]);
       if (grp.ok && Array.isArray(grp.data) && grp.data[0]) SRV.group = grp.data[0].groups;
-      if (mem.ok && Array.isArray(mem.data)) SRV.members = mem.data;
+      if (mem.ok && Array.isArray(mem.data)) { SRV.members = mem.data; await srvFetchPhotos(); }
       if (Array.isArray(ov)) SRV.ov = ov;
       if (att.ok && Array.isArray(att.data)) SRV.attempts[day] = att.data;
       if (sum && sum.gems_total !== undefined) SRV.sum = sum;
@@ -297,9 +309,29 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden) srvS
 setInterval(() => { if (!document.hidden && srvOn() && (typeof game === "undefined" || !game)) srvSync(); }, 45000);
 
 /* fournisseurs de données (mêmes formes que la version locale : les écrans n'ont pas à changer) */
+/* photos de profil : envoyées au serveur, lues seulement quand leur version change, conservées sur le téléphone (meridien.photos) */
+SRV.photos = (() => { try { return JSON.parse(localStorage.getItem("meridien.photos")) || {}; } catch (e) { return {}; } })();
+const savePhotos = () => { try { localStorage.setItem("meridien.photos", JSON.stringify(SRV.photos)); } catch (e) {} };
+async function srvPushPhoto() {
+  if (!srvOn() || srvLost()) return;
+  const tok = await srvToken(); if (!tok) return;
+  await srvFetch("/rest/v1/profiles?id=eq." + myUid(), { method: "PATCH", token: tok, prefer: "return=minimal", body: { photo: store.profile.photo || null, photo_v: Math.floor((srvNowMs() || Date.now()) / 1000) } });
+}
+async function srvFetchPhotos() {
+  let changed = false; const uid = myUid();
+  for (const m of SRV.members || []) {
+    if (m.user_id === uid) continue;
+    const v = (m.profiles && m.profiles.photo_v) || 0, c = SRV.photos[m.user_id];
+    if (!v) { if (c) { delete SRV.photos[m.user_id]; changed = true; } continue; }
+    if (c && c.v === v) continue;
+    const r = await srvGet("/rest/v1/profiles?select=photo&id=eq." + m.user_id);
+    if (r.ok && Array.isArray(r.data) && r.data[0] && r.data[0].photo) { SRV.photos[m.user_id] = { v, d: r.data[0].photo }; changed = true; }
+  }
+  if (changed) savePhotos();
+}
 function onlinePlayers() {
   const me = { id: "me", name: store.profile.name, color: ME_COLOR, me: true, pet: store.profile.pet, photo: store.profile.photo }, uid = myUid();
-  const others = (SRV.members || []).filter(m => m.user_id !== uid).map(m => ({ id: m.user_id, name: m.profiles ? m.profiles.pseudo : "Joueur", color: colorOf(m.user_id), pet: (m.profiles && m.profiles.pet) || defaultPet("renard") }));
+  const others = (SRV.members || []).filter(m => m.user_id !== uid).map(m => ({ id: m.user_id, name: m.profiles ? m.profiles.pseudo : "Joueur", color: colorOf(m.user_id), pet: (m.profiles && m.profiles.pet) || defaultPet("renard"), photo: (SRV.photos[m.user_id] || {}).d }));
   return [me, ...others];
 }
 function onlineDayResults(k) {
@@ -510,7 +542,7 @@ document.addEventListener("submit", async e => {
     const r = await srvOnboard({ name: store.profile.name, mode, group, code }, store.profile.pet);
     if (!r.ok) return fail(srvMsg(r.error));
     Object.assign(store.profile, { group: r.group.name, code: r.group.code, srv: { uid: SRV.sess.user.id } }); save(); SRV.members = null;
-    go("group"); srvSync(true); return;
+    go("group"); srvSync(true); if (store.profile.photo) srvPushPhoto(); return;
   }
   if (id === "recForm1") {
     const email = val("recEmail").toLowerCase(), r = ui.rec; r.email = email;
@@ -537,6 +569,6 @@ document.addEventListener("submit", async e => {
     const a = ui.acct, code = val("acctCode").replace(/\s/g, "");
     if (code.length < 6) { a.msg = srvMsg("bad_code"); return render(); }
     busy(true); const c = await srvConfirmLink(a.email, code);
-    a.msg = c.ok ? "" : srvMsg(c.error); if (c.ok) { a.step = 0; ui.toast = "Compte sauvegardé"; setTimeout(() => { ui.toast = ""; if (!game) render(); }, 2200); } return render();
+    a.msg = c.ok ? "" : srvMsg(c.error); if (c.ok) { a.step = 0; if (ui.view === "emailcode") return go("welcome"); ui.toast = "Compte sauvegardé"; setTimeout(() => { ui.toast = ""; if (!game) render(); }, 2200); } return render();
   }
 });

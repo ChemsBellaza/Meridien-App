@@ -582,6 +582,10 @@ button.fpill{color:var(--ink);text-align:left}
 @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .sharerow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sharerow .btn{font-size:16px}
+.sharerow.one{grid-template-columns:1fr}
+.leadbar{display:flex;align-items:center;gap:8px;background:var(--yellow-soft);color:var(--ink);border:2px solid var(--yellow-line);border-radius:14px;padding:6px 12px;font-weight:700;font-size:13.5px;line-height:1.3}
+.leadbar svg{flex:none;color:var(--gold-t)}
+.endrank{display:flex;flex-direction:column;gap:8px}
 .stampcard{background:var(--card);border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .stamps{display:flex;flex-wrap:wrap;gap:6px}
 .stamp{font-size:28px;line-height:1;width:44px;height:44px;border-radius:12px;background:var(--card-2);display:grid;place-items:center;border:2px dashed var(--grid);transform:rotate(-4deg)}
@@ -768,6 +772,27 @@ input,textarea,.codebox code,.bubble .tx{-webkit-user-select:text;user-select:te
 @keyframes evoT1{0%{opacity:0}12%,82%{opacity:1}100%{opacity:0}}
 @keyframes evoT2{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
 @keyframes evoBtn{0%{opacity:0;pointer-events:none}100%{opacity:1}}
+/* ---- autocollants animés ---- */
+.stk{position:relative;display:inline-grid;width:112px;text-align:center}
+.stkpet{display:block;aspect-ratio:1;border-radius:22px;overflow:hidden;box-shadow:0 3px 0 var(--lip)}.stkpet svg{display:block;width:100%;height:100%}
+.stkico{position:absolute;top:-8px;right:-6px;font-style:normal;font-size:30px;line-height:1;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.stklab{display:block;margin-top:5px;font-size:12.5px;font-weight:900;color:var(--ink)}
+.stk.bounce .stkpet{animation:stkBounce .9s ease-in-out infinite}.stk.pulse .stkpet{animation:stkPulse 1.1s ease-in-out infinite}.stk.shake .stkpet{animation:stkShake .5s linear infinite}
+.stk.pop .stkpet{animation:stkPop 1.2s ease-in-out infinite}.stk.wiggle .stkpet{animation:stkWiggle .8s ease-in-out infinite}.stk.tilt .stkpet{animation:stkTilt 1.6s ease-in-out infinite}.stk.droop .stkpet{animation:stkDroop 2.4s ease-in-out infinite}
+.stk .stkico{animation:stkIco 1.4s ease-in-out infinite}
+@keyframes stkBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes stkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+@keyframes stkShake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-4px) rotate(-3deg)}75%{transform:translateX(4px) rotate(3deg)}}
+@keyframes stkPop{0%,70%,100%{transform:scale(1)}80%{transform:scale(1.14)}90%{transform:scale(.97)}}
+@keyframes stkWiggle{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes stkTilt{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}65%{transform:rotate(6deg)}}
+@keyframes stkDroop{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(4px) scale(.97)}}
+@keyframes stkIco{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(8deg)}}
+.stkpanel{max-width:460px;margin:0 auto 8px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:var(--card);border-radius:22px;box-shadow:0 4px 0 var(--lip);max-height:46vh;overflow:auto}
+.stkpanel .stk{width:100%}
+.composer .stkbtn{background:transparent;color:var(--ink);padding:6px 2px;border-radius:16px;min-height:44px;box-shadow:none;font-size:inherit}.composer .stkbtn:active{background:var(--card-2)}
+.composer .stkopen{flex:none;width:44px;min-height:44px;padding:0;border-radius:14px;font-size:22px;line-height:1;background:transparent;color:var(--ink);box-shadow:none}
+.bubble .tx.sticker{display:block;padding:6px 2px 2px}
 .msgacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .chatmsg{max-width:460px;margin:0 auto 6px;padding:6px 12px;border-radius:12px;background:var(--card-2);color:var(--ink);font-weight:700;font-size:13.5px;text-align:center}
 .seg.three{grid-template-columns:repeat(3,1fr)}

@@ -6,7 +6,14 @@ const diffChip = d => `<span class="chip d" style="--c:${DIFFS[d].color}">${DIFF
 function gameTop() {
   const g = game;
   const bars = g.manches.map((t, i) => `<i class="${i < g.round ? "done" : i === g.round ? "on" : ""}"></i>`).join("");
-  return `<div class="gtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button><div class="prog" aria-label="Manche ${g.round + 1} sur 3">${bars}</div><span class="scorepill num">${fmtNum(g.score)}<small>PTS</small></span></div>`;
+  return `<div class="gtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button><div class="prog" aria-label="Manche ${g.round + 1} sur 3">${bars}</div><span class="scorepill num">${fmtNum(g.score)}<small>PTS</small></span></div>${leaderBar()}`;
+}
+// meilleur score des autres joueurs sur ce même jeu, pendant la partie (de quoi se mesurer à eux)
+function leaderBar() {
+  const g = game; if (g.practice || g.tuto) return "";
+  const lead = dayResults(g.k).played.find(r => !r.me); if (!lead) return "";
+  const gap = lead.best - g.score;
+  return `<div class="leadbar" role="status">${I.trophy(16)}<span><b>${esc(lead.name)}</b> en tête : <b class="num">${fmtNum(lead.best)} pts</b>${gap > 0 ? ` · encore <span class="num">${fmtNum(gap)}</span> à gagner` : ` · tu le devances !`}</span></div>`;
 }
 function jokerBtn() {
   const g = game, J = E().joker; if (!J || g.tuto || !featureOn("joker") || g.phase !== "q" || (J.can && !J.can(g))) return "";
@@ -36,6 +43,7 @@ function renderGame() {
       <div class="facts">
         <div class="f"><span class="kicker">Difficulté</span><span><b>À choisir avant chaque manche.</b> Facile ${fmtMult(CONFIG.mult[0])}, Moyen ${fmtMult(CONFIG.mult[1])}, Difficile ${fmtMult(CONFIG.mult[2])}.</span></div>
         <div class="f"><span class="kicker">${g.practice ? "Entraînement" : "Essais"}</span><span>${g.practice ? "Contenu au hasard, sans effet sur ton classement." : `<b>Essai ${g.tryIdx + 1} sur ${CONFIG.tries}.</b> Seul ton meilleur score compte${g.tryIdx === 0 ? ", et le 2e essai change le contenu" : ""}. L'essai est compté dès que tu commences.`}</span></div>
+        ${CHRONO[g.fmt] ? `<div class="f"><span class="kicker">Chrono</span><span><b>${chronoLabel(g.fmt)}</b> ${["connexions", "relier", "paysmystere", "plusmoins"].includes(g.fmt) ? "pour la manche" : "par question"}. Quand le temps est écoulé, ce qui est en cours est validé.</span></div>` : ""}
         ${E().joker && featureOn("joker") ? `<div class="f"><span class="kicker">Joker</span><span><b>${esc(E().joker.label)}</b>, une fois par manche, pour ${CONFIG.jokerCost} boussoles. ${esc(E().joker.help || "")}</span></div>` : ""}
       </div>
       <div class="petsay static">${petAv(pet, "lg", petName(pet))}<span class="say2"><b>${esc(petName(pet))}</b><span>${fr(petLine(pet.species, "hello", g.k + "i" + g.tryIdx))}</span></span></div>
@@ -117,6 +125,7 @@ function vEnd() {
     </section>
     ${g.online && srvSubmitNote(g) ? `<p class="note center" role="status">${esc(srvSubmitNote(g))}</p>` : ""}
     ${tiles}
+    ${g.practice ? "" : `<section class="endrank" aria-label="Classement du jour"><div class="kicker">Classement · ${esc(F.name)}</div>${vRanking(g.k)}</section>`}
     ${(g.newAch || []).map(a => `<div class="unlock ach"><span class="medal">${achIcon(a, 46)}</span><div><span class="mono">Succès débloqué</span><b>${esc(a.label)}</b><span class="usub">${esc(a.desc)}</span></div></div>`).join("")}
     ${g.newUnlocks.filter(u => u.cat === "stage").map(u => `<div class="unlock evolve" style="--c:${TYPES[Sp.type].color}"><span class="evopair">${petAv({ ...pet, stage: String(+u.it.id - 1) }, "lg", "Avant")}<i aria-hidden="true">›</i>${petAv({ ...pet, stage: u.it.id }, "lg", "Après")}</span><div><span class="mono">Évolution !</span><b>${esc(Sp.names[+u.it.id - 2])} évolue en ${esc(Sp.names[+u.it.id - 1])}</b><span class="usub">Stade ${u.it.id} · ${reqText(u.it.need)}</span></div></div>`).join("")}
     ${g.newUnlocks.filter(u => u.cat !== "stage").map(u => `<div class="unlock">${petAv(u.cat === "species" ? { ...store.profile.pet, species: u.it.id } : { ...store.profile.pet, [u.cat]: u.it.id }, "lg", u.it.label)}<div><span class="mono">${u.cat === "species" ? "Nouveau familier" : u.cat === "shiny" ? "Couleurs chromatiques" : "Nouveau fond"}</span><b>${esc(u.it.label)}</b><span class="usub">${esc(ITEMS[u.cat].label)} · ${reqText(u.it.need)}</span></div></div>`).join("")}
@@ -124,7 +133,7 @@ function vEnd() {
     <div class="breakdown">${g.manches.map((m, i) => `<div class="bd">${mancheChip({ ...m, label: g.mlabel[i] || m.label })}<span>${g.diffs[i] != null ? diffChip(g.diffs[i]) : ""}</span><span class="num">${fmtNum(g.roundPts[i])}</span></div>`).join("")}</div>
     ${stamps.length ? `<div class="stampcard"><div class="mono">Carnet de voyage · +${stamps.length} pays</div><div class="stamps">${stamps.slice(0, 18).map(id => `<span class="stamp" title="${esc(CBY[id] ? CBY[id].name : id)}">${CBY[id] ? flagOf(CBY[id]) : ""}</span>`).join("")}${stamps.length > 18 ? `<span class="stamp more num">+${stamps.length - 18}</span>` : ""}</div><span class="note">${Object.keys(store.carnet).length} pays tamponnés sur ${COUNTRIES.length}.</span></div>` : ""}
     ${g.learned.length ? `<details class="learned"><summary>Ce que tu as appris (${g.learned.length})</summary><ul>${g.learned.slice(0, 14).map(l => `<li><b>${fr(l.t)}</b>${l.f ? ` : ${fr(l.f)}` : ""}</li>`).join("")}</ul></details>` : ""}
-    ${g.practice ? "" : `<div class="sharerow"><button class="btn ghost" data-g="share">${I.share(20)}Partager</button><button class="btn ghost" data-g="challenge">${I.duel(20)}Défier un ami</button></div>`}
+    ${g.practice ? "" : `<div class="sharerow one"><button class="btn ghost" data-g="share">${I.share(20)}Partager mon score</button></div>`}
     ${g.newUnlocks.length ? `<button class="btn ghost" data-g="topet">Voir mon familier</button>` : ""}
     ${left > 0
       ? `<button class="btn" data-g="replay"><span class="stack">Rejouer<small>Essai ${mine.length + 1} sur ${CONFIG.tries} · nouvelles questions</small></span></button><button class="btn ghost" data-g="exit">Voir le classement</button>`

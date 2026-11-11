@@ -67,8 +67,33 @@ function nextStep() {
   g.phase = "end"; finishTry(); renderGame();
 }
 
+/* ---------- chrono pour les jeux qui n'en avaient pas (v23) : une durée par question ou par manche, fin de chrono propre à chaque jeu ---------- */
+const CHRONO = { carte: 30, frise: 25, plusmoins: 60, classement: 45, connexions: 150, motdujour: 90, quisuisje: 45, relier: 75, paysmystere: 180, distance: 20 }; // secondes
+const chronoLabel = fmt => CHRONO[fmt] ? (CHRONO[fmt] >= 60 ? `${Math.floor(CHRONO[fmt] / 60)} min${CHRONO[fmt] % 60 ? " " + CHRONO[fmt] % 60 + " s" : ""}` : `${CHRONO[fmt]} s`) : "";
+function chronoTimeout(g) { // temps écoulé : on valide ce qui est en cours, ou 0 point
+  const q = g.qs[g.qi], st = g.st || {}, eng = FORMATS[g.fmt].eng, out = { ans: "Temps écoulé." };
+  if (eng === "carte") { if (g.pin) answerCarte(); else award(0, { ...out, fact: q[5] }); }
+  else if (eng === "frise") E().act(g, "validate");
+  else if (eng === "plusmoins") { if (!st.lock) award(st.streak * 30, { ans: `Temps écoulé. Série de ${st.streak}.`, fact: PM_TXT[q.stat].f }); }
+  else if (eng === "order") { if (st.order && st.order.length === q.items.length) E().act(g, "ordok"); else award(0, out); }
+  else if (eng === "connex") cxEnd(g);
+  else if (eng === "wordle") award(0, { ans: `Temps écoulé. Le mot était ${q.word}.`, fact: q.fact, learn: [{ t: q.word, f: q.fact }] });
+  else if (eng === "clues") award(0, { ans: `Temps écoulé. C'était ${fr(q.ans)}.`, fact: q.fact, learn: [{ t: q.ans, f: q.fact }] });
+  else if (eng === "pairs") award(Math.max(0, Math.round(FORMATS.relier.max * st.done.length / q.pairs.length) - st.mist * 15), { ans: `Temps écoulé : ${st.done.length} paire${st.done.length > 1 ? "s" : ""} sur ${q.pairs.length}.`, learn: q.pairs.map(p => ({ t: p[0], f: p[1] })) });
+  else if (eng === "mystere") E().act(g, "myfail");
+  else if (eng === "distance") E().act(g, "kmok");
+  else award(0, out);
+}
+// appelée après chaque affichage : démarre le chrono de la question / manche, et l'affiche s'il manque
+function chronoEnsure() {
+  const g = game, secs = g && CHRONO[g.fmt]; if (!g || !secs || g.phase !== "q" || g.tuto) return;
+  const key = g.round + ":" + g.qi;
+  if (g.chronoKey !== key && !g.T && (!E().needsMap || MAP.ready) && !(g.st && g.st.wait)) { g.chronoKey = key; startTimer(secs, () => { if (game === g && g.phase === "q") chronoTimeout(g); }); }
+  if (g.T && !document.getElementById("timer")) { const anchor = document.querySelector(".jokerline") || document.querySelector(".roundtag"); if (anchor) { anchor.insertAdjacentHTML("afterend", timerHTML(true)); tickTimer(); } }
+}
+
 /* ---------- chrono (barre animée, fin automatique) ---------- */
-const timeFactor = () => (store.prefs && +store.prefs.time) || 1; // « temps rallongé » : 1, 1,5 ou 2 (accessibilité, WCAG 2.2.1)
+const timeFactor = () => 1; // « temps de réflexion » annulé (décision du propriétaire, 12 nov. 2026) : les chronos sont identiques pour tous
 function startTimer(secs, onEnd) {
   const g = game; stopTimer();
   g.T = { t0: performance.now(), ms: secs * 1000 * timeFactor(), onEnd, bonus: 0 };

@@ -18,6 +18,8 @@ document.addEventListener("submit", e => {
     const err = document.getElementById("onbErr"), btn = e.target.querySelector('button[type="submit"]');
     const fail = m => { err.textContent = m; err.hidden = false; if (btn) btn.disabled = false; };
     if (name.length < 2) return fail("Choisis un pseudo d'au moins 2 caractères.");
+    const mail = (ui.draftMail || "").trim().toLowerCase();
+    if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) return fail(srvMsg("bad_email"));
     let group = "", code = "";
     if (ui.onbTab === "create") {
       group = ui.draftGroup.trim(); if (group.length < 2) return fail(srvMsg("bad_name"));
@@ -33,7 +35,10 @@ document.addEventListener("submit", e => {
       store.profile = { name, group: r.group.name, code: r.group.code, created: today(), pet, tuto: { done: false, seen: {} }, srv: { uid: SRV.sess.user.id } };
       if (ui.draftPhoto) store.profile.photo = ui.draftPhoto;
       store.profile.seen = unlockedIds(progress());
-      save(); SRV.members = null; go("welcome"); srvSync(true); // horloge et données du serveur dès la création du profil
+      save(); SRV.members = null; srvSync(true); if (store.profile.photo) srvPushPhoto(); // horloge et données du serveur dès la création du profil ; photo partagée
+      if (!mail) return go("welcome");
+      // e-mail donné dès le départ : un code de confirmation est envoyé, à saisir tout de suite (ou plus tard depuis le menu)
+      srvLinkEmail(mail).then(s => { ui.acct = { step: s.ok ? 1 : 0, email: mail, msg: s.ok ? "" : srvMsg(s.error) }; go(s.ok ? "emailcode" : "welcome"); });
     });
   }
   if (e.target.id === "msgForm") {

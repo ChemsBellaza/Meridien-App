@@ -210,6 +210,7 @@ function afterGameRender() {
   const g = game; if (!g) return;
   if (!g._keepScroll) window.scrollTo(0, 0);
   if ((g.phase === "q" || g.phase === "reveal") && E().after) E().after(g);
+  chronoEnsure();
   if (g.phase === "q" && E().focus) { const ae = document.activeElement; if (!ae || ae === document.body || !ae.isConnected) { const f = document.getElementById(E().focus); if (f) f.focus({ preventScroll: true }); } }
   if (ui.toast && ui.toast !== "copied") { clearTimeout(afterGameRender._t); afterGameRender._t = setTimeout(() => { ui.toast = ""; const t = document.querySelector(".toast"); if (t) t.remove(); }, 1800); }
 }
