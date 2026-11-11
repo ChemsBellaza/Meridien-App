@@ -33,7 +33,7 @@ document.addEventListener("submit", e => {
       store.profile = { name, group: r.group.name, code: r.group.code, created: today(), pet, tuto: { done: false, seen: {} }, srv: { uid: SRV.sess.user.id } };
       if (ui.draftPhoto) store.profile.photo = ui.draftPhoto;
       store.profile.seen = unlockedIds(progress());
-      save(); SRV.members = null; go("welcome");
+      save(); SRV.members = null; go("welcome"); srvSync(true); // horloge et données du serveur dès la création du profil
     });
   }
   if (e.target.id === "msgForm") {

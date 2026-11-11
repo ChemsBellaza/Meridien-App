@@ -281,7 +281,7 @@ async function srvSync(force) {
 }
 function srvRepaint() { // redessine l'écran courant sans casser une saisie en cours
   try {
-    if (typeof game !== "undefined" && game) return;
+    if (typeof game !== "undefined" && game) { if (game.phase === "end" && !ui.confirm) renderGame(); return; } // l'écran de fin suit le classement en direct
     const a = document.activeElement; if (a && a.matches && a.matches("input,textarea")) return;
     if (ui.view === "welcome") return;
     render();
@@ -372,7 +372,10 @@ async function srvFlushPending() {
   const q = (store.pending || []).slice(); if (!q.length) return;
   for (const job of q) {
     const r = await srvTrySubmit(job);
-    if (r.state !== "retry") store.pending = (store.pending || []).filter(p => p.attempt !== job.attempt);
+    if (r.state !== "retry") {
+      store.pending = (store.pending || []).filter(p => p.attempt !== job.attempt);
+      if (typeof game !== "undefined" && game && game.attemptId === job.attempt) game.submit = r.state === "ok" ? "ok" : "fail:" + r.error; // l'écran de fin n'affiche plus « en attente »
+    }
   }
   save();
 }
@@ -397,7 +400,7 @@ document.addEventListener("submit", async e => {
     const r = await srvOnboard({ name: store.profile.name, mode, group, code }, store.profile.pet);
     if (!r.ok) return fail(srvMsg(r.error));
     Object.assign(store.profile, { group: r.group.name, code: r.group.code, srv: { uid: SRV.sess.user.id } }); save(); SRV.members = null;
-    go("group"); srvRefreshGroup(); return;
+    go("group"); srvSync(true); return;
   }
   if (id === "recForm1") {
     const email = val("recEmail").toLowerCase(), r = ui.rec; r.email = email;
@@ -412,7 +415,7 @@ document.addEventListener("submit", async e => {
     if (!v.ok) { r.msg = srvMsg(v.error); return render(); }
     const rp = await srvRestoreProfile();
     if (!rp.ok) { r.msg = rp.error === "no_profile" ? "Ce compte n'a pas encore de profil. Crée-en un." : srvMsg(rp.error); return render(); }
-    ui.rec = null; go("group"); srvRefreshGroup(); return;
+    ui.rec = null; go("group"); srvSync(true); return;
   }
   if (id === "acctForm1") {
     const email = val("acctEmail").toLowerCase(), a = ui.acct; a.email = email;
