@@ -23,5 +23,6 @@
   "pE_engines.js",
   "pN_engines.js",
   "pB_logic.js",
+  "pV_evo.js",
   "pF_flags.js"
 ]

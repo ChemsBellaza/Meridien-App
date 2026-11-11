@@ -144,7 +144,7 @@ document.addEventListener("keydown", e => {
   const d = currentDialog(); if (!d) return;
   if (e.key === "Escape") {
     e.preventDefault();
-    const b = d.querySelector('[data-act="confirm-no"],[data-act="closesheet"]'); if (b) b.click();
+    const b = d.querySelector('[data-act="confirm-no"],[data-act="closesheet"],[data-act="evoclose"]'); if (b) b.click();
   } else if (e.key === "Tab") {
     const f = [...d.querySelectorAll(FOCUSABLE)].filter(n => !n.hidden && n.type !== "file" && n.offsetParent !== null); if (!f.length) return;
     const first = f[0], last = f[f.length - 1];

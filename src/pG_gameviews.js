@@ -53,7 +53,9 @@ function renderGame() {
     body = vEnd();
   }
   $app.className = "";
-  setAppHTML(`<div class="game"><div class="gwrap">${body}</div></div>${ui.confirm ? vConfirm() : ""}${ui.toast && ui.toast !== "copied" ? `<div class="toast" role="status">${esc(ui.toast)}</div>` : ""}`);
+  const ev = g.phase === "end" && !g.evoShown && g.newUnlocks && g.newUnlocks.find(u => u.cat === "stage"); // le familier vient d'évoluer : animation (une seule fois)
+  if (ev) { g.evoShown = true; openEvo(store.profile.pet, +ev.it.id - 1, +ev.it.id); }
+  setAppHTML(`<div class="game"><div class="gwrap">${body}</div></div>${ui.confirm ? vConfirm() : ""}${ui.evo ? vEvo() : ""}${ui.toast && ui.toast !== "copied" ? `<div class="toast" role="status">${esc(ui.toast)}</div>` : ""}`);
   afterGameRender();
   syncBack();
   if (g.phase === "end") announce(`Partie terminée : ${fmtNum(g.score)} points.`);

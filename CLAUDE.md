@@ -59,6 +59,9 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 ## Tutoriel et déblocage progressif
 `src/pT_tuto.js` (placé juste après `pA_core.js` dans `order.json` : `render()` l'appelle dès le chargement). `profile.tuto = { done, seen, legacy? }` ; `featureOn("joker"|"carnet"|"trophees")` selon les jours depuis `profile.created` (`TUTO_UNLOCK`). Toute nouvelle fonctionnalité à introduire progressivement : l'ajouter à `TUTO_UNLOCK` et `TUTO_NEWS`. La partie guidée a `game.tuto = true` (1 manche, `practice` vrai) : ne jamais l'enregistrer dans stats/carnet. Dans les textes d'interface, écrire les espaces insécables en ` ` (jamais copiés-collés : ils se transforment en espaces normaux).
 
+## Évolutions des familiers
+Chaque espèce garde son dessin (`DRAW[espèce]`) ; `evoFX()` (p4_draw.js) ajoute par-dessus aura, rayons, anneaux, éléments du type (`EVO_PAL`) et étincelles selon le stade. Nouvelle espèce : ajouter son type dans `EVO_PAL` et le `case` correspondant. Les silhouettes verrouillées (`opt.sil`) n'ont pas d'effets. L'animation (`pV_evo.js`) s'ouvre par `openEvo(pet, from, to)` ; son CSS est écrit pour que l'état de base soit l'état final (règle « réduire les animations »).
+
 ## Drapeaux
 Les données gardent des emojis (`flagOf`) ; `src/pF_flags.js` les remplace à l'écran par `public/flags/*.svg` (Twemoji, CC BY 4.0 : mention obligatoire, déjà dans le menu et `CREDITS.md`). Ne pas écrire `<img>` à la main dans les moteurs. Le texte partagé (messageries) garde l'emoji.
 

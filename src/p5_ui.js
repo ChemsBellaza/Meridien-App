@@ -32,6 +32,7 @@ function render() {
   else html = vGroup();
   if (ui.sheet && store.profile && store.profile.pet) html += vSheet();
   if (ui.confirm) html += vConfirm();
+  if (ui.evo) html += vEvo();
   setAppHTML(html);
   $app.className = "app" + (ui.view === "season" && store.profile ? " dotted" : "");
   bindAfterRender();
@@ -232,7 +233,7 @@ function vPet() {
     <p class="dextext">${fr(S.dex[st - 1])}</p>
     <div class="traits">${S.traits.map(t => `<span>${t}</span>`).join("")}</div>
   </div>
-  <div class="evorow"><span class="kicker">Évolutions</span><div class="evos">${evo}</div></div>
+  <div class="evorow"><span class="kicker">Évolutions</span><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div>
   <div class="avprev">${avatar(me, "xl")}<div class="grow"><b>Ton avatar</b><p class="note">${me.photo ? `Ta photo, avec ${esc(petName(pet))} en médaillon.` : `Ajoute ta photo : ${esc(petName(pet))} se posera en médaillon.`}</p><div class="btnline">${photoBtn(me.photo ? "Changer" : "Ajouter ma photo")}${me.photo ? `<button class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
   <div class="pills four">
     ${pill(I.compass(22), fmtNum(prog.gems), "noop", `${fmtNum(prog.gems)} boussoles gagnées`)}
@@ -318,6 +319,8 @@ document.addEventListener("click", e => {
     case "onbback": captureDrafts(); ui.onbStep = "pet"; render(); break;
     case "pickpet-ok": store.profile.pet = defaultPet(ui.draftPet); store.profile.seen = unlockedIds(progress()); save(); go("group"); break;
     case "photo-rm": captureDrafts(); if (store.profile) { delete store.profile.photo; save(); } else ui.draftPhoto = null; render(); break;
+    case "evoclose": ui.evo = null; game ? renderGame() : render(); break;
+    case "evoreplay": { const pet = store.profile.pet, st = stageOf(pet); if (st > 1) { openEvo(pet, st - 1, st); render(); } break; }
     case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); break;
     case "goonline": ui.sheet = false; go("online"); break;
     case "recover": ui.sheet = false; ui.rec = { step: 0, email: "", msg: "" }; go("recover"); break;

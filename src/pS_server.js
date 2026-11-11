@@ -281,6 +281,7 @@ async function srvSync(force) {
 }
 function srvRepaint() { // redessine l'écran courant sans casser une saisie en cours
   try {
+    if (ui.evo) return; // ne jamais relancer l'animation d'évolution en cours
     if (typeof game !== "undefined" && game) { if (game.phase === "end" && !ui.confirm) renderGame(); return; } // l'écran de fin suit le classement en direct
     const a = document.activeElement; if (a && a.matches && a.matches("input,textarea")) return;
     if (ui.view === "welcome") return;

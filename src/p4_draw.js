@@ -238,13 +238,75 @@ const DRAW = {
   }
 };
 
+/* ---------- évolution : ce qui change réellement d'un stade à l'autre (v21) ----------
+   Stade 2 : aura douce, anneau au sol, éléments du type, premières étincelles.
+   Stade 3 : grande aura, rayons de lumière, double anneau, éléments du type en grand (ailes, cape, cristaux…), pluie d'étincelles, créature plus grande. */
+const EVO_PAL = { // [clair, moyen, foncé] propres à chaque type
+  feu: ["#FFD43B", "#FF8A2A", "#E8401C"], eau: ["#BFE9FF", "#4FB2FF", "#2C6BE0"], plante: ["#C6F58E", "#4FAE4A", "#2E7D32"],
+  electrik: ["#FFF59D", "#FFD400", "#F5A300"], roche: ["#EADCC4", "#B79B74", "#7A6246"], glace: ["#F4FCFF", "#BFE9FF", "#7FD8FF"],
+  combat: ["#FFE9A8", "#FFC24A", "#E0821E"], vol: ["#FFFFFF", "#D6E9FF", "#9CC8F5"], tenebres: ["#D9BFFF", "#8A5BE0", "#3A2470"], dragon: ["#FFE9A8", "#FFC24A", "#E85D5D"]
+};
+const star4 = (x, y, s, c = "#fff") => `<path d="M${pt(x, y - s)}Q${pt(x + s * .16, y - s * .16)} ${pt(x + s, y)}Q${pt(x + s * .16, y + s * .16)} ${pt(x, y + s)}Q${pt(x - s * .16, y + s * .16)} ${pt(x - s, y)}Q${pt(x - s * .16, y - s * .16)} ${pt(x, y - s)}Z" fill="${c}" stroke="${DL}" stroke-width="1.1" stroke-linejoin="round"/>`;
+const flake = (x, y, s) => [0, 60, 120].map(a => { const r = a * Math.PI / 180, d = `M${pt(x - s * Math.cos(r), y - s * Math.sin(r))}L${pt(x + s * Math.cos(r), y + s * Math.sin(r))}`; return lin(d, 3.4, DL) + lin(d, 1.5, "#fff"); }).join("");
+const bubble = (x, y, r) => `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r)}" fill="#fff" fill-opacity=".45" stroke="${DL}" stroke-width="1.2"/><circle cx="${f1(x - r * .3)}" cy="${f1(y - r * .3)}" r="${f1(r * .22)}" fill="#fff"/>`;
+const tilt = (x, y, a, inner) => `<g transform="rotate(${a} ${f1(x)} ${f1(y)})">${inner}</g>`;
+function evoFX(key, st, P, R) {
+  const T = SPECIES[key].type, C = EVO_PAL[T], { hr, hy, bx, by, bcy } = R, big = st === 2, cy = bcy - 6, side = [-1, 1], gid = `evg${key}${st}`;
+  let aura = "", back = "", front = "";
+  // aura et sol
+  aura += `<defs><radialGradient id="${gid}"><stop offset="0" stop-color="#fff" stop-opacity="${big ? .85 : .55}"/><stop offset=".55" stop-color="${C[0]}" stop-opacity="${big ? .4 : .22}"/><stop offset="1" stop-color="${C[0]}" stop-opacity="0"/></radialGradient></defs>`;
+  if (big) { let rays = ""; for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, w = .11; rays += `M60 ${f1(cy - 4)}L${pt(60 + 78 * Math.cos(a - w), cy - 4 + 78 * Math.sin(a - w))}L${pt(60 + 78 * Math.cos(a + w), cy - 4 + 78 * Math.sin(a + w))}Z`; } aura += `<path d="${rays}" fill="#fff" opacity=".17"/>`; }
+  aura += `<ellipse cx="60" cy="${f1(cy - 4)}" rx="${big ? 54 : 43}" ry="${big ? 56 : 45}" fill="url(#${gid})"/>`;
+  aura += `<ellipse cx="60" cy="108" rx="${f1(bx + (big ? 24 : 17))}" ry="${big ? 7 : 5.6}" fill="none" stroke="${C[0]}" stroke-width="${big ? 2.8 : 2.1}" opacity=".9"/>` + (big ? `<ellipse cx="60" cy="108" rx="${f1(bx + 32)}" ry="9.5" fill="none" stroke="#fff" stroke-width="1.6" opacity=".55"/>` : "");
+  // éléments propres au type
+  const sx = d => 60 + d * (bx + (big ? 14 : 9));
+  switch (T) {
+    case "feu":
+      back += side.map(sd => tilt(sx(sd), cy + 8, sd * 26, flame(sx(sd), cy + 8, big ? 8.5 : 5.5, C[0], C[1], C[2]))).join("") + (big ? side.map(sd => tilt(sx(sd) + sd * 8, cy + 18, sd * 52, flame(sx(sd) + sd * 8, cy + 18, 6, C[0], C[1], C[2]))).join("") : "");
+      front += [[22, 40], [98, 50], [28, 84], [96, 82]].slice(0, big ? 4 : 2).map(([x, y]) => flame(x, y, 2.6, C[0], C[1])).join(""); break;
+    case "eau":
+      back += side.map(sd => pth(`M${pt(60 + sd * bx * .5, cy + 20)}C${pt(60 + sd * (bx + 22), cy + 16)} ${pt(60 + sd * (bx + 28), cy - 8)} ${pt(60 + sd * (bx + (big ? 30 : 20)), cy - (big ? 30 : 20))}C${pt(60 + sd * (bx + 10), cy - 14)} ${pt(60 + sd * (bx + 4), cy - 6)} ${pt(60 + sd * bx * .5, cy - 2)}Z`, C[1]) + lin(`M${pt(60 + sd * (bx + 4), cy + 6)}Q${pt(60 + sd * (bx + 14), cy - 2)} ${pt(60 + sd * (bx + 16), cy - 12)}`, 1.4, C[0])).join("");
+      front += [[24, 44, 3.6], [96, 52, 3], [30, 80, 2.6], [92, 86, 3.4], [60, 14, 2.4]].slice(0, big ? 5 : 3).map(([x, y, r]) => bubble(x, y, r)).join(""); break;
+    case "plante":
+      back += side.map(sd => leaf(60 + sd * (bx - 2), cy + 8, big ? 17 : 11, sd * 58, C[1], C[2]) + (big ? leaf(60 + sd * (bx - 3), cy + 12, 13, sd * 95, C[1], C[2]) : "")).join("");
+      front += [[24, 42, 5, -30], [97, 50, 4.5, 40], [30, 86, 4, 70], [92, 84, 4.5, -60]].slice(0, big ? 4 : 2).map(([x, y, s, r]) => leaf(x, y, s, r, C[0], C[2])).join(""); break;
+    case "electrik":
+      back += side.map(sd => bolt(60 + sd * (bx + (big ? 18 : 12)), cy - 2, big ? 14 : 8.5, C[1])).join("") + (big ? side.map(sd => bolt(60 + sd * (bx + 30), cy + 12, 8, C[0])).join("") : "");
+      front += [[24, 36, 4.5], [98, 40, 4], [26, 80, 3.6], [96, 78, 4.2]].slice(0, big ? 4 : 2).map(([x, y, s]) => bolt(x, y, s, C[0])).join(""); break;
+    case "roche":
+    case "glace": {
+      const c1 = C[1], c2 = C[2];
+      back += side.map(sd => crystal(60 + sd * (bx + 3), cy + 12, big ? 6.5 : 4.8, big ? 28 : 17, c1, c2, sd * 26) + (big ? crystal(60 + sd * (bx + 7), cy + 14, 5, 20, c1, c2, sd * 56) : "")).join("");
+      front += T === "glace" ? [[24, 40, 6], [97, 46, 5], [30, 84, 4.4], [94, 80, 5]].slice(0, big ? 4 : 2).map(([x, y, s]) => flake(x, y, s)).join("") : [[24, 42, 3.4], [98, 50, 3], [28, 84, 3.6], [96, 84, 2.8]].slice(0, big ? 4 : 2).map(([x, y, s], i) => rock(x, y, s, C[1], C[2], C[0], i + 1)).join(""); break; }
+    case "combat":
+      back += side.map(sd => tilt(sx(sd), cy + 8, sd * 22, flame(sx(sd), cy + 8, big ? 8 : 5, "#FFF3C4", C[1], C[2]))).join("");
+      front += [[24, 40, 4.4], [98, 46, 4], [28, 86, 3.4], [95, 84, 3.8]].slice(0, big ? 4 : 2).map(([x, y, s]) => star4(x, y, s, C[1])).join(""); break;
+    case "vol":
+      back += side.map(sd => lin(`M${pt(60 + sd * (bx + 8), cy + 14)}Q${pt(60 + sd * (bx + 28), cy + 2)} ${pt(60 + sd * (bx + 20), cy - 16)}`, big ? 3.4 : 2.4, C[0]) + (big ? lin(`M${pt(60 + sd * (bx + 6), cy + 24)}Q${pt(60 + sd * (bx + 34), cy + 12)} ${pt(60 + sd * (bx + 28), cy - 6)}`, 2.4, C[0]) : "")).join("");
+      front += [[24, 40, 12, -40], [98, 46, 11, 35], [28, 84, 9, 20], [95, 80, 10, -20]].slice(0, big ? 4 : 2).map(([x, y, l, r]) => feather(x, y, l, 3, r, C[0], C[2])).join(""); break;
+    case "tenebres":
+      back += side.map(sd => tilt(sx(sd), cy + 10, sd * 30, flame(sx(sd), cy + 10, big ? 9 : 5.5, C[1], C[2], C[0]))).join("") + (big ? side.map(sd => tilt(sx(sd) + sd * 9, cy + 20, sd * 58, flame(sx(sd) + sd * 9, cy + 20, 6, C[1], C[2], C[0]))).join("") : "");
+      if (big) front += pth(`M${pt(60 + 6, hy - hr - 18)}A9 9 0 1 0 ${pt(60 + 6, hy - hr - 1)}A7 7 0 1 1 ${pt(60 + 6, hy - hr - 18)}Z`, C[0]);
+      front += [[24, 42, 3.6], [98, 48, 3.2], [28, 88, 3]].slice(0, big ? 3 : 2).map(([x, y, s]) => star4(x, y, s, C[0])).join(""); break;
+    case "dragon":
+      back += side.map(sd => tilt(sx(sd) + sd * 4, cy + 10, sd * 30, flame(sx(sd) + sd * 4, cy + 10, big ? 5.5 : 3.8, C[0], C[1], C[2]))).join("");
+      front += [[24, 40, 4.6], [98, 44, 4.2], [28, 86, 3.8], [95, 84, 4.4]].slice(0, big ? 4 : 2).map(([x, y, s]) => star4(x, y, s, C[1])).join(""); break;
+  }
+  // étincelles de lumière (communes à tous les types) : une pluie plus dense au dernier stade
+  const sp = big ? [[12, 22, 3.6], [108, 28, 3], [16, 64, 2.6], [106, 70, 3.4], [44, 8, 2.6], [78, 12, 3.2]] : [[14, 30, 2.8], [106, 36, 2.4], [100, 92, 2.2]];
+  front += sp.map(([x, y, s]) => star4(x, y, s, "#fff")).join("");
+  return { aura, back, front };
+}
+
 function creatureSVG(pet, opt = {}) {
   const key = pet.species in SPECIES ? pet.species : "renard", st = stageOf(pet) - 1, R = RIG[st], S = SPECIES[key];
   const base = { ...PAL[key], ...(pet.shiny === "shiny" ? SHINY[key] : {}) };
   const P = opt.sil ? new Proxy({}, { get: () => SIL }) : base;
   DL = opt.sil ? SIL : "#2B2240";
   const L = DRAW[key](P, R, st), { hr, hy, bx, by, bcy, fs } = R, o = S.ex, mood = opt.mood;
-  let h = `<ellipse cx="60" cy="108" rx="${f1(bx + 12)}" ry="4.5" fill="#000" opacity=".16"/>`;
+  const FX = st > 0 && !opt.sil && !opt.noFX ? evoFX(key, st, P, R) : { aura: "", back: "", front: "" };
+  let h = FX.aura + `<ellipse cx="60" cy="108" rx="${f1(bx + 12)}" ry="4.5" fill="#000" opacity=".16"/>`;
+  h += FX.back;
   h += L.back || "";
   const limb = L.limb || P.main, limbS = L.limb || P.shade;
   h += [-1, 1].map(sd => ell(60 + sd * bx * .55, 105, fs, fs * .58, L.feet || limb)).join("");
@@ -264,8 +326,9 @@ function creatureSVG(pet, opt = {}) {
   }
   h += L.headTop || "";
   h += L.front || "";
+  h += FX.front;
   DL = "#2B2240";
-  return { svg: h, hr, hy };
+  return { svg: h, hr, hy, st };
 }
 
 // opt.head : cadrage sur la tête (avatars) · opt.sil : silhouette (verrouillé) · opt.mood : "joy" | "sad"
@@ -274,7 +337,7 @@ function petSVG(pet, opt = {}) {
   const bg = BGS[pet.bg] || TYPES[SPECIES[key].type].color;
   const c = creatureSVG(pet, opt);
   const vb = opt.head ? `${f1(60 - c.hr * 1.6)} ${f1(c.hy - c.hr * 1.5)} ${f1(c.hr * 3.2)} ${f1(c.hr * 3.2)}` : "0 0 120 120";
-  return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect x="-10" y="-10" width="140" height="140" fill="${bg}"/>${opt.plain ? "" : PATTERN}${opt.head ? "" : `<rect x="-10" y="101" width="140" height="30" fill="#000" opacity=".09"/>`}${c.svg}</svg>`;
+  return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect x="-10" y="-10" width="140" height="140" fill="${bg}"/>${opt.plain ? "" : PATTERN}${opt.head ? "" : `<rect x="-10" y="101" width="140" height="30" fill="#000" opacity=".09"/>`}${!opt.head && c.st > 0 ? `<g transform="translate(60 108) scale(${[1, 1.03, 1.05][c.st]}) translate(-60 -108)">${c.svg}</g>` : c.svg}</svg>`;
 }
 const petLine = (key, kind, seed) => { const L = SPECIES[key].lines[kind]; return L[hashSeed(seed + key + kind) % L.length]; };
 const TYPE_ICO = {
