@@ -61,6 +61,24 @@ Le téléphone **joue** ; le serveur **décide** de ce qui se compare : quel jou
 6. **Connexion** : anonyme (aucun e-mail) ; récupération par e-mail facultative, ajoutée à l'étape 2.
 7. **Fin des « jours de démonstration »** : plus d'historique inventé.
 
+## 6 bis. Décision prise (11 novembre 2026)
+- **Récupération du compte par lien e-mail : OUI** (facultative, ajoutée à l'étape 2). Le compte anonyme est lié à une adresse e-mail ; sur un nouveau téléphone, un lien de connexion le retrouve. Point à régler : l'envoi d'e-mails par défaut de Supabase est très limité en volume ; prévoir un **SMTP personnalisé** (inclus dans l'offre gratuite) avant d'ouvrir à beaucoup de joueurs.
+
+## 6 ter. Limites de l'offre gratuite (page officielle supabase.com/pricing, lue le 11 novembre 2026 : à reconfirmer avant tout engagement)
+| Ressource | Limite gratuite | Remarque pour Méridien |
+|---|---|---|
+| Utilisateurs actifs par mois | **50 000** | pas de limite d'« amis » en soi |
+| Base de données | **500 Mo** | quelques centaines de joueurs pendant des mois sans difficulté (estimation) |
+| Transfert de données (egress) | **5 Go / mois** | l'application elle-même est servie par GitHub Pages et ne compte pas ; seules les données de jeu passent par Supabase |
+| Chat en direct | **200 connexions simultanées**, 2 millions de messages / mois | limite à surveiller si le chat utilise le temps réel ; l'interrogation périodique n'a pas cette limite |
+| Connexions anonymes, SMTP personnalisé | incluses | |
+| **Sauvegardes automatiques** | **non incluses** | prévoir un export régulier des données |
+| **Mise en pause** | après **1 semaine sans activité** | sans risque avec un jeu quotidien ; le projet se rallume manuellement |
+| Projets actifs | 2 maximum | |
+| Offre Pro | à partir de 25 $ / mois (100 000 utilisateurs actifs, 8 Go de base, 250 Go de transfert, sauvegardes quotidiennes) | passage naturel si le jeu grandit |
+
+Limite **fixée par Méridien** (pas par Supabase) : 30 membres par groupe (`groups.max_members`, modifiable).
+
 ## 7. Ce que Chems doit faire
 1. **Créer un compte Supabase** (supabase.com) et un **projet de test** en région « West EU (Frankfurt) ». Je ne crée jamais de compte à votre place.
 2. **Activer le connecteur Supabase** dans cette conversation (la carte « Connect » affichée plus haut). Il demande votre autorisation ; je n'ai accès qu'à ce que vous autorisez. Le connecteur peut créer ou mettre en pause des projets et appliquer des migrations : n'autorisez que le projet de test.
