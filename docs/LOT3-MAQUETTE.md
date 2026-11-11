@@ -1,6 +1,8 @@
-# Lot 3 : maquette du multijoueur réel (Supabase)
+# Lot 3 : multijoueur réel (Supabase)
 
-**Statut : maquette écrite, pas encore appliquée.** Le SQL n'a pas été exécuté (aucun accès Supabase à ce jour). Il sera relu, appliqué sur un **projet de test**, et vérifié par `supabase/tests/smoke.sql` avant toute intégration dans l'application.
+**Statut (11 novembre 2026) : base appliquée sur le projet de test `objfbehephvvaogmblhj` et vérifiée.** Appliquée par Chems via le SQL Editor (`supabase/apply_all.sql`), puis testée de bout en bout par `supabase/tests/e2e.ps1` : **43 contrôles sur 43 passent** (groupes, codes faux et freinage, 2 essais maximum, score truqué ou instantané refusé, écritures directes refusées, confidentialité, classement du jour, boussoles, chat, blocage, signalement, propriété du groupe, suppression de compte). Aucune intégration dans l'application pour l'instant : le jeu fonctionne toujours en local.
+
+**Pas encore vérifié** : le règlement des boussoles (`settle_closed_days`) et sa tâche planifiée horaire (`pg_cron`), qui demandent d'attendre un jour clos ou d'ouvrir l'éditeur SQL ; le classement de saison ; l'expiration d'un essai après 60 minutes ; la limite de messages par minute ; les avertissements du « Security Advisor » du tableau de bord. La région du projet (Europe attendue) est à confirmer.
 
 Fichiers : `supabase/migrations/20261112000000_lot3_init.sql` (base), `supabase/seed.sql` (généré depuis le code par `scripts/gen-supabase-seed.py`), `supabase/tests/smoke.sql` (test des triches).
 

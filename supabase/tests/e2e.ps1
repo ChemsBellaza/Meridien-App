@@ -1,0 +1,122 @@
+﻿$ErrorActionPreference = "Stop"
+# Test de bout en bout du multijoueur (lot 3) : 3 joueurs anonymes, groupe, essais, scores, triches, chat, nettoyage.
+# Utilise uniquement l'URL du projet et la clé PUBLIQUE (publishable/anon). Ne jamais y mettre la clé service_role.
+# À lancer sur un projet DE TEST :
+#   $env:MERIDIEN_SUPABASE_URL = "https://<ref>.supabase.co"; $env:MERIDIEN_SUPABASE_KEY = "sb_publishable_..."
+#   powershell -ExecutionPolicy Bypass -File supabase\tests\e2e.ps1
+# Durée : environ 40 s (attente de 22 s : durée minimale d'un essai). Les comptes de test sont supprimés à la fin.
+$base = $env:MERIDIEN_SUPABASE_URL; $key = $env:MERIDIEN_SUPABASE_KEY
+if (-not $base -or -not $key) { Write-Host "Définir MERIDIEN_SUPABASE_URL et MERIDIEN_SUPABASE_KEY (voir l'en-tête du fichier)."; exit 2 }
+$fails = @(); $users = @{}
+function Call($tok, $method, $path, $body, $extra) {
+  $h = @{ apikey = $key; "Content-Type" = "application/json" }; if ($tok) { $h.Authorization = "Bearer $tok" }; if ($extra) { $extra.GetEnumerator() | ForEach-Object { $h[$_.Key] = $_.Value } }
+  try { if ($body -ne $null) { return Invoke-RestMethod -Uri "$base$path" -Method $method -Headers $h -Body ($body | ConvertTo-Json -Depth 8 -Compress) -TimeoutSec 40 } else { return Invoke-RestMethod -Uri "$base$path" -Method $method -Headers $h -TimeoutSec 40 } }
+  catch { $resp = $_.Exception.Response; $b = ""; if ($resp) { try { $b = (New-Object IO.StreamReader($resp.GetResponseStream())).ReadToEnd() } catch {} }; return [pscustomobject]@{ __http_error = $(if ($resp) { [int]$resp.StatusCode } else { 0 }); body = $b } }
+}
+function Check($name, $cond, $detail) { if ($cond) { "OK    $name" } else { "ECHEC $name :: $detail"; $script:fails += $name } }
+function N($r) { if ($null -eq $r -or "$r" -eq "") { return 0 } elseif ($r.__http_error) { return "ERR" + $r.__http_error } else { return @($r).Count } }
+function Cnt($tok, $path) { $r = Call $tok "Get" $path $null $null; if ($null -eq $r -or "$r" -eq "") { return 0 } elseif ($r.__http_error) { return "ERR" + $r.__http_error } else { return @($r).Count } }
+function Rpc($tok, $fn, $args2) { Call $tok "Post" "/rest/v1/rpc/$fn" $(if ($args2) { $args2 } else { @{} }) $null }
+function Signup($name) { $s = Call $null "Post" "/auth/v1/signup" @{} $null; $users[$name] = @{ tok = $s.access_token; id = $s.user.id }; $p = Call $s.access_token "Post" "/rest/v1/profiles" @{ id = $s.user.id; pseudo = $name } @{ Prefer = "return=minimal" }; Check "profil $name créé" (-not $p.__http_error) ($p.body) }
+
+"--- Session : trois joueurs anonymes ---"
+Signup "Alice"; Signup "Bob"; Signup "Carol"
+$A = $users.Alice.tok; $B = $users.Bob.tok; $C = $users.Carol.tok
+
+"--- Groupes ---"
+$g = Rpc $A "create_group" @{ p_name = "Les Aventuriers" }
+Check "Alice crée un groupe (code à 6 caractères)" ($g.ok -and $g.group.code.Length -eq 6) ($g | ConvertTo-Json -Compress)
+$code = $g.group.code; $gid = $g.group.id
+$j = Rpc $B "join_group" @{ p_code = $code }
+Check "Bob rejoint avec le code ; le nom du groupe est conservé" ($j.ok -and $j.group.name -eq "Les Aventuriers") ($j | ConvertTo-Json -Compress)
+$res = $null; 1..10 | ForEach-Object { $res = Rpc $C "join_group" @{ p_code = "ZZZZZ$_" } }
+Check "codes faux refusés (invalid_code)" ($res.error -eq "invalid_code") ($res | ConvertTo-Json -Compress)
+$res = Rpc $C "join_group" @{ p_code = $code }
+Check "freinage après 10 essais ratés (même avec le bon code)" ($res.error -eq "too_many_attempts") ($res | ConvertTo-Json -Compress)
+$m = Call $A "Get" "/rest/v1/group_members?select=user_id" $null $null
+Check "Alice voit 2 membres" (@($m).Count -eq 2) ("" + @($m).Count)
+$mc = Call $C "Get" "/rest/v1/group_members?select=user_id" $null $null
+Check "Carol (hors groupe) ne voit aucun membre" (@($mc).Count -eq 0) ("" + @($mc).Count)
+$gc = Call $C "Get" "/rest/v1/groups?select=*" $null $null
+Check "Carol ne voit aucun groupe (les codes ne fuient pas)" (@($gc).Count -eq 0) ("" + @($gc).Count)
+
+"--- Essais ---"
+$t1 = Rpc $A "start_try"; $t2 = Rpc $A "start_try"; $t3 = Rpc $A "start_try"
+Check "Alice : 2 essais acceptés" ($t1.ok -and $t2.ok) (($t1, $t2 | ConvertTo-Json -Compress))
+Check "Alice : le 3e essai du jour est refusé" ($t3.error -eq "no_tries_left") ($t3 | ConvertTo-Json -Compress)
+Check "jour et jeu décidés par le serveur" ($t1.day -match '^\d{4}-\d\d-\d\d$' -and $t1.fmt) ($t1 | ConvertTo-Json -Compress)
+$tb = Rpc $B "start_try"
+$fmtMax = (Call $A "Get" "/rest/v1/formats?select=max_points&key=eq.$($t1.fmt)" $null $null)[0].max_points
+"      jeu du jour (serveur) : $($t1.fmt), barème $fmtMax, jour $($t1.day)"
+
+"--- Scores ---"
+$half = [int]($fmtMax / 2); $rounds = @(@{ m = "a"; diff = 0; pts = $half }, @{ m = "b"; diff = 0; pts = $half }, @{ m = "c"; diff = 0; pts = $half })
+$r = Rpc $A "submit_score" @{ p_attempt = $t1.attempt_id; p_rounds = $rounds }
+Check "score envoyé en moins de 20 s refusé" ($r.error -eq "too_fast") ($r | ConvertTo-Json -Compress)
+$d = Call $A "Patch" "/rest/v1/attempts?id=eq.$($t1.attempt_id)" @{ score = 99999 } @{ Prefer = "return=representation" }
+Check "modifier son score directement : interdit" ($d.__http_error -eq 403) ($d | ConvertTo-Json -Compress)
+$d2 = Call $A "Patch" "/rest/v1/attempts?id=eq.$($t1.attempt_id)" @{ started_at = "2020-01-01T00:00:00Z" } @{ Prefer = "return=representation" }
+Check "antidater un essai directement : interdit" ($d2.__http_error -eq 403) ($d2 | ConvertTo-Json -Compress)
+$lg = Call $A "Post" "/rest/v1/gem_ledger" @{ user_id = $users.Alice.id; day = $t1.day; amount = 100000 } $null
+Check "s'inscrire des boussoles directement : interdit" ($lg.__http_error -eq 403) ($lg | ConvertTo-Json -Compress)
+$ga = Call $C "Post" "/rest/v1/group_members" @{ group_id = $gid; user_id = $users.Carol.id } $null
+Check "s'ajouter à un groupe directement : interdit" ($ga.__http_error -eq 403) ($ga | ConvertTo-Json -Compress)
+"      attente de 22 s (durée minimale d'un essai)…"; Start-Sleep -Seconds 22
+$bad = @(@{ diff = 0; pts = 99999 }, @{ diff = 0; pts = 1 }, @{ diff = 0; pts = 1 })
+$r = Rpc $A "submit_score" @{ p_attempt = $t1.attempt_id; p_rounds = $bad }
+Check "score truqué (99 999) refusé" ($r.error -eq "bad_rounds") ($r | ConvertTo-Json -Compress)
+$r = Rpc $A "submit_score" @{ p_attempt = $t1.attempt_id; p_rounds = $rounds; p_slow = 2 }
+Check "score valide : total recalculé par le serveur ($($half * 3))" ($r.ok -and $r.score -eq $half * 3) ($r | ConvertTo-Json -Compress)
+$r = Rpc $A "submit_score" @{ p_attempt = $t1.attempt_id; p_rounds = $rounds }
+Check "double envoi refusé" ($r.error -eq "already_submitted") ($r | ConvertTo-Json -Compress)
+$r = Rpc $B "submit_score" @{ p_attempt = $t1.attempt_id; p_rounds = $rounds }
+Check "Bob ne peut pas envoyer sur l'essai d'Alice" ($r.error -eq "unknown_attempt") ($r | ConvertTo-Json -Compress)
+$better = @(@{ diff = 1; pts = $half + 10 }, @{ diff = 1; pts = $half + 10 }, @{ diff = 1; pts = $half + 10 })
+$r = Rpc $B "submit_score" @{ p_attempt = $tb.attempt_id; p_rounds = $better }
+Check "score de Bob accepté" ($r.ok) ($r | ConvertTo-Json -Compress)
+
+"--- Confidentialité et classement ---"
+$ab = Call $B "Get" "/rest/v1/attempts?select=id" $null $null
+Check "Bob ne voit que ses propres essais (1)" (@($ab).Count -eq 1) ("" + @($ab).Count)
+$dr = Rpc $B "day_results"
+$bob = $dr | Where-Object { $_.pseudo -eq "Bob" }; $ali = $dr | Where-Object { $_.pseudo -eq "Alice" }
+Check "classement du jour : Bob 1er (+32), Alice 2e (+16)" ($bob.pos -eq 1 -and $bob.gems -eq 32 -and $ali.pos -eq 2 -and $ali.gems -eq 16) ($dr | ConvertTo-Json -Compress)
+Check "pastille « temps rallongé » visible pour Alice, pas pour Bob" ($ali.slow -eq $true -and $bob.slow -eq $false) ($dr | ConvertTo-Json -Compress)
+Check "résultats provisoires (jour non clos)" ($bob.is_final -eq $false) ($dr | ConvertTo-Json -Compress)
+$drc = Rpc $C "day_results"
+Check "Carol (hors groupe) ne voit aucun résultat" ((N $drc) -eq 0) ($drc | ConvertTo-Json -Compress)
+Check "série d'Alice = 1" ((Rpc $A "my_streak") -eq 1) ("" + (Rpc $A "my_streak"))
+Check "portefeuille vide avant règlement" ((Rpc $B "my_wallet") -eq 0) ("" + (Rpc $B "my_wallet"))
+$sp = Rpc $B "spend_gems" @{ p_reason = "joker" }
+Check "joker refusé sans boussoles" ($sp.error -eq "not_enough_gems") ($sp | ConvertTo-Json -Compress)
+
+"--- Discussion, blocage, signalement ---"
+$mm = Call $A "Post" "/rest/v1/messages" @{ group_id = $gid; user_id = $users.Alice.id; body = "Bienvenue dans le groupe !" } @{ Prefer = "return=representation" }
+Check "Alice écrit dans son groupe" (-not $mm.__http_error) ($mm | ConvertTo-Json -Compress)
+$mid = $mm[0].id
+$spoof = Call $B "Post" "/rest/v1/messages" @{ group_id = $gid; user_id = $users.Alice.id; body = "Je suis Alice" } $null
+Check "usurper un autre joueur : interdit" ($spoof.__http_error -ge 400) ($spoof | ConvertTo-Json -Compress)
+$out = Call $C "Post" "/rest/v1/messages" @{ group_id = $gid; user_id = $users.Carol.id; body = "J'écris sans être membre" } $null
+Check "écrire hors de son groupe : interdit" ($out.__http_error -ge 400) ($out | ConvertTo-Json -Compress)
+$dbg = Call $B "Get" "/rest/v1/messages?select=id,user_id,body" $null $null; $null
+Check "Bob lit le message d'Alice (et lui seul)" (($dbg.body -like "Bienvenue*") -and (@($dbg | Where-Object { $_.body }).Count -eq 1)) ($dbg | ConvertTo-Json -Compress)
+Check "Carol ne lit aucun message" ((Cnt $C "/rest/v1/messages?select=id") -eq 0) "lecture"
+$rp = Call $B "Post" "/rest/v1/reports" @{ reporter_id = $users.Bob.id; message_id = $mid; reason = "test" } @{ Prefer = "return=minimal" }
+Check "Bob signale un message" (-not $rp.__http_error) ($rp | ConvertTo-Json -Compress)
+$bl = Call $B "Post" "/rest/v1/blocks" @{ blocker_id = $users.Bob.id; blocked_id = $users.Alice.id } @{ Prefer = "return=minimal" }
+Check "Bob bloque Alice" (-not $bl.__http_error) ($bl | ConvertTo-Json -Compress)
+Check "après blocage, Bob ne voit plus les messages d'Alice" ((Cnt $B "/rest/v1/messages?select=id") -eq 0) "lecture"
+$rd = Call $B "Get" "/rest/v1/reports?select=*" $null $null
+Check "les signalements ne sont pas lisibles par les joueurs" (@($rd).Count -eq 0 -or $rd.__http_error) ($rd | ConvertTo-Json -Compress)
+
+"--- Propriété du groupe ---"
+$rm = Rpc $B "remove_member" @{ p_user = $users.Alice.id }
+Check "un simple membre ne peut pas retirer un joueur" ($rm.error -eq "not_owner") ($rm | ConvertTo-Json -Compress)
+
+"--- Nettoyage (suppression des comptes de test) ---"
+Rpc $A "delete_my_account" | Out-Null
+$gleft = Call $B "Get" "/rest/v1/groups?select=name,owner_id" $null $null
+Check "Alice (propriétaire) supprimée : le groupe survit et Bob en devient propriétaire" (@($gleft).Count -eq 1 -and $gleft[0].owner_id -eq $users.Bob.id) ($gleft | ConvertTo-Json -Compress)
+Rpc $B "delete_my_account" | Out-Null; Rpc $C "delete_my_account" | Out-Null
+"      comptes de test supprimés."
+"=== BILAN : " + $(if ($fails.Count -eq 0) { "TOUS LES CONTRÔLES PASSENT" } else { "" + $fails.Count + " échec(s) : " + ($fails -join " | ") }) + " ==="
