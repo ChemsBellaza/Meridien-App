@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v15 (lot 2c)** — Tutoriel : écran de bienvenue après la création du profil, puis manche d'essai guidée (Quiz éclair, 3 questions, bulles du familier à chaque étape, rien ne compte : ni essais, ni stats, ni carnet) ; « Revoir le tutoriel » dans le menu. Introduction progressive : jokers au 3e jour, carnet et succès au 5e (cartes « Nouveau » sur l'accueil). Schéma de sauvegarde v3 : migration qui marque les profils existants `legacy` (pas de tutoriel, tout débloqué). Correctif : `fr()` n'insérait plus d'espaces insécables (copiés en espaces normaux) ; réécrit avec ` `. Code : `src/pT_tuto.js`.
+
 - **v14** — Drapeaux en SVG (Twemoji, CC BY 4.0, 194 fichiers dans `public/flags/`, ~360 Ko) : `src/pF_flags.js` remplace à l'affichage chaque emoji de drapeau par une image (observateur de mutations, aucun changement dans les moteurs ; le texte partagé garde l'emoji). Précache hors ligne (`sw.js`, cache v4). Mention dans le menu et `CREDITS.md`. Vérifié : 15/15 images chargées, drapeau affiché dans le jeu « Drapeaux ».
 
 - **v13.2** — Logo : globe crème à contours épais, ombre « lèvre » et étincelle dorée (`public/logo.svg`, fonction `logoMark()` dans `p5_ui.js`, icônes régénérées par `scripts/make-icons.py`, favicon). Affiché sur le premier écran. Motif neutre (indépendant du nom définitif, qui reste à choisir).

@@ -61,7 +61,7 @@ function award(base, o = {}) {
 function nextStep() {
   const g = game; clearLater();
   if (g.qi < g.qs.length - 1) { g.qi++; startQuestion(); return; }
-  if (g.round < 2) { g.round++; g.phase = "diff"; renderGame(); return; }
+  if (g.round < (g.tuto ? 0 : 2)) { g.round++; g.phase = "diff"; renderGame(); return; }
   g.phase = "end"; finishTry(); renderGame();
 }
 
@@ -91,6 +91,7 @@ const timerHTML = (big) => `<div class="timerrow ${big ? "big" : ""}"><div class
 function finishTry() {
   const g = game;
   stopTimer();
+  if (g.tuto) { g.newStamps = []; g.newUnlocks = []; g.newAch = []; return; } // manche d'essai : rien ne compte (ni carnet, ni stats, ni évolution)
   // carnet de voyage (aussi en entraînement)
   g.newStamps = g.stamps.filter(id => !store.carnet[id]);
   g.newStamps.forEach(id => store.carnet[id] = g.k);

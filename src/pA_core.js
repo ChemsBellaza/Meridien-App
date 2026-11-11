@@ -18,7 +18,7 @@ const issueNo = k => Math.max(1, diffDays(CONFIG.seasonAnchor, k) + 1);
 const fmtNum = n => Math.round(n).toLocaleString("fr-FR");
 const fmtMult = m => "×" + String(m).replace(".", ",");
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const fr = s => esc(s).replace(/ ([?!:;»])/g, " $1").replace(/« /g, "« ");
+const fr = s => esc(s).replace(/ ([?!:;»])/g, " $1").replace(/« /g, "« "); // espaces insécables à la française (écrits en   : un copier-coller les perdrait)
 const yearTxt = y => y < 0 ? `${-y} av. J.-C.` : String(y);
 const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -68,10 +68,14 @@ const capKeys = c => [c.cap, ...c.capAlt].filter(Boolean).map(norm);
 
 /* ---------- stockage local ---------- */
 const LS_KEY = "meridien.v1";
-const SCHEMA = 2;
+const SCHEMA = 3;
 const emptyStore = () => ({ v: SCHEMA, profile: null, plays: {}, chat: {}, carnet: {}, spent: 0, stats: { fmts: {}, perfect: 0, best: {} }, react: {}, ach: {} });
 // migrations : chaque entrée fait passer de la version N à N+1 sans jamais effacer le profil
-const MIGRATIONS = { 1: s => Object.assign(s, { v: 2 }) };
+// v2 → v3 : les profils existants n'ont pas de tutoriel et gardent tous les systèmes débloqués (`legacy`)
+const MIGRATIONS = {
+  1: s => Object.assign(s, { v: 2 }),
+  2: s => { if (s.profile && !s.profile.tuto) s.profile.tuto = { done: true, legacy: true, seen: {} }; return Object.assign(s, { v: 3 }); }
+};
 function loadStore() {
   try {
     let s = JSON.parse(localStorage.getItem(LS_KEY));

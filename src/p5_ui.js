@@ -20,6 +20,7 @@ function render() {
   let html = "";
   if (!store.profile) html = vOnboard();
   else if (!store.profile.pet) html = vPickPet();
+  else if (ui.view === "welcome" || (ui.view === "group" && !tutoState().done)) html = vWelcome();
   else if (ui.view === "history") html = vHistory();
   else if (ui.view === "season") html = vSeason();
   else if (ui.view === "day") html = vDay(ui.dayKey);
@@ -108,6 +109,7 @@ function vGroup() {
     ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
     ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
   </div>
+  ${tutoNotice()}
   <section class="today" aria-label="Défi du jour">
     <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
@@ -243,10 +245,11 @@ function vSheet() {
   const me = meP();
   return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Menu" data-stop>
     <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">${esc(store.profile.group)}</div></div></div>
-    <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button><button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button><button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button></div>
-    <div class="walletline">${I.joker(18)}<span>Boussoles disponibles pour les jokers : <b class="num">${fmtNum(wallet())}</b></span></div>
+    <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button>${featureOn("carnet") ? `<button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button>` : ""}${featureOn("trophees") ? `<button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button>` : ""}</div>
+    <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(store.profile.code)}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
     <div><div class="kicker" style="margin-bottom:8px">Entraînement · non compté</div><div class="fmtgrid">${Object.keys(FORMATS).map(f => `<button class="fmtbtn" data-act="practice" data-v="${f}">${art(f, "p" + f)}<span class="lab">${FORMATS[f].name}</span></button>`).join("")}</div></div>
+    <button class="smallbtn" data-act="tuto">Revoir le tutoriel</button>
     <button class="btn ghost" data-act="closesheet">Fermer</button>
     <p class="note center">Dictionnaire du petit bac enrichi grâce au Wiktionnaire (licence CC BY-SA).</p>
     <p class="note center">Drapeaux : Twemoji, © Twitter, Inc. et contributeurs (licence CC BY 4.0).</p>
@@ -314,6 +317,9 @@ document.addEventListener("click", e => {
     case "back": go(["season", "pet", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : "group") : "group"); break;
     case "day": go("day", { dayKey: v }); break;
     case "tab": ui.tab = v; render(); break;
+    case "tutostart": case "tuto": startTuto(); break;
+    case "tutoskip": tutoDone(); go("group"); break;
+    case "tutoseen": { const t = store.profile.tuto; if (t) { t.seen = t.seen || {}; t.seen[v] = true; if (v === "carnet") t.seen.trophees = true; save(); } render(); break; }
     case "play": startGame(false); break;
     case "practice": ui.sheet = false; startGame(true, v); break;
     case "copy": copyCode(); break;

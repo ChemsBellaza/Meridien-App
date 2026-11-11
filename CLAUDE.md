@@ -33,6 +33,9 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 ## PWA
 Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `dist/` par les builds ; `dist/` entier est à publier (GitHub Pages), pas seulement le HTML. Le service worker (seule exception à « pas de fetch », uniquement pour les fichiers de l'appli) est « réseau d'abord » ; changer `CACHE` dans `sw.js` pour vider les caches. Les icônes se régénèrent avec `python scripts/make-icons.py` (Pillow).
 
+## Tutoriel et déblocage progressif
+`src/pT_tuto.js` (placé juste après `pA_core.js` dans `order.json` : `render()` l'appelle dès le chargement). `profile.tuto = { done, seen, legacy? }` ; `featureOn("joker"|"carnet"|"trophees")` selon les jours depuis `profile.created` (`TUTO_UNLOCK`). Toute nouvelle fonctionnalité à introduire progressivement : l'ajouter à `TUTO_UNLOCK` et `TUTO_NEWS`. La partie guidée a `game.tuto = true` (1 manche, `practice` vrai) : ne jamais l'enregistrer dans stats/carnet. Dans les textes d'interface, écrire les espaces insécables en ` ` (jamais copiés-collés : ils se transforment en espaces normaux).
+
 ## Drapeaux
 Les données gardent des emojis (`flagOf`) ; `src/pF_flags.js` les remplace à l'écran par `public/flags/*.svg` (Twemoji, CC BY 4.0 : mention obligatoire, déjà dans le menu et `CREDITS.md`). Ne pas écrire `<img>` à la main dans les moteurs. Le texte partagé (messageries) garde l'emoji.
 

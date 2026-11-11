@@ -5,7 +5,7 @@ document.addEventListener("click", e => {
   const a = el.dataset.g, v = el.dataset.v, g = game;
   if (a === "quit") {
     if (g.phase === "intro" || g.phase === "end") { exitGame(); return; }
-    ui.confirm = { title: "Quitter la partie ?", text: g.practice ? "Ta partie d'entraînement sera perdue." : `Cet essai reste compté avec les ${fmtNum(g.score)} points déjà gagnés.`, yes: "Quitter", no: "Continuer", run: () => { stopTimer(); exitGame(); } };
+    ui.confirm = { title: g.tuto ? "Quitter le tutoriel ?" : "Quitter la partie ?", text: g.tuto ? "Tu pourras le revoir plus tard depuis le menu." : g.practice ? "Ta partie d'entraînement sera perdue." : `Cet essai reste compté avec les ${fmtNum(g.score)} points déjà gagnés.`, yes: "Quitter", no: "Continuer", run: () => { stopTimer(); exitGame(); } };
     renderGame(); return;
   }
   if (a === "start") { beginTry(); g.phase = "diff"; renderGame(); return; }
@@ -48,6 +48,7 @@ function useJoker() {
 }
 function exitGame() {
   const wasPractice = game.practice;
+  if (game.tuto) tutoDone();
   stopTimer();
   game = null; ui.confirm = null;
   ui.view = "group"; if (!wasPractice) ui.tab = "scores";

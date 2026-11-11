@@ -9,7 +9,7 @@ function gameTop() {
   return `<div class="gtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button><div class="prog" aria-label="Manche ${g.round + 1} sur 3">${bars}</div><span class="scorepill num">${fmtNum(g.score)}<small>PTS</small></span></div>`;
 }
 function jokerBtn() {
-  const g = game, J = E().joker; if (!J || g.phase !== "q" || (J.can && !J.can(g))) return "";
+  const g = game, J = E().joker; if (!J || g.tuto || !featureOn("joker") || g.phase !== "q" || (J.can && !J.can(g))) return "";
   if (g.jokers[g.round]) return `<span class="joker used">${I.joker(15)}Joker utilisé</span>`;
   const ok = g.practice || wallet() >= CONFIG.jokerCost;
   return `<button class="joker" data-g="joker" ${ok ? "" : "disabled"} aria-label="Joker ${esc(J.label)}, ${CONFIG.jokerCost} boussoles">${I.joker(15)}${esc(J.label)}<span class="cost num">${g.practice ? "offert" : CONFIG.jokerCost}${g.practice ? "" : I.compass(13)}</span></button>`;
@@ -24,7 +24,9 @@ function renderGame() {
   const g = game;
   let body = "";
   const F = FORMATS[g.fmt];
-  if (g.phase === "intro") {
+  if (g.phase === "intro" && g.tuto) {
+    body = tutoIntro(g);
+  } else if (g.phase === "intro") {
     const pet = store.profile.pet, Sp = SPECIES[pet.species];
     body = `
       <div class="rowtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button>${g.practice ? `<span class="flag">Entraînement · non compté</span>` : `<span class="kicker">Défi n°${issueNo(g.k)} · essai ${g.tryIdx + 1}/${CONFIG.tries}</span>`}<span></span></div>
@@ -34,7 +36,7 @@ function renderGame() {
       <div class="facts">
         <div class="f"><span class="kicker">Difficulté</span><span><b>À choisir avant chaque manche.</b> Facile ${fmtMult(CONFIG.mult[0])}, Moyen ${fmtMult(CONFIG.mult[1])}, Difficile ${fmtMult(CONFIG.mult[2])}.</span></div>
         <div class="f"><span class="kicker">${g.practice ? "Entraînement" : "Essais"}</span><span>${g.practice ? "Contenu au hasard, sans effet sur ton classement." : `<b>Essai ${g.tryIdx + 1} sur ${CONFIG.tries}.</b> Seul ton meilleur score compte${g.tryIdx === 0 ? ", et le 2e essai change le contenu" : ""}. L'essai est compté dès que tu commences.`}</span></div>
-        ${E().joker ? `<div class="f"><span class="kicker">Joker</span><span><b>${esc(E().joker.label)}</b>, une fois par manche, pour ${CONFIG.jokerCost} boussoles. ${esc(E().joker.help || "")}</span></div>` : ""}
+        ${E().joker && featureOn("joker") ? `<div class="f"><span class="kicker">Joker</span><span><b>${esc(E().joker.label)}</b>, une fois par manche, pour ${CONFIG.jokerCost} boussoles. ${esc(E().joker.help || "")}</span></div>` : ""}
       </div>
       <div class="petsay static">${petAv(pet, "lg", petName(pet))}<span class="say2"><b>${esc(petName(pet))}</b><span>${fr(petLine(pet.species, "hello", g.k + "i" + g.tryIdx))}</span></span></div>
       <button class="btn" data-g="start" style="margin-top:auto">C'est parti</button>`;
@@ -42,10 +44,11 @@ function renderGame() {
     const m = g.manches[g.round];
     body = `${gameTop()}
       <div class="theme-banner" style="--c:${m.color}"><div><div class="kicker">Manche ${g.round + 1} sur 3</div><h2 class="display">${esc(m.label)}</h2></div><span class="bico">${mIcon(m, 58)}</span></div>
+      ${tutoCoach(g)}
       <p class="qsub">Choisis ta difficulté pour cette manche.</p>
       <div class="diffs">${DIFFS.map((d, i) => `<button class="diff" data-g="diff" data-v="${i}"><span class="mult num" style="--c:${d.color}">${fmtMult(CONFIG.mult[i])}</span><span><span class="lbl">${d.label}</span><br><span class="s">${esc((E().diffHint && E().diffHint[i]) || d.sub)}</span></span>${pips(i)}</button>`).join("")}</div>`;
   } else if (g.phase === "q" || g.phase === "reveal") {
-    body = gameTop() + roundTag() + E().view(g) + (g.phase === "reveal" ? revealBox() : "");
+    body = gameTop() + roundTag() + (g.phase === "q" ? tutoCoach(g) : "") + E().view(g) + (g.phase === "reveal" ? tutoCoach(g) + revealBox() : "");
   } else if (g.phase === "end") {
     body = vEnd();
   }
@@ -64,11 +67,12 @@ function revealBox() {
     ${a.ans ? `<div class="ans">${a.ans}</div>` : ""}
     ${a.extra || ""}
     ${a.fact ? `<div class="fact"><div class="mono">Le saviez-vous ?</div><p>${fr(a.fact)}</p></div>` : ""}
-    <button class="btn" data-g="next">${last ? (g.round === 2 ? "Voir mon score" : "Manche suivante") : (E().nextWord || "Question suivante")}</button>
+    <button class="btn" data-g="next">${last ? (g.round === (g.tuto ? 0 : 2) ? "Voir mon score" : "Manche suivante") : (E().nextWord || "Question suivante")}</button>
   </div>`;
 }
 
 function vEnd() {
+  if (game.tuto) return vEndTuto();
   const g = game, F = FORMATS[g.fmt], mine = g.practice ? [] : store.plays[g.k];
   const best = g.practice ? g.score : Math.max(...mine.map(p => p.score));
   const res = g.practice ? null : dayResults(g.k);

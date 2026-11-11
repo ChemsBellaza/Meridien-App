@@ -27,10 +27,10 @@ document.addEventListener("submit", e => {
       if (!/^[A-Z0-9-]{4,8}$/.test(code)) return fail("Ce code n'est pas valide. Il ressemble à MER-4K7Q.");
       group = "Groupe " + code;
     }
-    store.profile = { name, group, code, created: today(), pet: defaultPet(ui.draftPet) };
+    store.profile = { name, group, code, created: today(), pet: defaultPet(ui.draftPet), tuto: { done: false, seen: {} } };
     if (ui.draftPhoto) store.profile.photo = ui.draftPhoto;
     store.profile.seen = unlockedIds(progress());
-    save(); go("group");
+    save(); go("welcome");
   }
   if (e.target.id === "msgForm") {
     const inp = document.getElementById("msg"), text = inp.value.trim();
