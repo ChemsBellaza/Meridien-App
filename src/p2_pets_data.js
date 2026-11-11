@@ -134,6 +134,8 @@ const ITEMS = {
   ] }
 };
 const PET_CATS = ["species", "stage", "shiny", "bg"];
+// description textuelle pour les lecteurs d'écran : espèce, type, stade, couleurs, caractère
+const petDesc = pet => { const S = SPECIES[pet.species in SPECIES ? pet.species : "renard"]; return `${petName(pet)}, familier de type ${TYPES[S.type].label}, stade ${stageOf(pet)} sur 3${pet.shiny === "shiny" ? ", aux couleurs chromatiques" : ""}.${S.traits && S.traits.length ? " Caractère : " + S.traits.join(", ") + "." : ""}`; };
 const reqText = n => n.k === "games" ? `${n.v} parties terminées` : n.k === "gems" ? `${n.v} boussoles` : n.k === "streak" ? `Série de ${n.v} jours` : n.k === "wins" ? `${n.v} victoire${n.v > 1 ? "s" : ""} du jour` : `${n.v} parties jouées`;
 
 const BOTS = [

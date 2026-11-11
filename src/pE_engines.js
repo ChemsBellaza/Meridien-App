@@ -62,7 +62,7 @@ ENG.mcq = {
       <div class="opts">${st.order.map((i, pos) => {
         if (!rev && st.hidden.includes(i)) return `<button class="opt gone" disabled aria-hidden="true"><span class="k">${"ABCD"[pos]}</span><span class="tx">—</span></button>`;
         let cls = ""; if (rev) { if (i === 0) cls = "ok"; else if (st.choice === i) cls = "bad"; }
-        return `<button class="opt ${cls}" data-g="opt" data-v="${i}" ${rev ? "disabled" : ""}><span class="k">${"ABCD"[pos]}</span><span class="tx">${fr(q.opts[i])}</span></button>`;
+        return `<button class="opt ${cls}" data-g="opt" data-v="${i}" ${rev ? "disabled" : ""}><span class="k">${"ABCD"[pos]}</span><span class="tx">${fr(q.opts[i])}</span>${cls === "ok" ? `<span class="mk" aria-hidden="true">✓</span><span class="sr">Bonne réponse</span>` : cls === "bad" ? `<span class="mk" aria-hidden="true">✗</span><span class="sr">Ta réponse, fausse</span>` : ""}</button>`;
       }).join("")}</div>`;
   },
   act(g, a, v) {
@@ -74,7 +74,7 @@ ENG.mcq = {
 };
 function mcqAnswer(choice) {
   const g = game; if (!g || g.phase !== "q") return;
-  const q = g.qs[g.qi], secs = FORMATS[g.fmt].secs, left = timeLeft();
+  const q = g.qs[g.qi], secs = g.T ? (g.T.ms + g.T.bonus) / 1000 : FORMATS[g.fmt].secs, left = timeLeft(); // le bonus de rapidité se mesure sur le temps réellement accordé
   g.st.choice = choice;
   const base = choice === 0 ? Math.round(unitOf(g) * (.5 + .5 * left / secs)) : 0;
   const ans = choice === 0 ? `Bonne réponse en ${(secs - left).toFixed(1).replace(".", ",")} s.` : choice == null ? `Temps écoulé. Réponse : ${fr(q.opts[0])}.` : `Raté. Réponse : ${fr(q.opts[0])}.`;

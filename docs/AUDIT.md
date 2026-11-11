@@ -26,10 +26,11 @@ Légende : ✅ traité · ⏳ à faire (voir ROADMAP)
 | A6 | dialogues sans focus piégé / Échap / retour du focus | ✅ |
 | A7 | focus perdu au re-rendu | ✅ |
 | A8 | annonces (résultats, chrono) | ✅ `announce()`, `role="timer"`, 10 s et 5 s |
-| A9 | cartes sans équivalent clavier | ⏳ |
-| A10 | information par la couleur seule | ⏳ |
-| A11 | description textuelle de l'état du familier | ⏳ |
-| A12 | chronos courts sans alternative | ⏳ « temps rallongé » |
+| A9 | cartes sans équivalent clavier | ✅ viseur aux flèches, Entrée = toucher, + − 0 pour zoomer (La Carte, Sprint Carte, Pays mystère ; ce dernier se joue aussi en tapant le nom) |
+| A10 | information par la couleur seule | ✅ partiel : ✓/✗ sur les réponses du quiz, mots « Glacial → Brûlant » au Pays mystère ; ⏳ vérifier les autres jeux (relier, classement, vrai/faux…) |
+| A11 | description textuelle de l'état du familier | ✅ `petDesc()` (espèce, type, stade, couleurs, caractère) sur l'accueil et la fiche ; humeur à la fin de partie |
+| A12 | chronos courts sans alternative | ✅ réglage « Temps de réflexion » ×1, ×1,5, ×2 (menu) ; bonus de rapidité mesuré sur le temps accordé |
+| A13 | violet de texte sur fond sombre (3,3:1) | ✅ jeton `--purple-t` (5,6:1 en sombre, 5,6:1 en clair) |
 
 ## UX
 1. Pas d'aide à la première partie → tutoriel d'essai sans score. ⏳

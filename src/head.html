@@ -29,7 +29,7 @@
 :root{
   --paper:#F4F2EC; --card:#FFFFFF; --card-2:#ECE9E2; --ink:#1C1C1E; --ink-2:#6A665F; --line:#E2DED6; --grid:#D3CFC6;
   --dark:#454547; --dark-2:#262628; --panel:#2E2E30; --panel-2:#3A3A3C;
-  --purple:#6B5BE2; --purple-d:#4C3EBE; --yellow-soft:#FBF0C8; --yellow-line:#EFD06A; --gold-t:#7F5A00;
+  --purple:#6B5BE2; --purple-t:#5B4BD0; --purple-d:#4C3EBE; --yellow-soft:#FBF0C8; --yellow-line:#EFD06A; --gold-t:#7F5A00;
   --ok:#1FA36A; --ok-soft:#DDF3E7; --bad:#E5534B; --bad-soft:#FBE0DE; --cobalt:#4A72E0;
   --ocean:#CFE5F3; --land:#FBF8F1; --border-c:#AAB7C6; --grat:#BCD6EA;
   --lip:#DDD8CE; --scrim:rgba(20,18,14,.5);
@@ -38,7 +38,7 @@
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --paper:#18181A; --card:#242426; --card-2:#2F2F32; --ink:#F4F2EE; --ink-2:#A39E96; --line:#38383B; --grid:#3C3C40;
   --dark:#3E3E41; --dark-2:#111113; --panel:#202022; --panel-2:#2E2E31;
-  --purple:#7060E0; --purple-d:#5A4CC4; --yellow-soft:#3A3322; --yellow-line:#806A2A; --gold-t:#E9C25A;
+  --purple:#7060E0; --purple-t:#9C90F2; --purple-d:#5A4CC4; --yellow-soft:#3A3322; --yellow-line:#806A2A; --gold-t:#E9C25A;
   --ok:#36C98A; --ok-soft:#173A2A; --bad:#FF6B63; --bad-soft:#43211F; --cobalt:#7095FF;
   --ocean:#1B2D44; --land:#2F3A4C; --border-c:#4C5D78; --grat:#22364F;
   --lip:#0B0B0C; --scrim:rgba(0,0,0,.6);
@@ -46,7 +46,7 @@
 :root[data-theme="dark"]{
   --paper:#18181A; --card:#242426; --card-2:#2F2F32; --ink:#F4F2EE; --ink-2:#A39E96; --line:#38383B; --grid:#3C3C40;
   --dark:#3E3E41; --dark-2:#111113; --panel:#202022; --panel-2:#2E2E31;
-  --purple:#7060E0; --purple-d:#5A4CC4; --yellow-soft:#3A3322; --yellow-line:#806A2A; --gold-t:#E9C25A;
+  --purple:#7060E0; --purple-t:#9C90F2; --purple-d:#5A4CC4; --yellow-soft:#3A3322; --yellow-line:#806A2A; --gold-t:#E9C25A;
   --ok:#36C98A; --ok-soft:#173A2A; --bad:#FF6B63; --bad-soft:#43211F; --cobalt:#7095FF;
   --ocean:#1B2D44; --land:#2F3A4C; --border-c:#4C5D78; --grat:#22364F;
   --lip:#0B0B0C; --scrim:rgba(0,0,0,.6);
@@ -133,7 +133,7 @@ button.spill:active{transform:translateY(3px);box-shadow:0 1px 0 var(--lip)}
 /* le familier parle */
 .petsay{display:flex;align-items:flex-end;gap:10px;width:100%;text-align:left}
 .say2{flex:1;min-width:0;background:var(--card);border-radius:20px 20px 20px 6px;padding:10px 14px;box-shadow:0 3px 0 var(--lip)}
-.say2 b,.say3 b{display:block;color:var(--purple);font-weight:900;font-size:14px}
+.say2 b,.say3 b{display:block;color:var(--purple-t);font-weight:900;font-size:14px}
 .say2 span{font-weight:700;font-size:15.5px}
 
 /* onglets */
@@ -286,7 +286,7 @@ hr.podium{width:70%;border:0;height:2px;background:var(--line);margin:2px 0}
 .item .av{--s:72px}
 .item .lbl{font-weight:900;font-size:13px;line-height:1.2}
 .item .req{font-size:11.5px;font-weight:800;line-height:1.25;color:var(--ink-2)}
-.item .req.on{color:var(--purple)}
+.item .req.on{color:var(--purple-t)}
 .item.locked{cursor:default}
 .item.locked .av{opacity:.8}
 .item .lock{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--card-2);display:grid;place-items:center;color:var(--ink-2)}
@@ -339,6 +339,13 @@ hr.podium{width:70%;border:0;height:2px;background:var(--line);margin:2px 0}
 .mapwrap{position:relative;border-radius:22px;background:var(--ocean);box-shadow:0 5px 0 var(--lip);overflow:hidden}
 .mapwrap svg{width:100%;height:auto;touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
 .maphint{position:absolute;left:10px;top:10px;background:rgba(22,22,24,.74);color:#fff;padding:3px 10px;border-radius:999px;pointer-events:none;max-width:70%;font-size:12.5px;font-weight:800}
+.kcursor{display:none;position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #1C1C1E,inset 0 0 0 2px #1C1C1E;pointer-events:none;z-index:2}
+.kcursor::before,.kcursor::after{content:"";position:absolute;background:#1C1C1E;left:50%;top:50%;transform:translate(-50%,-50%)}
+.kcursor::before{width:2px;height:12px}.kcursor::after{width:12px;height:2px}
+.mapwrap.kbd .kcursor{display:block}
+.mapwrap:focus-visible::after{content:"Flèches : viseur · Maj : plus vite · Entrée : toucher · + − : zoom";position:absolute;left:10px;right:60px;bottom:10px;background:rgba(22,22,24,.82);color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:800;pointer-events:none}
+.opt .mk{margin-left:auto;font-weight:900;font-size:20px;line-height:1;padding-right:4px}
+.hw{display:block;font-size:12px;font-weight:800;color:var(--ink-2);text-align:right}
 .zoomctl{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px}
 .zoomctl button{width:40px;height:40px;border-radius:50%;background:var(--card);color:var(--ink);display:grid;place-items:center;font-weight:900;font-size:22px;line-height:1;box-shadow:0 3px 0 var(--lip)}
 .zoomctl button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--lip)}
@@ -695,7 +702,7 @@ button.fpill{color:var(--ink);text-align:left}
 .pbl span{padding:0 6px 0 14px;font-weight:900;font-size:13px;line-height:1.15;color:var(--ink-2)}
 .pbl input{min-width:0;border:0;border-left:2px solid var(--line);background:transparent;padding:12px 12px;font-size:17px;font-weight:800;color:var(--ink);outline:none}
 .pbl:focus-within{box-shadow:0 0 0 2.5px var(--purple),0 3px 0 var(--lip)}
-.pbl:focus-within span{color:var(--purple)}
+.pbl:focus-within span{color:var(--purple-t)}
 .pbl input::placeholder{color:var(--grid);font-weight:800}
 
 /* ===== v9 : fiche du familier ===== */

@@ -166,6 +166,7 @@ function bearing(a, b) {
 }
 const ARROWS = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"], DIRS = ["nord", "nord-est", "est", "sud-est", "sud", "sud-ouest", "ouest", "nord-ouest"];
 const heatOf = km => km < 500 ? 4 : km < 1000 ? 3 : km < 2000 ? 2 : km < 3500 ? 1 : 0;
+const HEAT_WORD = ["Glacial", "Froid", "Tiède", "Chaud", "Brûlant"]; // le mot double la couleur (WCAG 1.4.1)
 ENG.mystere = {
   needsMap: true, board: true, focus: "typein",
   diffHint: ["Des pays connus", "Des pays moins évidents", "Des pays méconnus"],
@@ -187,7 +188,7 @@ ENG.mystere = {
       ${st.cap && !rev ? `<p class="note center">Indice : sa capitale est <b>${esc(T.cap || "—")}</b>.</p>` : ""}
       <div class="mapwrap sprint">${countriesSVG(CONTS[cont].box, "map", g.view, id => heat[id] || "", "Carte : " + CONTS[cont].label)}${zoomCtl()}</div>
       ${rev ? "" : `<div id="mysel" class="mysel">${mySelHTML(st)}</div>${typeBox("Un pays…")}<div class="pchips" id="mysug"></div>`}
-      ${list.length ? `<div class="mylist">${list.map(x => `<div class="myrow h${x.id === st.target ? "ok" : heatOf(x.km)}"><span>${flagOf(CBY[x.id])} ${esc(CBY[x.id].name)}</span>${x.id === st.target ? `<b>Trouvé !</b>` : `<b class="num">${fmtNum(x.km)} km <span class="arr" aria-label="vers le ${DIRS[x.dir]}">${ARROWS[x.dir]}</span></b>`}</div>`).join("")}</div>` : rev ? "" : `<p class="note center">Écris un pays ou touche-le sur la carte. La flèche indique la direction du pays mystère.</p>`}`;
+      ${list.length ? `<div class="mylist">${list.map(x => `<div class="myrow h${x.id === st.target ? "ok" : heatOf(x.km)}"><span>${flagOf(CBY[x.id])} ${esc(CBY[x.id].name)}</span>${x.id === st.target ? `<b>Trouvé !</b>` : `<b class="num"><small class="hw">${HEAT_WORD[heatOf(x.km)]}</small>${fmtNum(x.km)} km <span class="arr" aria-label="vers le ${DIRS[x.dir]}">${ARROWS[x.dir]}</span></b>`}</div>`).join("")}</div>` : rev ? "" : `<p class="note center">Écris un pays ou touche-le sur la carte. La flèche indique la direction du pays mystère.</p>`}`;
   },
   type(g, val, submit) {
     const st = g.st; if (g.phase !== "q" || !st.target) return;

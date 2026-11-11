@@ -107,7 +107,7 @@ function vEnd() {
     </div>` : "";
   return `
     <div class="endhead"><span class="mono muted">${esc(F.name)} · ${g.practice ? "entraînement" : "essai " + (g.tryIdx + 1)}</span>${g.practice ? `<span class="flag mono">Non compté</span>` : ""}</div>
-    <div class="react"><span class="rtile">${petSVG(pet, { mood: kind === "good" ? "joy" : kind === "bad" ? "sad" : null })}</span><div class="say3"><b>${esc(petName(pet))}</b><span>${fr(petLine(pet.species, kind, g.k + g.tryIdx))}</span></div></div>
+    <div class="react"><span class="rtile" role="img" aria-label="${esc(petName(pet))}, ${kind === "good" ? "tout content" : kind === "bad" ? "un peu triste" : "attentif"}">${petSVG(pet, { mood: kind === "good" ? "joy" : kind === "bad" ? "sad" : null })}</span><div class="say3"><b>${esc(petName(pet))}</b><span>${fr(petLine(pet.species, kind, g.k + g.tryIdx))}</span></div></div>
     <section class="endscore" aria-label="Ton score"><div class="v num">${fmtNum(g.score)}</div><div class="u">points</div>
       ${record ? `<span class="recordtag">${I.trophy(16)}Nouveau record du jour</span>` : ""}
       ${!g.practice && !record && best > g.score ? `<p class="muted endnote">Ton meilleur score du jour reste ${fmtNum(best)} pts.</p>` : ""}

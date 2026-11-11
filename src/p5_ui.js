@@ -119,7 +119,7 @@ function vGroup() {
       <div class="countdown">Prochain défi dans <b id="cd" class="num">--:--:--</b></div>
     </div>
   </section>
-  <button class="petline" data-act="pet" aria-label="Mon familier ${esc(petName(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
+  <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
   ${ui.tab === "chat" ? `<div class="composer"><form id="msgForm"><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
@@ -216,7 +216,7 @@ function vPet() {
   return `
   <div class="rowtop">${backBtn()}<span class="kicker">Fiche n°${String(S.num).padStart(3, "0")}</span><span></span></div>
   <div class="dexcard" style="--c:${T.color}">
-    <div class="stage" role="img" aria-label="${esc(petName(pet))}">${petSVG(pet)}</div>
+    <div class="stage" role="img" aria-label="${esc(petDesc(pet))}">${petSVG(pet)}</div>
     <div class="dexhead"><h1 class="display">${esc(petName(pet))}</h1><div class="dexmeta">${typeBadge(S.type)}<span class="tchip">Stade ${st}</span>${pet.shiny === "shiny" ? `<span class="tchip shiny">✦ Chromatique</span>` : ""}</div></div>
     <p class="dextext">${fr(S.dex[st - 1])}</p>
     <div class="traits">${S.traits.map(t => `<span>${t}</span>`).join("")}</div>
@@ -247,6 +247,9 @@ function vSheet() {
     <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">${esc(store.profile.group)}</div></div></div>
     <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button>${featureOn("carnet") ? `<button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button>` : ""}${featureOn("trophees") ? `<button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button>` : ""}</div>
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
+    <div><div class="kicker" style="margin-bottom:6px">Temps de réflexion</div>
+      <div class="seg light" role="group" aria-label="Temps de réflexion">${[[1, "Normal"], [1.5, "× 1,5"], [2, "× 2"]].map(([v, l]) => `<button data-act="timepref" data-v="${v}" aria-pressed="${timeFactor() === v}">${l}</button>`).join("")}</div>
+      <p class="note">Allonge tous les chronos pour jouer à ton rythme. Le bonus de rapidité se calcule sur le temps que tu as.</p></div>
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(store.profile.code)}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
     <div><div class="kicker" style="margin-bottom:8px">Entraînement · non compté</div><div class="fmtgrid">${Object.keys(FORMATS).map(f => `<button class="fmtbtn" data-act="practice" data-v="${f}">${art(f, "p" + f)}<span class="lab">${FORMATS[f].name}</span></button>`).join("")}</div></div>
     <button class="smallbtn" data-act="tuto">Revoir le tutoriel</button>
@@ -317,6 +320,7 @@ document.addEventListener("click", e => {
     case "back": go(["season", "pet", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : "group") : "group"); break;
     case "day": go("day", { dayKey: v }); break;
     case "tab": ui.tab = v; render(); break;
+    case "timepref": store.prefs = Object.assign({ time: 1 }, store.prefs, { time: +v }); save(); render(); announce(+v === 1 ? "Temps normal" : `Temps multiplié par ${String(+v).replace(".", ",")}`); break;
     case "tutostart": case "tuto": startTuto(); break;
     case "tutoskip": tutoDone(); go("group"); break;
     case "tutoseen": { const t = store.profile.tuto; if (t) { t.seen = t.seen || {}; t.seen[v] = true; if (v === "carnet") t.seen.trophees = true; save(); } render(); break; }

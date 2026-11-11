@@ -68,13 +68,14 @@ const capKeys = c => [c.cap, ...c.capAlt].filter(Boolean).map(norm);
 
 /* ---------- stockage local ---------- */
 const LS_KEY = "meridien.v1";
-const SCHEMA = 3;
-const emptyStore = () => ({ v: SCHEMA, profile: null, plays: {}, chat: {}, carnet: {}, spent: 0, stats: { fmts: {}, perfect: 0, best: {} }, react: {}, ach: {} });
+const SCHEMA = 4;
+const emptyStore = () => ({ v: SCHEMA, profile: null, plays: {}, chat: {}, carnet: {}, spent: 0, stats: { fmts: {}, perfect: 0, best: {} }, react: {}, ach: {}, prefs: { time: 1 } });
 // migrations : chaque entrée fait passer de la version N à N+1 sans jamais effacer le profil
 // v2 → v3 : les profils existants n'ont pas de tutoriel et gardent tous les systèmes débloqués (`legacy`)
 const MIGRATIONS = {
   1: s => Object.assign(s, { v: 2 }),
-  2: s => { if (s.profile && !s.profile.tuto) s.profile.tuto = { done: true, legacy: true, seen: {} }; return Object.assign(s, { v: 3 }); }
+  2: s => { if (s.profile && !s.profile.tuto) s.profile.tuto = { done: true, legacy: true, seen: {} }; return Object.assign(s, { v: 3 }); },
+  3: s => Object.assign(s, { v: 4, prefs: Object.assign({ time: 1 }, s.prefs) }) // v3 → v4 : réglages d'accessibilité (temps de réflexion)
 };
 function loadStore() {
   try {

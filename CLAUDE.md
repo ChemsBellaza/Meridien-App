@@ -33,6 +33,13 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 ## PWA
 Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `dist/` par les builds ; `dist/` entier est à publier (GitHub Pages), pas seulement le HTML. Le service worker (seule exception à « pas de fetch », uniquement pour les fichiers de l'appli) est « réseau d'abord » ; changer `CACHE` dans `sw.js` pour vider les caches. Les icônes se régénèrent avec `python scripts/make-icons.py` (Pillow).
 
+## Accessibilité : acquis à ne pas casser
+- Texte violet : `var(--purple-t)` (≥ 4,5:1 clair et sombre), jamais `var(--purple)` pour du texte.
+- Une carte avec toucher (`E().onTap`) est focusable (`#mapwrap`) et pilotable au clavier via `bindMapKeys` : tout nouveau jeu à carte doit passer par `bindMap(svg)`.
+- Les chronos passent par `startTimer` (qui applique `timeFactor()`, réglage `store.prefs.time`) ; tout bonus de rapidité se calcule sur `g.T.ms + g.T.bonus`, jamais sur `FORMATS[..].secs`.
+- Un état ne se signale jamais par la couleur seule : ajouter symbole ou mot (✓/✗, « Brûlant »…).
+- Le familier se décrit avec `petDesc(pet)` dans les `aria-label`.
+
 ## Tutoriel et déblocage progressif
 `src/pT_tuto.js` (placé juste après `pA_core.js` dans `order.json` : `render()` l'appelle dès le chargement). `profile.tuto = { done, seen, legacy? }` ; `featureOn("joker"|"carnet"|"trophees")` selon les jours depuis `profile.created` (`TUTO_UNLOCK`). Toute nouvelle fonctionnalité à introduire progressivement : l'ajouter à `TUTO_UNLOCK` et `TUTO_NEWS`. La partie guidée a `game.tuto = true` (1 manche, `practice` vrai) : ne jamais l'enregistrer dans stats/carnet. Dans les textes d'interface, écrire les espaces insécables en ` ` (jamais copiés-collés : ils se transforment en espaces normaux).
 

@@ -66,9 +66,10 @@ function nextStep() {
 }
 
 /* ---------- chrono (barre animée, fin automatique) ---------- */
+const timeFactor = () => (store.prefs && +store.prefs.time) || 1; // « temps rallongé » : 1, 1,5 ou 2 (accessibilité, WCAG 2.2.1)
 function startTimer(secs, onEnd) {
   const g = game; stopTimer();
-  g.T = { t0: performance.now(), ms: secs * 1000, onEnd, bonus: 0 };
+  g.T = { t0: performance.now(), ms: secs * 1000 * timeFactor(), onEnd, bonus: 0 };
   tickTimer();
 }
 function addTime(secs) { if (game && game.T) game.T.bonus += secs * 1000; }

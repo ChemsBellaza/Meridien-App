@@ -138,7 +138,42 @@ function bindMap(svg) {
     if (E().onTap) E().onTap(g, p, e);
   };
   svg.addEventListener("pointerup", up); svg.addEventListener("pointercancel", up);
+  bindMapKeys(svg);
   svg.addEventListener("wheel", e => { e.preventDefault(); const c = toSvg(svg, e.clientX, e.clientY); zoomAt(Math.exp(-e.deltaY * 0.0016), c.x, c.y); }, { passive: false });
+}
+/* ---------- carte au clavier (WCAG 2.1.1) : un viseur se déplace aux flèches, Entrée équivaut à un toucher ---------- */
+function bindMapKeys(svg) {
+  const g = game, wrap = svg.closest(".mapwrap");
+  if (!wrap || g.phase !== "q" || !E().onTap) return; // rien à viser pendant la correction ou dans un jeu sans toucher
+  wrap.id = "mapwrap"; wrap.tabIndex = 0; wrap.setAttribute("role", "group");
+  wrap.setAttribute("aria-label", "Carte. Au clavier : flèches pour déplacer le viseur, Maj pour aller plus vite, Entrée pour toucher, plus et moins pour zoomer, 0 pour recentrer.");
+  const cross = document.createElement("div"); cross.className = "kcursor"; cross.setAttribute("aria-hidden", "true"); wrap.appendChild(cross);
+  const place = () => {
+    const r = svg.getBoundingClientRect(), w = wrap.getBoundingClientRect(), c = g.kcur || (g.kcur = { x: r.width / 2, y: r.height / 2 });
+    cross.style.left = (r.left - w.left + c.x) + "px"; cross.style.top = (r.top - w.top + c.y) + "px";
+  };
+  place();
+  wrap.addEventListener("pointerdown", () => wrap.classList.remove("kbd"));
+  wrap.addEventListener("keydown", e => {
+    if (e.target !== wrap || e.altKey || e.ctrlKey || e.metaKey || game !== g || g.phase !== "q") return;
+    const r = svg.getBoundingClientRect(), c = g.kcur || (g.kcur = { x: r.width / 2, y: r.height / 2 }), step = e.shiftKey ? 56 : 16;
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    const client = () => ({ clientX: r.left + c.x, clientY: r.top + c.y });
+    if (dir) {
+      let nx = c.x + dir[0] * step, ny = c.y + dir[1] * step, px = 0, py = 0;
+      if (nx < 0) { px = nx; nx = 0; } else if (nx > r.width) { px = nx - r.width; nx = r.width; }
+      if (ny < 0) { py = ny; ny = 0; } else if (ny > r.height) { py = ny - r.height; ny = r.height; }
+      c.x = nx; c.y = ny;
+      if ((px || py) && g.view) { const k = g.view.w / r.width, v = g.view; g.view = clampView({ x: v.x + px * k, y: v.y + py * k, w: v.w, h: v.h }, view0()); applyView(); } // au bord : la carte se déplace
+    } else if (e.key === "Enter" || e.key === " ") {
+      const q = client(), grp = document.getElementById("mapg"), pt = svg.createSVGPoint(); pt.x = q.clientX; pt.y = q.clientY;
+      E().onTap(g, pt.matrixTransform(grp.getScreenCTM().inverse()), q);
+    } else if (["+", "=", "-", "_"].includes(e.key) && g.view) {
+      const q = client(), s = toSvg(svg, q.clientX, q.clientY); zoomAt(["+", "="].includes(e.key) ? 1.7 : 1 / 1.7, s.x, s.y);
+    } else if (e.key === "0" && g.view) tweenView(view0());
+    else return;
+    e.preventDefault(); wrap.classList.add("kbd"); place();
+  });
 }
 function drawPins() {
   const g = game; if (!g || FORMATS[g.fmt].eng !== "carte") return;
