@@ -6,6 +6,17 @@
 
 Fichiers : `supabase/migrations/20261112000000_lot3_init.sql` (base), `supabase/seed.sql` (généré depuis le code par `scripts/gen-supabase-seed.py`), `supabase/tests/smoke.sql` (test des triches).
 
+## Avancement des étapes
+- **Étape 1 (base)** : ✅ appliquée et vérifiée (43/43).
+- **Étape 2 (v19) : ✅ code écrit et testé contre le vrai projet** (`src/pS_server.js`) : session anonyme, profil et groupes réels (création, rejoindre par code, erreurs en français, hors ligne), passage en ligne des profils existants, réinitialisation qui supprime aussi le compte en ligne, liste réelle des membres dans le menu. **Récupération par e-mail : code écrit, non testé de bout en bout** (il faut un vrai e-mail et le réglage des modèles ci-dessous).
+- Étapes 3 (suite des groupes), 4, 5, 6, 7, 8 : à faire. Le classement et les essais sont encore locaux et simulés.
+
+### Réglage requis pour l'e-mail (tableau de bord Supabase → Authentication → Email Templates)
+L'application envoie un **code à 6 chiffres** (pas de lien : un lien ouvrirait le navigateur, pas l'application installée). Pour qu'il apparaisse dans l'e-mail, ajouter `{{ .Token }}` dans deux modèles :
+1. **Magic Link** (connexion sur un autre téléphone). Objet : `Ton code Méridien`. Corps : `<h2>Ton code Méridien</h2><p>Voici ton code de connexion : <b>{{ .Token }}</b></p><p>Il est valable une heure. Si tu n'as rien demandé, ignore ce message.</p>`
+2. **Change Email Address** (sauvegarde du compte depuis le menu). Objet : `Confirme ton adresse Méridien`. Corps : `<h2>Confirme ton adresse</h2><p>Ton code : <b>{{ .Token }}</b></p>`
+Limite : l'envoi d'e-mails par défaut de Supabase est très restreint en volume ; un SMTP personnalisé sera nécessaire pour plus de quelques joueurs.
+
 ## 1. L'idée en une phrase
 Le téléphone **joue** ; le serveur **décide** de ce qui se compare : quel jour on est, combien d'essais il reste, quel score est enregistré, combien de boussoles on gagne. Le téléphone n'écrit jamais lui-même dans ces tables : il demande à une fonction du serveur, qui vérifie.
 

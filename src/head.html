@@ -216,7 +216,7 @@ hr.podium{width:70%;border:0;height:2px;background:var(--line);margin:2px 0}
 .coach{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--purple);border-radius:20px 20px 20px 6px;padding:10px 14px 10px 10px;box-shadow:0 3px 0 var(--lip);text-align:left}
 .coach p{font-weight:700;font-size:15px;line-height:1.35;color:var(--ink)}
 .coach .av{flex:none}
-.tnotice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;background:var(--yellow-soft);color:#3A2F00;border:2px solid var(--yellow-line);border-radius:18px;padding:12px 14px;margin:4px 0;font-weight:700;font-size:14.5px;line-height:1.35}
+.tnotice{display:flex;flex-direction:column;align-items:flex-start;gap:4px;background:var(--yellow-soft);color:var(--ink);border:2px solid var(--yellow-line);border-radius:18px;padding:12px 14px;margin:4px 0;font-weight:700;font-size:14.5px;line-height:1.35}
 .tnotice .kicker{color:var(--gold-t)}
 .tnotice b{font-family:var(--fd);font-weight:800;font-size:15px}
 .tnotice .smallbtn{margin-top:6px}
@@ -744,6 +744,12 @@ input,textarea,.codebox code,.bubble .tx{-webkit-user-select:text;user-select:te
 .rx{position:relative}
 .rx::after{content:"";position:absolute;inset:-12px -4px}
 .seg.three{grid-template-columns:repeat(3,1fr)}
+.plainform{display:flex;flex-direction:column;align-items:flex-start;gap:10px;width:100%}
+.plainform .field{width:100%}
+.plainform .field input{box-sizing:border-box;width:100%}
+.mlist{list-style:none;display:flex;flex-direction:column;gap:8px;margin:0;padding:0}
+.mrow{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;min-height:44px}
+.plainlink{color:var(--ink-2);text-decoration:underline;font-weight:800}
 .stickybtn{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:4}
 </style>
 </head>

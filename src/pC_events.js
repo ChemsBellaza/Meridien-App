@@ -15,22 +15,26 @@ document.addEventListener("submit", e => {
   if (e.target.id === "onbForm") {
     captureDrafts();
     const name = ui.draftName.trim();
-    const err = document.getElementById("onbErr");
-    const fail = m => { err.textContent = m; err.hidden = false; };
+    const err = document.getElementById("onbErr"), btn = e.target.querySelector('button[type="submit"]');
+    const fail = m => { err.textContent = m; err.hidden = false; if (btn) btn.disabled = false; };
     if (name.length < 2) return fail("Choisis un pseudo d'au moins 2 caractères.");
-    let group, code;
+    let group = "", code = "";
     if (ui.onbTab === "create") {
-      group = (ui.draftGroup.trim() || "Les Cartographes");
-      const ab = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; code = "MER-" + Array.from({ length: 4 }, () => ab[Math.floor(Math.random() * ab.length)]).join("");
+      group = ui.draftGroup.trim(); if (group.length < 2) return fail(srvMsg("bad_name"));
     } else {
-      code = ui.draftCode.trim().toUpperCase();
-      if (!/^[A-Z0-9-]{4,8}$/.test(code)) return fail("Ce code n'est pas valide. Il ressemble à MER-4K7Q.");
-      group = "Groupe " + code;
+      code = ui.draftCode.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (code.length < 4) return fail("Entre le code que ton ami t'a donné.");
     }
-    store.profile = { name, group, code, created: today(), pet: defaultPet(ui.draftPet), tuto: { done: false, seen: {} } };
-    if (ui.draftPhoto) store.profile.photo = ui.draftPhoto;
-    store.profile.seen = unlockedIds(progress());
-    save(); go("welcome");
+    // le profil et le groupe sont créés sur le serveur (code vérifié, groupe partagé avec les amis)
+    if (btn) btn.disabled = true; err.textContent = "Connexion au serveur…"; err.hidden = false;
+    const pet = defaultPet(ui.draftPet);
+    srvOnboard({ name, mode: ui.onbTab, group, code }, pet).then(r => {
+      if (!r.ok) return fail(srvMsg(r.error));
+      store.profile = { name, group: r.group.name, code: r.group.code, created: today(), pet, tuto: { done: false, seen: {} }, srv: { uid: SRV.sess.user.id } };
+      if (ui.draftPhoto) store.profile.photo = ui.draftPhoto;
+      store.profile.seen = unlockedIds(progress());
+      save(); SRV.members = null; go("welcome");
+    });
   }
   if (e.target.id === "msgForm") {
     const inp = document.getElementById("msg"), text = inp.value.trim();

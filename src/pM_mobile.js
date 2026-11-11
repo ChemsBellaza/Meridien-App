@@ -23,7 +23,7 @@
 
 /* ---------- 2) bouton retour ---------- */
 let backPushed = false, backIgnore = false, backWant = false;
-const backDepth = () => !!(typeof game !== "undefined" && game) || !!ui.sheet || !!ui.confirm || !!(store.profile && !["group", "onboard", "welcome"].includes(ui.view));
+const backDepth = () => !!(typeof game !== "undefined" && game) || !!ui.sheet || !!ui.confirm || ui.view === "recover" || !!(store.profile && !["group", "onboard", "welcome"].includes(ui.view));
 function pushBack() { try { history.pushState({ meridien: 1 }, ""); backPushed = true; } catch (e) { backPushed = false; } }
 function syncBack() {
   const deep = backDepth();
@@ -37,6 +37,7 @@ window.addEventListener("popstate", () => {
   if (ui.confirm) { ui.confirm = null; game ? renderGame() : render(); }
   else if (game) { const q = document.querySelector('[data-g="quit"]'); if (q) q.click(); else exitGame(); }
   else if (ui.sheet) { ui.sheet = false; render(); }
+  else if (ui.view === "recover") { ui.rec = null; ui.view = store.profile ? "group" : "onboard"; render(); }
   else if (store.profile && !["group", "onboard", "welcome"].includes(ui.view)) { const b = document.querySelector('[data-act="back"]'); if (b) b.click(); else go("group"); }
   syncBack();
 });

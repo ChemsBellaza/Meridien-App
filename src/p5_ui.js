@@ -18,8 +18,10 @@ function render() {
     const pp = progress(); Object.assign(store.profile.pet, { stage: String(ITEMS.stage.list.filter(it => isUnlocked(it, pp)).length), shiny: "normal", bg: "type" }); save();
   }
   let html = "";
-  if (!store.profile) html = vOnboard();
+  if (ui.view === "recover") html = vRecover();
+  else if (!store.profile) html = vOnboard();
   else if (!store.profile.pet) html = vPickPet();
+  else if (ui.view === "online") html = vOnline();
   else if (ui.view === "welcome" || (ui.view === "group" && !tutoState().done)) html = vWelcome();
   else if (ui.view === "history") html = vHistory();
   else if (ui.view === "season") html = vSeason();
@@ -50,6 +52,7 @@ function vOnboard() {
     <div class="ohead"><span class="brand">${logoMark(52)}<span class="kicker">Méridien</span></span><h1 class="display">Choisis ton familier</h1><p class="qsub">Il t'accompagne, réagit à tes parties et se personnalise au fil des jours.</p></div>
     ${petPicker()}
     <button class="btn" data-act="onbnext">Partir avec ${esc(SPECIES[ui.draftPet].names[0])}</button>
+    <button class="linkbtn plainlink" data-act="recover">J'ai déjà un compte</button>
     <p class="note center">Les familiers verrouillés se gagnent en jouant : séries, parties, victoires et boussoles.</p>
   </div>`;
   const t = ui.onbTab, S = SPECIES[ui.draftPet];
@@ -67,11 +70,11 @@ function vOnboard() {
       </div>
       ${t === "create"
         ? `<div class="field"><label for="gname">Nom du groupe</label><input id="gname" maxlength="24" value="${esc(ui.draftGroup)}"></div>`
-        : `<div class="field"><label for="gcode">Code du groupe</label><input id="gcode" maxlength="8" placeholder="Ex. : MER-4K7Q" style="text-transform:uppercase" value="${esc(ui.draftCode)}"></div>`}
-      <p class="err" id="onbErr" hidden></p>
+        : `<div class="field"><label for="gcode">Code du groupe</label><input id="gcode" maxlength="8" placeholder="Ex. : K7Q4ZP" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase" value="${esc(ui.draftCode)}"></div>`}
+      <p class="err" id="onbErr" role="alert" hidden></p>
       <button class="btn" type="submit">${t === "create" ? "Créer le groupe" : "Rejoindre"}</button>
     </form>
-    <p class="note center">Prototype : les autres membres du groupe sont simulés pour tester le jeu.</p>
+    <p class="note center">Une connexion est nécessaire pour créer ton profil. Les autres membres de ton groupe sont de vrais joueurs ; le classement reste simulé pour l'instant.</p>
   </div>`;
 }
 
@@ -110,7 +113,7 @@ function vGroup() {
     ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
     ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
   </div>
-  ${tutoNotice()}
+  ${tutoNotice()}${onlineNotice()}
   <section class="today" aria-label="Défi du jour">
     <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
@@ -252,7 +255,8 @@ function vSheet() {
       <div class="seg light three" role="group" aria-label="Temps de réflexion">${[[1, "Normal"], [1.5, "× 1,5"], [2, "× 2"]].map(([v, l]) => `<button data-act="timepref" data-v="${v}" aria-pressed="${timeFactor() === v}">${l}</button>`).join("")}</div>
       <p class="note">Allonge tous les chronos pour jouer à ton rythme. Le bonus de rapidité se calcule sur le temps que tu as.</p></div>
     ${mobileSheetBlocks()}
-    <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(store.profile.code)}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
+    ${accountSheetBlock()}
+    <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
     <div><div class="kicker" style="margin-bottom:8px">Entraînement · non compté</div><div class="fmtgrid">${Object.keys(FORMATS).map(f => `<button class="fmtbtn" data-act="practice" data-v="${f}">${art(f, "p" + f)}<span class="lab">${FORMATS[f].name}</span></button>`).join("")}</div></div>
     <button class="smallbtn" data-act="tuto">Revoir le tutoriel</button>
     <button class="btn ghost" data-act="closesheet">Fermer</button>
@@ -308,7 +312,12 @@ document.addEventListener("click", e => {
     case "onbback": captureDrafts(); ui.onbStep = "pet"; render(); break;
     case "pickpet-ok": store.profile.pet = defaultPet(ui.draftPet); store.profile.seen = unlockedIds(progress()); save(); go("group"); break;
     case "photo-rm": captureDrafts(); if (store.profile) { delete store.profile.photo; save(); } else ui.draftPhoto = null; render(); break;
-    case "menu": ui.sheet = true; ui.toast = ""; render(); break;
+    case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); break;
+    case "goonline": ui.sheet = false; go("online"); break;
+    case "recover": ui.sheet = false; ui.rec = { step: 0, email: "", msg: "" }; go("recover"); break;
+    case "recoverback": ui.rec = null; ui.view = store.profile ? "group" : "onboard"; go(ui.view); break;
+    case "recoveragain": ui.rec = { step: 0, email: (ui.rec && ui.rec.email) || "", msg: "" }; render(); break;
+    case "acctagain": ui.acct = { step: 0, email: (ui.acct && ui.acct.email) || "", msg: "" }; render(); break;
     case "closesheet": ui.sheet = false; render(); break;
     case "history": ui.sheet = false; go("history"); break;
     case "season": go("season"); break;
@@ -331,7 +340,7 @@ document.addEventListener("click", e => {
     case "play": startGame(false); break;
     case "practice": ui.sheet = false; startGame(true, v); break;
     case "copy": copyCode(); break;
-    case "askreset": ui.sheet = false; ui.confirm = { title: "Réinitialiser ?", text: "Ton pseudo, ta photo, ton groupe, ton familier, tes scores et tes messages seront effacés de cet appareil.", yes: "Effacer", no: "Annuler", run: () => { store = emptyStore(); save(); ui.view = "onboard"; ui.onbStep = "pet"; ui.draftPet = "renard"; ui.draftName = ""; ui.draftPhoto = null; } }; render(); break;
+    case "askreset": ui.sheet = false; ui.confirm = { title: "Réinitialiser ?", text: store.profile && store.profile.srv ? "Ton compte en ligne, ta place dans le groupe, ton familier et tes scores seront supprimés, ici et sur le serveur. Cette action est définitive." : "Ton pseudo, ta photo, ton groupe, ton familier, tes scores et tes messages seront effacés de cet appareil.", yes: "Effacer", no: "Annuler", run: () => { srvResetAccount(); store = emptyStore(); save(); ui.view = "onboard"; ui.onbStep = "pet"; ui.draftPet = "renard"; ui.draftName = ""; ui.draftPhoto = null; } }; render(); break;
     case "confirm-no": ui.confirm = null; game ? renderGame() : render(); break;
     case "confirm-yes": { const run = ui.confirm.run; ui.confirm = null; run(); game ? renderGame() : render(); break; }
   }
