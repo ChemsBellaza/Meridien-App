@@ -43,7 +43,7 @@ window.addEventListener("popstate", () => {
 
 /* ---------- 3) vibrations ---------- */
 const hapticsOn = () => !!navigator.vibrate && !(store.prefs && store.prefs.haptics === false);
-function buzz(pattern) { try { if (hapticsOn() && !reduceMotion()) navigator.vibrate(pattern); } catch (e) {} }
+function buzz(pattern) { try { if (hapticsOn() && !reduceMotion() && !(navigator.userActivation && !navigator.userActivation.hasBeenActive)) navigator.vibrate(pattern); } catch (e) {} } // le navigateur refuse de vibrer avant le premier toucher
 
 /* ---------- 4) installation ---------- */
 let deferredInstall = null;
