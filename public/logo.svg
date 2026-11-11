@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Logo de l'application">
+  <rect width="512" height="512" rx="112" fill="#6B5BE2"/>
+  <circle cx="256" cy="274" r="144" fill="#4C3EBE"/>
+  <circle cx="256" cy="256" r="144" fill="#FFF6EC" stroke="#2A2333" stroke-width="16"/>
+  <g fill="none" stroke="#2A2333" stroke-width="12" stroke-linecap="round">
+    <ellipse cx="256" cy="256" rx="64" ry="144"/>
+    <path d="M256 112V400M112 256H400"/>
+  </g>
+  <path d="M370 100l10 36 36 10-36 10-10 36-10-36-36-10 36-10z" fill="#FFC24A" stroke="#2A2333" stroke-width="10" stroke-linejoin="round"/>
+</svg>

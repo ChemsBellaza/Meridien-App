@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v13.2** — Logo : globe crème à contours épais, ombre « lèvre » et étincelle dorée (`public/logo.svg`, fonction `logoMark()` dans `p5_ui.js`, icônes régénérées par `scripts/make-icons.py`, favicon). Affiché sur le premier écran. Motif neutre (indépendant du nom définitif, qui reste à choisir).
+
 - **v13.1** — Polices Nunito (latin + latin-ext) et Unbounded (latin) embarquées dans `public/fonts/` (polices variables, 3 fichiers, ~220 Ko) ; Google Fonts supprimé ; précache hors ligne (`sw.js`, cache v2). Vérifié : polices chargées, zéro requête externe.
 
 - **v13 (lot 2b, partie 1)** — PWA installable : `public/` (manifeste, service worker « réseau d'abord », icônes 192/512/maskable/Apple générées par `scripts/make-icons.py`) copié dans `dist/` par les trois builds, qui écrivent aussi `dist/index.html` (GitHub Pages). Vérifié : service worker actif, cache de 6 fichiers, page ouverte serveur coupé. Restent : polices embarquées, drapeaux SVG.

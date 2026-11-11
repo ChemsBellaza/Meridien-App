@@ -40,9 +40,12 @@ const pill = (icon, val, act, aria) => `<button class="spill" data-act="${act}" 
 const labels = (small, big) => `<span class="labels">${small ? `<span class="lab sm">${small}</span>` : ""}<span class="lab">${big}</span></span>`;
 const toi = `<span class="toi">TOI</span>`;
 
+// Logo : même dessin que public/logo.svg (globe, ombre « lèvre », étincelle). Décoratif : le nom est écrit à côté.
+const logoMark = (px = 44) => `<svg class="logomark" width="${px}" height="${px}" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><rect width="512" height="512" rx="112" fill="#6B5BE2"/><circle cx="256" cy="274" r="144" fill="#4C3EBE"/><circle cx="256" cy="256" r="144" fill="#FFF6EC" stroke="#2A2333" stroke-width="16"/><g fill="none" stroke="#2A2333" stroke-width="12" stroke-linecap="round"><ellipse cx="256" cy="256" rx="64" ry="144"/><path d="M256 112V400M112 256H400"/></g><path d="M370 100l10 36 36 10-36 10-10 36-10-36-36-10 36-10z" fill="#FFC24A" stroke="#2A2333" stroke-width="10" stroke-linejoin="round"/></svg>`;
+
 function vOnboard() {
   if (ui.onbStep === "pet") return `<div class="onb">
-    <div class="ohead"><span class="kicker">Méridien</span><h1 class="display">Choisis ton familier</h1><p class="qsub">Il t'accompagne, réagit à tes parties et se personnalise au fil des jours.</p></div>
+    <div class="ohead"><span class="brand">${logoMark(52)}<span class="kicker">Méridien</span></span><h1 class="display">Choisis ton familier</h1><p class="qsub">Il t'accompagne, réagit à tes parties et se personnalise au fil des jours.</p></div>
     ${petPicker()}
     <button class="btn" data-act="onbnext">Partir avec ${esc(SPECIES[ui.draftPet].names[0])}</button>
     <p class="note center">Les familiers verrouillés se gagnent en jouant : séries, parties, victoires et boussoles.</p>
