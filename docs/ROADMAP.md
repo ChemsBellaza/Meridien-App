@@ -9,7 +9,7 @@
 - Manifeste (`name`, icônes 192/512 + maskable, `theme_color`, `display: standalone`), service worker (cache hors-ligne du HTML), icône d'écran d'accueil.
 - ~~Embarquer les polices~~ (fait, v13.1). Restent : manifeste ✅, service worker ✅ ; drapeaux SVG ✅ (v14).
 - ~~Tutoriel de première partie ; introduction progressive des systèmes~~ ✅ (v15). À faire plus tard : tester auprès de vrais nouveaux joueurs et ajuster les jours de déblocage.
-- Écran de fin de partie plus lisible (points, rang, progression vers l'évolution).
+- ~~Écran de fin de partie plus lisible (points, rang, progression vers l'évolution)~~ ✅ (v16).
 - Mode clavier pour les cartes (Pays mystère, géographie) : saisie ou liste de pays (WCAG 2.1.1) ; icônes/mots en plus des couleurs chaud/froid (1.4.1).
 - Option « temps rallongé » pour les chronos courts (WCAG 2.2.1).
 - Texte violet sur fond sombre (~3,7:1) : ajouter un jeton `--purple-t` ≥ 4,5:1.

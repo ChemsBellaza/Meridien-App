@@ -12,6 +12,7 @@ document.addEventListener("click", e => {
   if (a === "diff") { chooseDiff(+v); return; }
   if (a === "next") { nextStep(); return; }
   if (a === "exit") { exitGame(); return; }
+  if (a === "replay") { exitGame(); startGame(false); return; }
   if (a === "topet") { exitGame(); go("pet", { prevView: "group" }); return; }
   if (a === "share" || a === "challenge") { shareResult(a === "challenge"); return; }
   if (a === "joker") { useJoker(); return; }

@@ -55,6 +55,7 @@ function renderGame() {
   $app.className = "";
   setAppHTML(`<div class="game"><div class="gwrap">${body}</div></div>${ui.confirm ? vConfirm() : ""}${ui.toast && ui.toast !== "copied" ? `<div class="toast" role="status">${esc(ui.toast)}</div>` : ""}`);
   afterGameRender();
+  if (g.phase === "end") announce(`Partie terminée : ${fmtNum(g.score)} points.`);
   if (g.phase === "reveal") { const r = document.querySelector(".reveal"); if (r) { const t = r.querySelector(".gain b"), a = r.querySelector(".ans"); announce(`${t ? t.textContent + " points. " : ""}${a ? a.textContent : ""}`); } }
 }
 const roundChip = (m, i) => `<span class="rnd" style="--c:${m.color}"><i class="num">${i + 1}</i>${mIcon(m, 16)}${esc(m.label)}</span>`;
@@ -71,6 +72,23 @@ function revealBox() {
   </div>`;
 }
 
+/* carte « prochaine étape » : progression vers l'évolution du familier, puis vers le prochain déblocage une fois au stade 3 */
+function endProgress() {
+  const pet = store.profile.pet, Sp = SPECIES[pet.species], prog = progress();
+  const maxStage = ITEMS.stage.list.filter(it => isUnlocked(it, prog)).length; // dernier stade débloqué (on peut en choisir un plus bas)
+  const bar = (have, total, label) => `<div class="bar" role="progressbar" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${have}"><i style="--w:${Math.round(have / total * 100)}%"></i></div>`;
+  if (maxStage < 3) {
+    const n = EVO_NEED[maxStage], have = Math.min(prog.games, n.v), left = n.v - prog.games;
+    const from = Sp.names[maxStage - 1], to = Sp.names[maxStage];
+    return `<div class="nextcard" style="--c:${TYPES[Sp.type].color}"><span class="evopair">${petAv({ ...pet, stage: String(maxStage) }, "md", from)}<i aria-hidden="true">›</i>${petAv({ ...pet, stage: String(maxStage + 1) }, "md", to)}</span>
+      <div class="grow"><span class="mono">Prochaine évolution</span><b>${esc(from)} évolue en ${esc(to)}</b>${bar(have, n.v, "Progression vers l'évolution")}
+      <span class="note">${have} sur ${n.v} parties terminées · plus que ${left} partie${left > 1 ? "s" : ""}</span></div></div>`;
+  }
+  const nx = nextUnlock(prog); if (!nx) return "";
+  const have = Math.min(nx.have, nx.it.need.v);
+  return `<div class="nextcard"><div class="grow"><span class="mono">Prochain déblocage</span><b>${esc(ITEMS[nx.cat].label)} : ${esc(nx.it.label)}</b>${bar(have, nx.it.need.v, "Progression vers le prochain déblocage")}<span class="note">${esc(reqText(nx.it.need))}</span></div></div>`;
+}
+
 function vEnd() {
   if (game.tuto) return vEndTuto();
   const g = game, F = FORMATS[g.fmt], mine = g.practice ? [] : store.plays[g.k];
@@ -81,22 +99,30 @@ function vEnd() {
   const pet = store.profile.pet, Sp = SPECIES[pet.species];
   const maxP = g.manches.reduce((s, m, i) => s + F.max * CONFIG.mult[g.diffs[i] ?? 0], 0), ratio = g.score / maxP, kind = ratio >= .6 ? "good" : ratio >= .3 ? "mid" : "bad";
   const stamps = g.newStamps || [];
+  const record = !g.practice && g.tryIdx > 0 && mine.slice(0, -1).every(p => p.score < g.score);
+  const tiles = me ? `<div class="stats3">
+      <div class="stile"><span class="sm">Rang du jour</span><b class="big num">N°${me.pos}</b><span class="sm">sur ${res.N} joueur${res.N > 1 ? "s" : ""}</span></div>
+      <div class="stile"><span class="sm">Boussoles</span><b class="big num">+${me.gems}</b><span class="sm">${I.compass(14)}gagnées</span></div>
+      <div class="stile"><span class="sm">Essai</span><b class="big num">${g.tryIdx + 1}/${CONFIG.tries}</b><span class="sm">meilleur : ${fmtNum(best)}</span></div>
+    </div>` : "";
   return `
-    <div style="display:flex;justify-content:space-between;align-items:center"><span class="mono muted">${esc(F.name)} · ${g.practice ? "entraînement" : "essai " + (g.tryIdx + 1)}</span>${g.practice ? `<span class="flag mono">Non compté</span>` : ""}</div>
+    <div class="endhead"><span class="mono muted">${esc(F.name)} · ${g.practice ? "entraînement" : "essai " + (g.tryIdx + 1)}</span>${g.practice ? `<span class="flag mono">Non compté</span>` : ""}</div>
     <div class="react"><span class="rtile">${petSVG(pet, { mood: kind === "good" ? "joy" : kind === "bad" ? "sad" : null })}</span><div class="say3"><b>${esc(petName(pet))}</b><span>${fr(petLine(pet.species, kind, g.k + g.tryIdx))}</span></div></div>
-    <div class="endscore"><div class="v num">${fmtNum(g.score)}</div><div class="u">points</div>
-      ${me ? `<div class="tags" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><span class="tag num" style="font-size:14px;padding:3px 9px">N°${me.pos} du jour</span><span class="tag num" style="font-size:14px;padding:3px 9px">+${me.gems} ${I.compass(15)}</span></div>` : ""}
-      ${!g.practice && best > g.score ? `<p class="muted" style="font-weight:700;margin-top:6px">Ton meilleur score du jour reste ${fmtNum(best)} pts.</p>` : ""}
-      ${!g.practice && g.tryIdx === 1 && mine.length > 1 && mine[0].score < g.score ? `<p style="font-weight:800;color:var(--ok);margin-top:6px">Nouveau record du jour !</p>` : ""}
-    </div>
+    <section class="endscore" aria-label="Ton score"><div class="v num">${fmtNum(g.score)}</div><div class="u">points</div>
+      ${record ? `<span class="recordtag">${I.trophy(16)}Nouveau record du jour</span>` : ""}
+      ${!g.practice && !record && best > g.score ? `<p class="muted endnote">Ton meilleur score du jour reste ${fmtNum(best)} pts.</p>` : ""}
+    </section>
+    ${tiles}
+    ${(g.newAch || []).map(a => `<div class="unlock ach"><span class="medal">${achIcon(a, 46)}</span><div><span class="mono">Succès débloqué</span><b>${esc(a.label)}</b><span class="usub">${esc(a.desc)}</span></div></div>`).join("")}
+    ${g.newUnlocks.filter(u => u.cat === "stage").map(u => `<div class="unlock evolve" style="--c:${TYPES[Sp.type].color}"><span class="evopair">${petAv({ ...pet, stage: String(+u.it.id - 1) }, "lg", "Avant")}<i aria-hidden="true">›</i>${petAv({ ...pet, stage: u.it.id }, "lg", "Après")}</span><div><span class="mono">Évolution !</span><b>${esc(Sp.names[+u.it.id - 2])} évolue en ${esc(Sp.names[+u.it.id - 1])}</b><span class="usub">Stade ${u.it.id} · ${reqText(u.it.need)}</span></div></div>`).join("")}
+    ${g.newUnlocks.filter(u => u.cat !== "stage").map(u => `<div class="unlock">${petAv(u.cat === "species" ? { ...store.profile.pet, species: u.it.id } : { ...store.profile.pet, [u.cat]: u.it.id }, "lg", u.it.label)}<div><span class="mono">${u.cat === "species" ? "Nouveau familier" : u.cat === "shiny" ? "Couleurs chromatiques" : "Nouveau fond"}</span><b>${esc(u.it.label)}</b><span class="usub">${esc(ITEMS[u.cat].label)} · ${reqText(u.it.need)}</span></div></div>`).join("")}
+    ${endProgress()}
     <div class="breakdown">${g.manches.map((m, i) => `<div class="bd">${mancheChip({ ...m, label: g.mlabel[i] || m.label })}<span>${g.diffs[i] != null ? diffChip(g.diffs[i]) : ""}</span><span class="num">${fmtNum(g.roundPts[i])}</span></div>`).join("")}</div>
-    ${g.practice ? "" : `<div class="sharerow"><button class="btn ghost" data-g="share">${I.share(20)}Partager</button><button class="btn ghost" data-g="challenge">${I.duel(20)}Défier un ami</button></div>`}
     ${stamps.length ? `<div class="stampcard"><div class="mono">Carnet de voyage · +${stamps.length} pays</div><div class="stamps">${stamps.slice(0, 18).map(id => `<span class="stamp" title="${esc(CBY[id] ? CBY[id].name : id)}">${CBY[id] ? flagOf(CBY[id]) : ""}</span>`).join("")}${stamps.length > 18 ? `<span class="stamp more num">+${stamps.length - 18}</span>` : ""}</div><span class="note">${Object.keys(store.carnet).length} pays tamponnés sur ${COUNTRIES.length}.</span></div>` : ""}
-    ${(g.newAch || []).map(a => `<div class="unlock ach"><span class="medal">${achIcon(a, 46)}</span><div><span class="mono">Succès débloqué</span><b>${esc(a.label)}</b><span style="font-size:13px;font-weight:600">${esc(a.desc)}</span></div></div>`).join("")}
-    ${g.newUnlocks.filter(u => u.cat === "stage").map(u => `<div class="unlock evolve" style="--c:${TYPES[Sp.type].color}"><span class="evopair">${petAv({ ...pet, stage: String(+u.it.id - 1) }, "lg", "Avant")}<i aria-hidden="true">›</i>${petAv({ ...pet, stage: u.it.id }, "lg", "Après")}</span><div><span class="mono">Évolution !</span><b>${esc(Sp.names[+u.it.id - 2])} évolue en ${esc(Sp.names[+u.it.id - 1])}</b><span style="font-size:13px;font-weight:600">Stade ${u.it.id} · ${reqText(u.it.need)}</span></div></div>`).join("")}
-    ${g.newUnlocks.filter(u => u.cat !== "stage").map(u => `<div class="unlock">${petAv(u.cat === "species" ? { ...store.profile.pet, species: u.it.id } : { ...store.profile.pet, [u.cat]: u.it.id }, "lg", u.it.label)}<div><span class="mono">${u.cat === "species" ? "Nouveau familier" : u.cat === "shiny" ? "Couleurs chromatiques" : "Nouveau fond"}</span><b>${esc(u.it.label)}</b><span style="font-size:13px;font-weight:600">${esc(ITEMS[u.cat].label)} · ${reqText(u.it.need)}</span></div></div>`).join("")}
-    ${g.learned.length ? `<details class="learned" open><summary>Ce que tu as appris (${g.learned.length})</summary><ul>${g.learned.slice(0, 14).map(l => `<li><b>${fr(l.t)}</b>${l.f ? ` : ${fr(l.f)}` : ""}</li>`).join("")}</ul></details>` : ""}
+    ${g.learned.length ? `<details class="learned"><summary>Ce que tu as appris (${g.learned.length})</summary><ul>${g.learned.slice(0, 14).map(l => `<li><b>${fr(l.t)}</b>${l.f ? ` : ${fr(l.f)}` : ""}</li>`).join("")}</ul></details>` : ""}
+    ${g.practice ? "" : `<div class="sharerow"><button class="btn ghost" data-g="share">${I.share(20)}Partager</button><button class="btn ghost" data-g="challenge">${I.duel(20)}Défier un ami</button></div>`}
     ${g.newUnlocks.length ? `<button class="btn ghost" data-g="topet">Voir mon familier</button>` : ""}
-    <button class="btn" data-g="exit">${g.practice ? "Retour" : "Voir le classement"}</button>
-    ${left > 0 ? `<p class="note">Il te reste ${left} essai aujourd'hui, avec un nouveau contenu.</p>` : ""}`;
+    ${left > 0
+      ? `<button class="btn" data-g="replay"><span class="stack">Rejouer<small>Essai ${mine.length + 1} sur ${CONFIG.tries} · nouvelles questions</small></span></button><button class="btn ghost" data-g="exit">Voir le classement</button>`
+      : `<button class="btn" data-g="exit">${g.practice ? "Retour" : "Voir le classement"}</button>`}`;
 }
