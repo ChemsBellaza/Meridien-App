@@ -14,8 +14,8 @@ function Call($tok, $method, $path, $body, $extra) {
   catch { $resp = $_.Exception.Response; $b = ""; if ($resp) { try { $b = (New-Object IO.StreamReader($resp.GetResponseStream())).ReadToEnd() } catch {} }; return [pscustomobject]@{ __http_error = $(if ($resp) { [int]$resp.StatusCode } else { 0 }); body = $b } }
 }
 function Check($name, $cond, $detail) { if ($cond) { "OK    $name" } else { "ECHEC $name :: $detail"; $script:fails += $name } }
-function N($r) { if ($null -eq $r -or "$r" -eq "") { return 0 } elseif ($r.__http_error) { return "ERR" + $r.__http_error } else { return @($r).Count } }
-function Cnt($tok, $path) { $r = Call $tok "Get" $path $null $null; if ($null -eq $r -or "$r" -eq "") { return 0 } elseif ($r.__http_error) { return "ERR" + $r.__http_error } else { return @($r).Count } }
+function N($r) { if ($null -eq $r -or "$r" -eq "") { return 0 } elseif (($r -isnot [array]) -and $r.__http_error) { return "ERR" + $r.__http_error } else { return @($r).Count } }
+function Cnt($tok, $path) { $r = Call $tok "Get" $path $null $null; if ($null -eq $r -or "$r" -eq "") { return 0 } elseif (($r -isnot [array]) -and $r.__http_error) { return "ERR" + $r.__http_error } else { return @($r).Count } }
 function Rpc($tok, $fn, $args2) { Call $tok "Post" "/rest/v1/rpc/$fn" $(if ($args2) { $args2 } else { @{} }) $null }
 function Signup($name) { $s = Call $null "Post" "/auth/v1/signup" @{} $null; $users[$name] = @{ tok = $s.access_token; id = $s.user.id }; $p = Call $s.access_token "Post" "/rest/v1/profiles" @{ id = $s.user.id; pseudo = $name } @{ Prefer = "return=minimal" }; Check "profil $name créé" (-not $p.__http_error) ($p.body) }
 
