@@ -33,6 +33,13 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 ## PWA
 Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `dist/` par les builds ; `dist/` entier est à publier (GitHub Pages), pas seulement le HTML. Le service worker (seule exception à « pas de fetch », uniquement pour les fichiers de l'appli) est « réseau d'abord » ; changer `CACHE` dans `sw.js` pour vider les caches. Les icônes se régénèrent avec `python scripts/make-icons.py` (Pillow).
 
+## Smartphone d'abord (le jeu se joue au doigt)
+- Toute zone tapable fait **au moins 44 × 44 px** (hauteur minimale ou zone invisible `::after` élargie). Champs de saisie ≥ 16 px (sinon iOS zoome).
+- Écran de jeu : `.game` est `position: fixed` et s'arrête à `bottom: var(--kb)` (hauteur du clavier, `pM_mobile.js`) ; un bouton d'action sous des champs de saisie reçoit `.stickybtn`.
+- Bouton retour : `syncBack()` est appelé à la fin de `render()` et `renderGame()`. Tout nouvel « écran » ou fenêtre doit faire partie de `backDepth()` et être refermable par le bouton retour dans le gestionnaire `popstate`.
+- Retour tactile : `buzz(ms)` (Android seulement, réglable). Pas de survol (`:hover`) comme seule indication.
+- `pM_mobile.js` est placé juste après `pA_core.js` dans `order.json` (même raison que `pT_tuto.js`).
+
 ## Accessibilité : acquis à ne pas casser
 - Texte violet : `var(--purple-t)` (≥ 4,5:1 clair et sombre), jamais `var(--purple)` pour du texte.
 - Une carte avec toucher (`E().onTap`) est focusable (`#mapwrap`) et pilotable au clavier via `bindMapKeys` : tout nouveau jeu à carte doit passer par `bindMap(svg)`.

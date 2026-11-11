@@ -415,7 +415,7 @@ ENG.petitbac = {
         ${r.bots.length ? `<div class="pbbots">${r.bots.map(b => `<span class="pchip"><i style="background:${b.color}"></i>${esc(b.name)} : ${esc(b.ans)}</span>`).join("")}</div>` : ""}</div>`).join("")}</div>`;
     return `<div class="pbhead sticky"><span class="bigletter">${q.L}</span><div class="grow">${timerHTML(true)}<span class="note">${q.cats.length} catégories · tout en ${q.L}</span></div></div>
       <div class="pbrows">${q.cats.map((c, i) => `<label class="pbl"><span>${esc(PB_CATS[c].label)}</span><input id="pb${i}" data-cat="${c}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="${i === q.cats.length - 1 ? "done" : "next"}" placeholder="${q.L}…" value="${esc(st.vals[c] || "")}"></label>`).join("")}</div>
-      <button class="btn" data-g="pbdone">J'ai fini</button>`;
+      <button class="btn stickybtn" data-g="pbdone">J'ai fini</button>`;
   },
   act(g, a) { if (a === "pbdone" && g.phase === "q") { pbEnd(); return true; } },
   joker: { label: "+15 s", help: "Ajoute 15 secondes au chrono.", use() { addTime(15); } }

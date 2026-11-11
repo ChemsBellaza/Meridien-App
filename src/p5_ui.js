@@ -33,6 +33,7 @@ function render() {
   setAppHTML(html);
   $app.className = "app" + (ui.view === "season" && store.profile ? " dotted" : "");
   bindAfterRender();
+  syncBack();
 }
 
 const backBtn = (act = "back", label = "Retour") => `<button class="roundbtn" data-act="${act}" aria-label="${label}">${I.back}</button>`;
@@ -248,8 +249,9 @@ function vSheet() {
     <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button>${featureOn("carnet") ? `<button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button>` : ""}${featureOn("trophees") ? `<button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button>` : ""}</div>
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
     <div><div class="kicker" style="margin-bottom:6px">Temps de réflexion</div>
-      <div class="seg light" role="group" aria-label="Temps de réflexion">${[[1, "Normal"], [1.5, "× 1,5"], [2, "× 2"]].map(([v, l]) => `<button data-act="timepref" data-v="${v}" aria-pressed="${timeFactor() === v}">${l}</button>`).join("")}</div>
+      <div class="seg light three" role="group" aria-label="Temps de réflexion">${[[1, "Normal"], [1.5, "× 1,5"], [2, "× 2"]].map(([v, l]) => `<button data-act="timepref" data-v="${v}" aria-pressed="${timeFactor() === v}">${l}</button>`).join("")}</div>
       <p class="note">Allonge tous les chronos pour jouer à ton rythme. Le bonus de rapidité se calcule sur le temps que tu as.</p></div>
+    ${mobileSheetBlocks()}
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(store.profile.code)}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
     <div><div class="kicker" style="margin-bottom:8px">Entraînement · non compté</div><div class="fmtgrid">${Object.keys(FORMATS).map(f => `<button class="fmtbtn" data-act="practice" data-v="${f}">${art(f, "p" + f)}<span class="lab">${FORMATS[f].name}</span></button>`).join("")}</div></div>
     <button class="smallbtn" data-act="tuto">Revoir le tutoriel</button>
@@ -321,6 +323,8 @@ document.addEventListener("click", e => {
     case "day": go("day", { dayKey: v }); break;
     case "tab": ui.tab = v; render(); break;
     case "timepref": store.prefs = Object.assign({ time: 1 }, store.prefs, { time: +v }); save(); render(); announce(+v === 1 ? "Temps normal" : `Temps multiplié par ${String(+v).replace(".", ",")}`); break;
+    case "hapticpref": store.prefs = Object.assign({ time: 1 }, store.prefs, { haptics: v === "true" }); save(); render(); buzz(30); break;
+    case "install": installNow(); break;
     case "tutostart": case "tuto": startTuto(); break;
     case "tutoskip": tutoDone(); go("group"); break;
     case "tutoseen": { const t = store.profile.tuto; if (t) { t.seen = t.seen || {}; t.seen[v] = true; if (v === "carnet") t.seen.trophees = true; save(); } render(); break; }

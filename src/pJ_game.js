@@ -56,6 +56,7 @@ function award(base, o = {}) {
   (o.stamps || []).forEach(id => { if (!g.stamps.includes(id)) g.stamps.push(id); });
   g.answer = { base, pts, ans: o.ans || "", fact: o.fact || "", extra: o.extra || "" };
   g.phase = "reveal";
+  buzz(base > 0 ? 12 : [30, 40, 30]); // retour tactile : court si juste, double si raté
   persistScore(); renderGame();
 }
 function nextStep() {

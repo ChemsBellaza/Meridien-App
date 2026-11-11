@@ -38,8 +38,8 @@ Légende : ✅ traité · ⏳ à faire (voir ROADMAP)
 3. Écran de fin : récompense peu lisible (points, rang, progression vers l'évolution). ⏳
 4. Groupe simulé : le classement perd son sens dès que le joueur s'en aperçoit → multijoueur réel. ⏳
 5. Pas de notifications de rappel quotidien. ⏳ (Capacitor)
-6. Clavier mobile qui masque le champ et « Valider » (`visualViewport`). ⏳
-7. Bouton retour Android : fermer feuille / revenir en arrière sans quitter l'appli. ⏳
+6. Clavier mobile qui masque le champ et « Valider » (`visualViewport`). ✅ `--kb` (v18) ; à confirmer sur de vrais téléphones
+7. Bouton retour Android : fermer feuille / revenir en arrière sans quitter l'appli. ✅ `syncBack()` (v18)
 
 ## Publication mobile
 PWA (test avec amis) puis Capacitor (stores). Prérequis : serveur de groupes + horloge de référence, politique de confidentialité, nom définitif, comptes développeur, justification Apple 4.2, mention CC BY-SA du Wiktionnaire. Détail dans `ROADMAP.md`.

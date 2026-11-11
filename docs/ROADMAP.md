@@ -11,7 +11,7 @@
 - ~~Tutoriel de première partie ; introduction progressive des systèmes~~ ✅ (v15). À faire plus tard : tester auprès de vrais nouveaux joueurs et ajuster les jours de déblocage.
 - ~~Écran de fin de partie plus lisible (points, rang, progression vers l'évolution)~~ ✅ (v16).
 - ~~Mode clavier pour les cartes ; mots en plus des couleurs chaud/froid ; « temps rallongé » ; jeton `--purple-t`~~ ✅ (v17). Reste : audit complet des autres jeux pour l'information par la couleur seule, test avec de vrais lecteurs d'écran (NVDA, VoiceOver, TalkBack).
-- Clavier mobile : garder champ + « Valider » visibles (`visualViewport`) ; bouton retour Android = fermer feuille / écran précédent.
+- ~~Clavier mobile (`visualViewport`) ; bouton retour Android~~ ✅ (v18). Reste : **test sur de vrais téléphones** (un Android d'entrée de gamme, un iPhone) : clavier réel, geste retour, fluidité, vibrations.
 - Politique de confidentialité (page publique).
 
 ## Lot 3 — Multijoueur réel

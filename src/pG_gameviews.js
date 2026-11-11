@@ -55,6 +55,7 @@ function renderGame() {
   $app.className = "";
   setAppHTML(`<div class="game"><div class="gwrap">${body}</div></div>${ui.confirm ? vConfirm() : ""}${ui.toast && ui.toast !== "copied" ? `<div class="toast" role="status">${esc(ui.toast)}</div>` : ""}`);
   afterGameRender();
+  syncBack();
   if (g.phase === "end") announce(`Partie terminée : ${fmtNum(g.score)} points.`);
   if (g.phase === "reveal") { const r = document.querySelector(".reveal"); if (r) { const t = r.querySelector(".gain b"), a = r.querySelector(".ans"); announce(`${t ? t.textContent + " points. " : ""}${a ? a.textContent : ""}`); } }
 }

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F4F2EC" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#18181A" media="(prefers-color-scheme: dark)">
@@ -731,6 +731,20 @@ button.fpill{color:var(--ink);text-align:left}
 .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .savewarn{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));pointer-events:none;z-index:40;background:#B3261E;color:#fff;font-weight:800;padding:10px 14px;border-radius:14px;text-align:center}
 @media (prefers-contrast:more){:root{--ink-2:#4F4B45}}
+/* ---- confort smartphone (tactile) ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior-y:none}
+body{overscroll-behavior-y:none}
+a,button,input,select,summary,label,.opt,[data-act],[data-g]{touch-action:manipulation}
+.app,.game,.scrim,.confirm{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+input,textarea,.codebox code,.bubble .tx{-webkit-user-select:text;user-select:text}
+.game{overscroll-behavior:contain;bottom:var(--kb,0px)}
+.composer{bottom:var(--kb,0px)}
+.smallbtn,.linkbtn,.seg button,.seg.light button,.spill,.composer input,.composer button,.typebox button{min-height:44px}
+.petline{min-height:48px}
+.rx{position:relative}
+.rx::after{content:"";position:absolute;inset:-12px -4px}
+.seg.three{grid-template-columns:repeat(3,1fr)}
+.stickybtn{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:4}
 </style>
 </head>
 <body>
