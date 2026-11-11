@@ -11,7 +11,7 @@ Le propriétaire (Chems) parle **français** : toute l'interface, les messages, 
 - Pas de bundler, pas de framework : JavaScript « classique » en un seul scope global.
 
 ## Règles à respecter
-- **Un seul fichier de sortie, aucune dépendance réseau à l'exécution** (hors polices Google Fonts, à embarquer plus tard). Pas de CDN, pas de `fetch`.
+- **Un seul fichier de sortie, aucune dépendance réseau à l'exécution** (polices embarquées dans `public/fonts/`, vérifié : zéro requête externe). Pas de CDN, pas de `fetch`.
 - Texte de l'interface en français correct (accents, espaces insécables avant `: ; ? !` via `fr()` quand le texte vient de données).
 - **Accessibilité WCAG 2.1 AA** : vrais `<button>`, `aria-label` sur les boutons-icônes, focus visible, contrastes ≥ 4,5:1, textes ≥ 12 px, annonces via `announce()`, fenêtres via le gestionnaire de `pA_core.js` (focus piégé, Échap). Un test (`tests/a11y.test.js`) le vérifie : ne pas le casser.
 - Rendu : `render()` / `renderGame()` remplacent le DOM via `setAppHTML()` (qui conserve le focus). Ne jamais écrire `$app.innerHTML =` directement.
