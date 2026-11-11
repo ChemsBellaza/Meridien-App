@@ -7,3 +7,12 @@ Thumbs.db
 meridien-lexique.json
 meridien-carte.json
 *.tmp
+
+# Supabase : jamais de secrets dans le dépôt
+.env
+.env.*
+*.env
+supabase/.temp/
+supabase/.branches/
+supabase/config.toml.bak
+*service_role*

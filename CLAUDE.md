@@ -33,6 +33,12 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 ## PWA
 Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `dist/` par les builds ; `dist/` entier est à publier (GitHub Pages), pas seulement le HTML. Le service worker (seule exception à « pas de fetch », uniquement pour les fichiers de l'appli) est « réseau d'abord » ; changer `CACHE` dans `sw.js` pour vider les caches. Les icônes se régénèrent avec `python scripts/make-icons.py` (Pillow).
 
+## Lot 3 : multijoueur (Supabase) — état et règles
+- Maquette dans `docs/LOT3-MAQUETTE.md`, base dans `supabase/` (migration, seed généré par `scripts/gen-supabase-seed.py`, test `supabase/tests/smoke.sql`). **Pas encore appliquée** : à relire, puis à tester sur un projet de test.
+- Règle d'or : le serveur décide (jour, essais, score, boussoles) ; le téléphone n'écrit jamais dans `attempts`, `groups`, `group_members`, `gem_*` : il appelle les fonctions (`start_try`, `submit_score`…). Toute nouvelle règle de jeu qui se compare passe côté serveur.
+- **Secrets** : jamais de clé `service_role`, de mot de passe de base ni de jeton dans le dépôt (public) ni dans une conversation. Le client n'a besoin que de l'URL du projet et de la clé `anon`. Je ne crée pas de compte à la place de Chems.
+- Les règles du jeu (`CONFIG`, `FORMATS`) restent la source de vérité dans le code ; après toute modification, relancer `python scripts/gen-supabase-seed.py` et réappliquer le seed.
+
 ## Smartphone d'abord (le jeu se joue au doigt)
 - Toute zone tapable fait **au moins 44 × 44 px** (hauteur minimale ou zone invisible `::after` élargie). Champs de saisie ≥ 16 px (sinon iOS zoome).
 - Écran de jeu : `.game` est `position: fixed` et s'arrête à `bottom: var(--kb)` (hauteur du clavier, `pM_mobile.js`) ; un bouton d'action sous des champs de saisie reçoit `.stickybtn`.
