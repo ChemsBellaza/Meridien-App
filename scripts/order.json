@@ -1,0 +1,23 @@
+[
+  "d0_data.js",
+  "p1_config.js",
+  "d1_countries.js",
+  "d2_content.js",
+  "d3_bank.js",
+  "d4_dict.js",
+  "d5_new.js",
+  "d6_lex.js",
+  "d7_map.js",
+  "p2_pets_data.js",
+  "pA_core.js",
+  "p3_art.js",
+  "p4_draw.js",
+  "p5_ui.js",
+  "pC_events.js",
+  "pR_retention.js",
+  "pJ_game.js",
+  "pG_gameviews.js",
+  "pE_engines.js",
+  "pN_engines.js",
+  "pB_logic.js"
+]

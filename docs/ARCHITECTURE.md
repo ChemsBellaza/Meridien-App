@@ -1,6 +1,6 @@
 # Architecture
 
-Application web **monofichier** : `scripts/build.js` concatène `src/*.js` (un seul scope global, pas de modules) derrière `src/head.html` (CSS + `<title>`), dans `dist/meridien.html`.
+Application web **monofichier** : `scripts/build.js` (ou `build.py` / `build.ps1` / `build.cmd`, équivalents sans Node ; liste ordonnée dans `scripts/order.json`) concatène `src/*.js` (un seul scope global, pas de modules) derrière `src/head.html` (CSS + `<title>`), dans `dist/meridien.html`.
 
 ## Fichiers (ordre d'exécution)
 | Fichier | Rôle |

@@ -4,10 +4,11 @@ Méridien est un jeu communautaire quotidien de culture générale (inspiré de 
 Le propriétaire (Chems) parle **français** : toute l'interface, les messages, les commits et les échanges sont en français. Fuseau Europe/Madrid.
 
 ## Commandes
-- `npm run build` → assemble `src/` en `dist/meridien.html` (un seul fichier HTML autonome, ~1,2 Mo).
-- `npm test` → build puis smoke + a11y + cartes (rapide). `npm run test:full` → tous les formats (≈ 5–8 min).
-- Première fois : `npm install` puis `npx playwright install chromium`. `CHROME_PATH` pour utiliser un Chrome existant.
-- Pas de bundler, pas de framework : JavaScript « classique » en un seul scope global. L'ordre des fichiers est défini dans `scripts/build.js` (tableau `ORDER`) ; tout nouveau fichier `src/*.js` doit y être ajouté, sinon le build échoue volontairement.
+- **Construire** (aucune installation requise) : `build.cmd` (double-clic) ou `powershell -ExecutionPolicy Bypass -File scripts\build.ps1` ou `python scripts/build.py` ; avec Node : `npm run build`. Les quatre donnent le même `dist/meridien.html` (~1,2 Mo, un seul fichier HTML autonome).
+- Fichiers assemblés : liste ordonnée dans `scripts/order.json` ; tout nouveau `src/*.js` doit y être ajouté (sinon le build échoue volontairement).
+- **Tests automatiques** (nécessitent Node.js) : `npm test` (fumée + a11y + cartes, ~1 min), `npm run test:full` (+ évolution + 28 formats, ~8 min). `npm install` une fois ; `BROWSER_CHANNEL=msedge` ou `CHROME_PATH` pour utiliser un navigateur déjà installé.
+- **Poste sans Node.js** (cas du propriétaire : pas de droits administrateur) : construire avec `build.ps1`/`build.py`, puis vérifier avec le navigateur intégré ou à la main (liste dans `docs/SANS-INSTALLATION.md`) : console sans erreur, parcours onboarding → partie d'entraînement → menu/Échap, clair et sombre. Ne jamais demander d'installer Node avec des droits administrateur ; proposer Node portable (zip) si des tests automatiques sont utiles.
+- Pas de bundler, pas de framework : JavaScript « classique » en un seul scope global.
 
 ## Règles à respecter
 - **Un seul fichier de sortie, aucune dépendance réseau à l'exécution** (hors polices Google Fonts, à embarquer plus tard). Pas de CDN, pas de `fetch`.
@@ -24,7 +25,7 @@ Le propriétaire (Chems) parle **français** : toute l'interface, les messages, 
 Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = objet `ENG` (`build/start/view/act/type/onTap/after/joker`) ; formats déclarés dans `FORMATS` (`p1_config.js`).
 
 ## Avant de dire « c'est fini »
-1. `npm run build` sans erreur ; 2. `npm test` vert (aucune erreur JavaScript dans la console, clair et sombre) ; 3. si l'interface a changé, regarder une capture (`tests/out/`) ; 4. commit en français, un lot = un commit.
+1. le build sans erreur ; 2. `npm test` vert **ou**, sans Node, la vérification manuelle (console sans erreur JavaScript, clair et sombre) ; 3. si l'interface a changé, regarder une capture (`tests/out/`) ; 4. commit en français, un lot = un commit.
 
 ## Publication
 - Version de test en ligne : artefact claude.ai https://claude.ai/artifact/N8GkW6nxPUin8HEqqo37wL (republier `dist/meridien.html` au même lien ; dernière version publiée : v12).

@@ -4,15 +4,13 @@ Un défi de culture générale par jour, à jouer entre amis : 28 jeux en rotati
 
 Application web **monofichier** (HTML + CSS + JavaScript, sans dépendance ni réseau à l'exécution).
 
-## Démarrer
-```bash
-npm install                      # Playwright (tests)
-npx playwright install chromium  # une seule fois
-npm run build                    # → dist/meridien.html
-```
-Ouvrir `dist/meridien.html` dans un navigateur (double-clic suffit), idéalement en mode mobile (F12 → icône téléphone).
+## Démarrer (aucune installation)
+Double-clic sur **`build.cmd`** (ou `python scripts/build.py`, ou `npm run build`) → `dist/meridien.html`. Ouvrir ce fichier dans un navigateur, idéalement en mode mobile (F12 → icône téléphone). Détails, vérification manuelle et tests sans droits administrateur : `docs/SANS-INSTALLATION.md`.
 
-## Tests
+## Tests automatiques (Node.js requis, version portable possible)
+```bash
+npm install
+```
 | Commande | Contenu | Durée |
 |---|---|---|
 | `npm test` | build + fumée (clair/sombre) + accessibilité + cartes | ~1 min |
@@ -23,6 +21,7 @@ Les captures d'écran sont écrites dans `tests/out/` (ignoré par git). Variabl
 
 ## Documentation
 - `CLAUDE.md` — contexte et règles du projet (lu automatiquement par Claude Code)
+- `docs/SANS-INSTALLATION.md` — travailler sans droits administrateur
 - `docs/ARCHITECTURE.md` — fichiers, moteurs de jeux, stockage
 - `docs/ROADMAP.md` — lots à venir (PWA, multijoueur, publication mobile)
 - `docs/AUDIT.md` — audit technique, accessibilité et UX
