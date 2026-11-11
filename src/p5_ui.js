@@ -249,6 +249,7 @@ function vSheet() {
     <div><div class="kicker" style="margin-bottom:8px">Entraînement · non compté</div><div class="fmtgrid">${Object.keys(FORMATS).map(f => `<button class="fmtbtn" data-act="practice" data-v="${f}">${art(f, "p" + f)}<span class="lab">${FORMATS[f].name}</span></button>`).join("")}</div></div>
     <button class="btn ghost" data-act="closesheet">Fermer</button>
     <p class="note center">Dictionnaire du petit bac enrichi grâce au Wiktionnaire (licence CC BY-SA).</p>
+    <p class="note center">Drapeaux : Twemoji, © Twitter, Inc. et contributeurs (licence CC BY 4.0).</p>
     <button class="linkbtn" data-act="askreset">Réinitialiser le prototype</button>
   </div></div>`;
 }

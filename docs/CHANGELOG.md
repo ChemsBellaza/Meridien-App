@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v14** — Drapeaux en SVG (Twemoji, CC BY 4.0, 194 fichiers dans `public/flags/`, ~360 Ko) : `src/pF_flags.js` remplace à l'affichage chaque emoji de drapeau par une image (observateur de mutations, aucun changement dans les moteurs ; le texte partagé garde l'emoji). Précache hors ligne (`sw.js`, cache v4). Mention dans le menu et `CREDITS.md`. Vérifié : 15/15 images chargées, drapeau affiché dans le jeu « Drapeaux ».
+
 - **v13.2** — Logo : globe crème à contours épais, ombre « lèvre » et étincelle dorée (`public/logo.svg`, fonction `logoMark()` dans `p5_ui.js`, icônes régénérées par `scripts/make-icons.py`, favicon). Affiché sur le premier écran. Motif neutre (indépendant du nom définitif, qui reste à choisir).
 
 - **v13.1** — Polices Nunito (latin + latin-ext) et Unbounded (latin) embarquées dans `public/fonts/` (polices variables, 3 fichiers, ~220 Ko) ; Google Fonts supprimé ; précache hors ligne (`sw.js`, cache v2). Vérifié : polices chargées, zéro requête externe.

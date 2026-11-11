@@ -19,5 +19,6 @@
   "pG_gameviews.js",
   "pE_engines.js",
   "pN_engines.js",
-  "pB_logic.js"
+  "pB_logic.js",
+  "pF_flags.js"
 ]

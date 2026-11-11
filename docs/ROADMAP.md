@@ -7,7 +7,7 @@
 
 ## Lot 2 — PWA installable (prochain)
 - Manifeste (`name`, icônes 192/512 + maskable, `theme_color`, `display: standalone`), service worker (cache hors-ligne du HTML), icône d'écran d'accueil.
-- ~~Embarquer les polices~~ (fait, v13.1). Restent : manifeste ✅, service worker ✅ ; drapeaux SVG à faire.
+- ~~Embarquer les polices~~ (fait, v13.1). Restent : manifeste ✅, service worker ✅ ; drapeaux SVG ✅ (v14).
 - **Tutoriel de première partie** (manche d'essai sans score) ; introduction progressive des systèmes (jokers au jour 3, carnet au jour 5…).
 - Écran de fin de partie plus lisible (points, rang, progression vers l'évolution).
 - Mode clavier pour les cartes (Pays mystère, géographie) : saisie ou liste de pays (WCAG 2.1.1) ; icônes/mots en plus des couleurs chaud/froid (1.4.1).

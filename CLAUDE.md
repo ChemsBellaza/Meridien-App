@@ -33,6 +33,9 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 ## PWA
 Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `dist/` par les builds ; `dist/` entier est à publier (GitHub Pages), pas seulement le HTML. Le service worker (seule exception à « pas de fetch », uniquement pour les fichiers de l'appli) est « réseau d'abord » ; changer `CACHE` dans `sw.js` pour vider les caches. Les icônes se régénèrent avec `python scripts/make-icons.py` (Pillow).
 
+## Drapeaux
+Les données gardent des emojis (`flagOf`) ; `src/pF_flags.js` les remplace à l'écran par `public/flags/*.svg` (Twemoji, CC BY 4.0 : mention obligatoire, déjà dans le menu et `CREDITS.md`). Ne pas écrire `<img>` à la main dans les moteurs. Le texte partagé (messageries) garde l'emoji.
+
 ## Logo
 Source : `public/logo.svg` (globe + ombre + étincelle ; couleurs `#6B5BE2`, `#4C3EBE`, `#FFF6EC`, `#2A2333`, `#FFC24A`). Le même tracé est dans `logoMark()` (`p5_ui.js`) et dans `scripts/make-icons.py` : modifier les trois ensemble. Pas de texte dans le logo (nom provisoire) ; le mot « Méridien » s'écrit en Unbounded à côté.
 
