@@ -129,14 +129,13 @@ function vGroup() {
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
-  ${ui.tab === "chat" && !srvOn() ? `<div class="composer"><form id="msgForm"><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
+  ${ui.tab === "chat" ? `<div class="composer">${ui.chatMsg ? `<p class="chatmsg" id="chatmsg" role="status">${esc(ui.chatMsg)}</p>` : ""}<form id="msgForm"><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
 }
 
 function vFeed(k) {
   const ev = feed(k), lead = dayResults(k).played[0];
-  const soon = srvOn() ? `<p class="note center">Les messages et les réactions entre amis arrivent bientôt.</p>` : "";
-  if (!ev.length) return `<div class="feed"><p class="note center">Personne n'a encore joué aujourd'hui. Lance le défi !</p>${soon}</div>`;
-  return `<div class="feed">${soon}${ev.map(e => {
+  if (!ev.length) return `<div class="feed"><p class="note center">${srvOn() ? "Personne n'a encore joué ni écrit aujourd'hui. Lance le défi, ou dis bonjour à ton groupe !" : "Personne n'a encore joué aujourd'hui. Lance le défi !"}</p></div>`;
+  return `<div class="feed">${ev.map(e => {
     if (e.type === "launch") return `<div class="fpill">${avatar(e.p, "sm")}<span><b>Défi lancé</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></div>`;
     if (e.type === "score") return `<div class="fitem"><button class="fpill ${e.best && lead && e.p.id === lead.id ? "best" : ""}" data-act="reactopen" data-v="${e.id}" aria-label="Réagir au score de ${esc(e.p.name)}">${avatar(e.p, "sm")}<span><b>Score : ${fmtNum(e.score)} pts</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></button>${reactRow(k, e)}</div>`;
     return `<div class="msg ${e.mine ? "me" : ""}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx">${esc(e.text)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
@@ -335,7 +334,11 @@ document.addEventListener("click", e => {
     case "carnet": ui.sheet = false; go("carnet"); break;
     case "trophees": ui.sheet = false; go("trophees"); break;
     case "reactopen": ui.reactOpen = ui.reactOpen === v ? null : v; render(); break;
-    case "react": { const [id, emo] = v.split("|"), k = today(), m = store.react[k] = store.react[k] || {}; m[id] = m[id] === emo ? undefined : emo; if (!m[id]) delete m[id]; ui.reactOpen = null; save(); render(); break; }
+    case "msgreport": srvAskMod("report", v); break;
+    case "msgblock": srvAskMod("block", v); break;
+    case "msgdel": srvAskMod("del", v); break;
+    case "unblock": srvUnblock(v); break;
+    case "react": { if (srvOn()) { const [rid, remo] = v.split("|"); srvReact(rid, remo); break; } const [id, emo] = v.split("|"), k = today(), m = store.react[k] = store.react[k] || {}; m[id] = m[id] === emo ? undefined : emo; if (!m[id]) delete m[id]; ui.reactOpen = null; save(); render(); break; }
     case "equip": { const [c, id] = v.split("|"); if (c === "species") { store.profile.pet.species = id; } else store.profile.pet[c] = id; save(); render(); break; }
     case "back": go(["season", "pet", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : "group") : "group"); break;
     case "day": go("day", { dayKey: v }); break;

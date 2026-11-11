@@ -115,6 +115,23 @@ Check "écrire hors de son groupe : interdit" ($out.__http_error -ge 400) ($out 
 $dbg = Call $B "Get" "/rest/v1/messages?select=id,user_id,body" $null $null; $null
 Check "Bob lit le message d'Alice (et lui seul)" (($dbg.body -like "Bienvenue*") -and (@($dbg | Where-Object { $_.body }).Count -eq 1)) ($dbg | ConvertTo-Json -Compress)
 Check "Carol ne lit aucun message" ((Cnt $C "/rest/v1/messages?select=id") -eq 0) "lecture"
+"--- Réactions et clé de score (migration 20261114 : à appliquer avant ces contrôles) ---"
+$so2 = Rpc $B "season_overview"; $sk = @($so2)[0].score_key
+Check "season_overview fournit une clé de score (uuid)" ("$sk" -match '^[0-9a-f]{8}-[0-9a-f]{4}-') ($so2 | ConvertTo-Json -Compress)
+$rx1 = Call $B "Post" "/rest/v1/reactions" @{ group_id = $gid; user_id = $users.Bob.id; target_type = "message"; target_id = $mid; emoji = "🔥" } @{ Prefer = "return=minimal" }
+Check "réaction à un message du groupe acceptée" (-not $rx1.__http_error) ($rx1 | ConvertTo-Json -Compress)
+$rx2 = Call $B "Post" "/rest/v1/reactions" @{ group_id = $gid; user_id = $users.Bob.id; target_type = "message"; target_id = "00000000-0000-0000-0000-000000000001"; emoji = "👍" } @{ Prefer = "return=minimal" }
+Check "réaction à un message inexistant refusée" ($rx2.__http_error -ge 400) ($rx2 | ConvertTo-Json -Compress)
+$rx3 = Call $B "Post" "/rest/v1/reactions" @{ group_id = $gid; user_id = $users.Bob.id; target_type = "score"; target_id = $sk; emoji = "👏" } @{ Prefer = "return=minimal" }
+Check "réaction à un score acceptée" (-not $rx3.__http_error) ($rx3 | ConvertTo-Json -Compress)
+$rx4 = Call $C "Post" "/rest/v1/reactions" @{ group_id = $gid; user_id = $users.Carol.id; target_type = "message"; target_id = $mid; emoji = "😂" } @{ Prefer = "return=minimal" }
+Check "Carol (hors groupe) ne peut pas réagir" ($rx4.__http_error -ge 400) ($rx4 | ConvertTo-Json -Compress)
+$rx5 = Call $B "Post" "/rest/v1/reactions" @{ group_id = $gid; user_id = $users.Alice.id; target_type = "message"; target_id = $mid; emoji = "😮" } @{ Prefer = "return=minimal" }
+Check "réagir au nom d'un autre joueur : interdit" ($rx5.__http_error -ge 400) ($rx5 | ConvertTo-Json -Compress)
+Check "les membres lisent les réactions de leur groupe (2)" ((Cnt $B "/rest/v1/reactions?select=emoji") -eq 2) ("" + (Cnt $B "/rest/v1/reactions?select=emoji"))
+Check "Carol ne lit aucune réaction" ((Cnt $C "/rest/v1/reactions?select=emoji") -eq 0) ""
+$pg = Rpc $A "purge_old_chat"
+Check "le nettoyage des vieux messages n'est pas appelable par l'application" ($pg.__http_error -ge 400) ($pg | ConvertTo-Json -Compress)
 $rp = Call $B "Post" "/rest/v1/reports" @{ reporter_id = $users.Bob.id; message_id = $mid; reason = "test" } @{ Prefer = "return=minimal" }
 Check "Bob signale un message" (-not $rp.__http_error) ($rp | ConvertTo-Json -Compress)
 $bl = Call $B "Post" "/rest/v1/blocks" @{ blocker_id = $users.Bob.id; blocked_id = $users.Alice.id } @{ Prefer = "return=minimal" }

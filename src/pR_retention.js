@@ -82,6 +82,7 @@ function shareResult(challenge) {
 /* ---------- réactions sur le fil ---------- */
 const REACTS = ["👍", "😂", "🔥", "😮", "👏"];
 function reactionsOf(k, ev) {
+  if (srvOn()) return onlineReactions(ev); // réactions réelles des membres du groupe
   const counts = {}, r = rng(`${k}|${ev.id}|react`), live = k === today(), now = minutesNow();
   if (ev.type !== "launch") BOTS.forEach(b => {
     if (ev.p && b.id === ev.p.id) return;
@@ -93,11 +94,10 @@ function reactionsOf(k, ev) {
   return { counts, mine };
 }
 function reactRow(k, ev) {
-  if (srvOn()) return ""; // réactions réelles : étape 6 (les réactions simulées sont retirées en ligne)
   const { counts, mine } = reactionsOf(k, ev), keys = Object.keys(counts);
   const open = ui.reactOpen === ev.id;
   return `${keys.length ? `<span class="reacts">${keys.map(e => `<button class="rx ${mine === e ? "me" : ""}" data-act="react" data-v="${ev.id}|${e}" aria-label="${e} ${counts[e]}">${e}<b class="num">${counts[e]}</b></button>`).join("")}</span>` : ""}
-    ${open ? `<span class="rxpick" role="group" aria-label="Réagir">${REACTS.map(e => `<button data-act="react" data-v="${ev.id}|${e}" aria-pressed="${mine === e}">${e}</button>`).join("")}</span>` : ""}`;
+    ${open ? `<span class="rxpick" role="group" aria-label="Réagir">${REACTS.map(e => `<button data-act="react" data-v="${ev.id}|${e}" aria-pressed="${mine === e}">${e}</button>`).join("")}</span>${srvOn() ? msgActions(ev) : ""}` : ""}`;
 }
 
 /* ---------- vue Carnet de voyage ---------- */

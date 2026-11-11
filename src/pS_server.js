@@ -216,7 +216,8 @@ function accountSheetBlock() {
     : a.step === 0
       ? `<form class="plainform" id="acctForm1" novalidate><div class="field"><label for="acctEmail">Ton e-mail (pour retrouver ton compte)</label><input id="acctEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(a.email)}"></div><p class="note">Utilisé uniquement pour retrouver ton compte. Tu recevras un code.</p>${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<button class="smallbtn" type="submit">Recevoir un code</button></form>`
       : `<form class="plainform" id="acctForm2" novalidate><div class="field"><label for="acctCode">Code reçu sur ${esc(a.email)}</label><input id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*"></div>${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<button class="smallbtn" type="submit">Valider</button> <button type="button" class="linkbtn" data-act="acctagain">Changer d'adresse</button></form>`;
-  return `<div><div class="kicker" style="margin-bottom:6px">Mon groupe${SRV.group ? ` · ${esc(SRV.group.name)}` : ""}</div>${list}</div>
+  const blocked = [...SRV.blocks].map(id => { const m = (SRV.members || []).find(x => x.user_id === id); return `<li class="mrow"><span><b>${esc(m && m.profiles ? m.profiles.pseudo : "Joueur bloqué")}</b></span><button class="smallbtn ghost" data-act="unblock" data-v="${id}">Débloquer</button></li>`; }).join("");
+  return `<div><div class="kicker" style="margin-bottom:6px">Mon groupe${SRV.group ? ` · ${esc(SRV.group.name)}` : ""}</div>${list}${blocked ? `<div class="kicker" style="margin:10px 0 4px">Joueurs bloqués</div><ul class="mlist">${blocked}</ul>` : ""}</div>
     <div><div class="kicker" style="margin-bottom:6px">Sauvegarde du compte</div>${mail}</div>`;
 }
 
@@ -260,12 +261,15 @@ async function srvSync(force) {
       if (!(await srvSyncClock())) return false;
       await srvFlushPending();
       const day = srvToday();
-      const [mem, ov, att, sum] = await Promise.all([
+      const [mem, ov, att, sum, grp] = await Promise.all([
         srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet)&order=joined_at"),
         srvRpc("season_overview"),
         srvGet("/rest/v1/attempts?select=day,try_idx,score,submitted_at,fmt,slow&day=eq." + day + "&order=try_idx"),
-        srvRpc("my_summary")
+        srvRpc("my_summary"),
+        srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members)"),
+        srvLoadChat()
       ]);
+      if (grp.ok && Array.isArray(grp.data) && grp.data[0]) SRV.group = grp.data[0].groups;
       if (mem.ok && Array.isArray(mem.data)) SRV.members = mem.data;
       if (Array.isArray(ov)) SRV.ov = ov;
       if (att.ok && Array.isArray(att.data)) SRV.attempts[day] = att.data;
@@ -302,17 +306,24 @@ function onlineDayResults(k) {
   const pl = onlinePlayers(), uid = myUid(), rows = (SRV.ov || []).filter(r => r.play_day === k);
   const played = rows.map(r => {
     const p = r.player_id === uid ? pl[0] : (pl.find(x => x.id === r.player_id) || { id: r.player_id, name: r.pseudo, color: colorOf(r.player_id), pet: defaultPet("renard") });
-    return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, win: r.pos === 1 && r.n >= 2, slow: !!r.slow };
+    return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, win: r.pos === 1 && r.n >= 2, slow: !!r.slow, sk: r.score_key || `${r.player_id}-${r.play_day}` };
   }).sort((a, b) => a.pos - b.pos || String(a.name).localeCompare(String(b.name), "fr"));
   const ids = new Set(played.map(p => p.id));
   return { played, waiting: pl.filter(p => !ids.has(p.id)), N: played.length };
 }
 function onlineFeed(k) {
-  const res = onlineDayResults(k), ev = res.played.map(p => ({ id: `s-${p.id}-0`, type: "score", at: p.plays[0].at, p, score: p.best, best: p.pos === 1 && res.N >= 2 }));
+  const res = onlineDayResults(k), pl = onlinePlayers(), uid = myUid();
+  const ev = res.played.map(p => ({ id: `s-${p.sk}`, rid: p.sk, rtype: "score", type: "score", at: p.plays[0].at, p, score: p.best, best: p.pos === 1 && res.N >= 2 }));
   ev.sort((a, b) => a.at - b.at);
   if (ev.length) ev.unshift({ id: "launch", type: "launch", at: ev[0].at, p: ev[0].p });
-  return ev;
+  // messages du jour (les auteurs bloqués sont déjà filtrés par le serveur)
+  const msgs = (SRV.msgs || []).filter(m => dayOfIso(m.created_at) === k && !(SRV.hidden && SRV.hidden.has(m.id))).map(m => {
+    const p = m.user_id === uid ? pl[0] : (pl.find(x => x.id === m.user_id) || { id: m.user_id, name: (m.profiles && m.profiles.pseudo) || "Ancien membre", color: colorOf(m.user_id), pet: (m.profiles && m.profiles.pet) || defaultPet("renard") });
+    return { id: `m-${m.id}`, rid: m.id, rtype: "message", type: "msg", at: minutesOfIso(m.created_at), p, text: m.body, mine: m.user_id === uid, mid: m.id };
+  });
+  return [...ev, ...msgs].sort((a, b) => a.at - b.at || (a.type === "score" ? -1 : 1));
 }
+function dayOfIso(iso) { try { const p = srvParts(Date.parse(String(iso).replace(/(\.\d{3})\d+/, "$1"))); return `${p.year}-${p.month}-${p.day}`; } catch (e) { return ""; } }
 function onlineProgress() {
   const s = SRV.sum || { gems_total: 0, wins: 0, days: 0, wallet: 0, streak: 0 };
   return { gems: s.gems_total, wins: s.wins, streak: s.streak, plays: s.days, games: Object.values(store.stats.fmts || {}).reduce((n, v) => n + v, 0), carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };
@@ -322,6 +333,104 @@ const onlineWallet = () => (SRV.sum ? SRV.sum.wallet : 0);
 function playsOf(k) {
   if (!srvOn()) return store.plays[k] || [];
   return (SRV.attempts[k] || []).map(a => ({ score: a.score || 0, at: a.submitted_at ? minutesOfIso(a.submitted_at) : 0 }));
+}
+
+/* =================== CHAT DES AMIS (lot 3, étape 6) ===================
+   Messages et réactions du groupe, lus sur le serveur (interrogation toutes les 8 s quand l'onglet Chat est ouvert, 45 s sinon).
+   Signaler (envoyé à la modération et masqué), bloquer (le serveur ne renvoie plus ses messages), supprimer ses propres messages. */
+SRV.msgs = []; SRV.reacts = []; SRV.blocks = new Set(); SRV.hidden = new Set(); SRV.chatSig = "";
+const srvBlocked = uid => SRV.blocks.has(uid);
+async function srvLoadChat() {
+  const since = new Date((srvNowMs() || Date.now()) - 48 * 3600e3).toISOString();
+  const [m, r, b] = await Promise.all([
+    srvGet("/rest/v1/messages?select=id,user_id,body,created_at,profiles(pseudo,pet)&created_at=gte." + encodeURIComponent(since) + "&order=created_at.asc&limit=300"),
+    srvGet("/rest/v1/reactions?select=user_id,target_type,target_id,emoji&limit=3000"),
+    srvGet("/rest/v1/blocks?select=blocked_id")
+  ]);
+  if (b.ok && Array.isArray(b.data)) SRV.blocks = new Set(b.data.map(x => x.blocked_id));
+  if (m.ok && Array.isArray(m.data)) SRV.msgs = m.data;
+  if (r.ok && Array.isArray(r.data)) SRV.reacts = r.data.filter(x => !SRV.blocks.has(x.user_id));
+  const sig = SRV.msgs.map(x => x.id).join() + "|" + SRV.reacts.map(x => x.target_id + x.emoji + x.user_id).join();
+  const changed = sig !== SRV.chatSig; SRV.chatSig = sig; return changed;
+}
+const chatOpen = () => srvOn() && !srvLost() && !document.hidden && typeof game !== "undefined" && !game && ui.view === "group" && ui.tab === "chat" && !ui.sheet && !ui.confirm && !ui.evo;
+function srvRepaintFeed() { // met à jour le fil sans toucher au champ de saisie
+  const f = document.querySelector(".feed"); if (!f) return render();
+  const t = document.createElement("div"); t.innerHTML = vFeed(today()); f.replaceWith(t.firstElementChild);
+}
+setInterval(async () => {
+  if (!chatOpen()) return;
+  if (await srvLoadChat()) { const a = document.activeElement; if (a && a.id === "msg") srvRepaintFeed(); else render(); }
+}, 8000);
+function srvChatInfo(m) { ui.chatMsg = m; clearTimeout(srvChatInfo._t); srvChatInfo._t = setTimeout(() => { ui.chatMsg = ""; const e = document.getElementById("chatmsg"); if (e) e.remove(); }, 5000); const e = document.getElementById("chatmsg"); if (e) e.textContent = m; else if (!game) render(); }
+async function srvSendMessage(text, inp) {
+  if (!SRV.group) await srvSync(true);
+  const gid = SRV.group && SRV.group.id, tok = await srvToken();
+  if (!gid || !tok) return srvChatInfo(!tok ? srvMsg(SRV.why || "offline") : "Ton groupe n'est pas chargé. Réessaie dans un instant.");
+  const r = await srvFetch("/rest/v1/messages", { method: "POST", token: tok, prefer: "return=representation", body: { group_id: gid, user_id: myUid(), body: text } });
+  if (!r.ok) return srvChatInfo(r.offline ? srvMsg("offline") : JSON.stringify(r.data || "").includes("rate_limited") ? "Doucement : trop de messages à la suite. Attends un instant." : "Message non envoyé. Réessaie.");
+  const m = Array.isArray(r.data) ? r.data[0] : r.data;
+  if (m) { m.profiles = { pseudo: store.profile.name, pet: store.profile.pet }; SRV.msgs.push(m); }
+  if (inp) inp.value = "";
+  ui.chatMsg = ""; srvRepaintFeed(); window.scrollTo(0, document.body.scrollHeight);
+}
+const rxTarget = evId => onlineFeed(today()).find(e => e.id === evId);
+function onlineReactions(ev) {
+  const counts = {}, uid = myUid(); let mine = null;
+  (SRV.reacts || []).forEach(r => { if (r.target_id !== ev.rid) return; counts[r.emoji] = (counts[r.emoji] || 0) + 1; if (r.user_id === uid) mine = r.emoji; });
+  return { counts, mine };
+}
+async function srvReact(evId, emoji) {
+  const ev = rxTarget(evId), gid = SRV.group && SRV.group.id, uid = myUid(), tok = await srvToken(); ui.reactOpen = null;
+  if (!ev || !ev.rid || !gid || !tok) return render();
+  const cur = SRV.reacts.find(r => r.user_id === uid && r.target_id === ev.rid), backup = SRV.reacts.slice();
+  SRV.reacts = SRV.reacts.filter(r => !(r.user_id === uid && r.target_id === ev.rid)); // affichage immédiat
+  let res;
+  if (cur && cur.emoji === emoji) res = await srvFetch(`/rest/v1/reactions?user_id=eq.${uid}&target_type=eq.${ev.rtype}&target_id=eq.${ev.rid}`, { method: "DELETE", token: tok });
+  else { SRV.reacts.push({ user_id: uid, target_type: ev.rtype, target_id: ev.rid, emoji }); res = await srvFetch("/rest/v1/reactions?on_conflict=user_id,target_type,target_id", { method: "POST", token: tok, prefer: "resolution=merge-duplicates,return=minimal", body: { group_id: gid, user_id: uid, target_type: ev.rtype, target_id: ev.rid, emoji } }); }
+  if (!res.ok) { SRV.reacts = backup; srvChatInfo(res.offline ? srvMsg("offline") : "Réaction non enregistrée."); }
+  render();
+}
+// modération : confirmations (via la fenêtre de confirmation de l'application)
+function srvAskMod(kind, evId) {
+  const ev = rxTarget(evId); if (!ev) return; ui.reactOpen = null;
+  const name = ev.p ? ev.p.name : "ce joueur";
+  const C = {
+    report: { title: "Signaler ce message ?", text: "Il sera envoyé à la modération et masqué pour toi.", yes: "Signaler", run: () => srvReport(ev.rid) },
+    block: { title: `Bloquer ${name} ?`, text: "Tu ne verras plus ses messages ni ses réactions. Tu pourras le débloquer depuis le menu.", yes: "Bloquer", run: () => srvBlock(ev.p.id) },
+    del: { title: "Supprimer ce message ?", text: "Il disparaîtra pour tout le groupe.", yes: "Supprimer", run: () => srvDeleteMessage(ev.rid) }
+  }[kind];
+  ui.confirm = { ...C, no: "Annuler" }; render();
+}
+async function srvReport(mid) {
+  const tok = await srvToken(); if (!tok) return srvChatInfo(srvMsg(SRV.why || "offline"));
+  const r = await srvFetch("/rest/v1/reports", { method: "POST", token: tok, prefer: "return=minimal", body: { reporter_id: myUid(), message_id: mid, reason: "signalement depuis l'application" } });
+  if (!r.ok) return srvChatInfo(r.offline ? srvMsg("offline") : "Signalement non envoyé. Réessaie.");
+  SRV.hidden.add(mid); srvChatInfo("Message signalé et masqué. Merci."); render();
+}
+async function srvBlock(uid) {
+  const tok = await srvToken(); if (!tok) return srvChatInfo(srvMsg(SRV.why || "offline"));
+  const r = await srvFetch("/rest/v1/blocks", { method: "POST", token: tok, prefer: "return=minimal", body: { blocker_id: myUid(), blocked_id: uid } });
+  if (!r.ok) return srvChatInfo(r.offline ? srvMsg("offline") : "Blocage non enregistré. Réessaie.");
+  SRV.blocks.add(uid); await srvLoadChat(); srvChatInfo("Joueur bloqué."); render();
+}
+async function srvUnblock(uid) {
+  const tok = await srvToken(); if (!tok) return;
+  const r = await srvFetch(`/rest/v1/blocks?blocker_id=eq.${myUid()}&blocked_id=eq.${uid}`, { method: "DELETE", token: tok });
+  if (r.ok) { SRV.blocks.delete(uid); await srvLoadChat(); } render();
+}
+async function srvDeleteMessage(mid) {
+  const tok = await srvToken(); if (!tok) return;
+  const r = await srvFetch(`/rest/v1/messages?id=eq.${mid}`, { method: "DELETE", token: tok });
+  if (r.ok) { SRV.msgs = SRV.msgs.filter(m => m.id !== mid); } else srvChatInfo(r.offline ? srvMsg("offline") : "Suppression impossible.");
+  render();
+}
+// boutons d'action affichés sous un message quand on ouvre le sélecteur de réaction
+function msgActions(ev) {
+  if (ev.type !== "msg") return "";
+  return `<span class="msgacts" role="group" aria-label="Actions sur le message">${ev.mine
+    ? `<button class="smallbtn ghost" data-act="msgdel" data-v="${ev.id}">Supprimer</button>`
+    : `<button class="smallbtn ghost" data-act="msgreport" data-v="${ev.id}">Signaler</button><button class="smallbtn ghost" data-act="msgblock" data-v="${ev.id}">Bloquer ${esc(ev.p.name)}</button>`}</span>`;
 }
 
 /* jouer le défi du jour : synchronisation avec le serveur d'abord (jour, essais restants) */

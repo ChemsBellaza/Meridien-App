@@ -39,6 +39,7 @@ document.addEventListener("submit", e => {
   if (e.target.id === "msgForm") {
     const inp = document.getElementById("msg"), text = inp.value.trim();
     if (!text) return;
+    if (srvOn()) { srvSendMessage(text, inp); inp.focus(); return; } // en ligne : message envoyé au groupe via le serveur
     const k = today(); (store.chat[k] = store.chat[k] || []).push({ from: "me", text, at: minutesNow() });
     save(); render();
     const f = document.getElementById("msg"); if (f) f.focus();
