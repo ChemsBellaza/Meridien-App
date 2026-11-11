@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v12.1** — Page autonome valide : `head.html` déclare désormais doctype, `lang="fr"`, `<meta charset="utf-8">` et viewport (jusque-là fournis par l'artefact claude.ai ; sans eux, l'écran restait vide hors artefact quand le serveur n'indiquait pas l'encodage).
+
 - **v12** — Carte du monde embarquée (plus de CDN) ; correction de l'ordre d'initialisation de la carte.
 - **v11 (lot 1)** — Sauvegarde avec alerte et migrations de schéma ; accessibilité : `lang="fr"`, contrastes AA, textes ≥ 12 px, fenêtres modales (focus piégé, Échap, retour du focus), focus conservé au re-rendu, annonces lecteur d'écran, chrono `role="timer"` ; registre de minuteries ; compte à rebours suspendu en arrière-plan ; dictionnaire du petit bac décodé en tâche de fond.
 - **v10** — Crédit Wiktionnaire dans le menu.

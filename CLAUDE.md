@@ -27,6 +27,9 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 ## Avant de dire « c'est fini »
 1. le build sans erreur ; 2. `npm test` vert **ou**, sans Node, la vérification manuelle (console sans erreur JavaScript, clair et sombre) ; 3. si l'interface a changé, regarder une capture (`tests/out/`) ; 4. commit en français, un lot = un commit.
 
+## Piège : fichier autonome
+`src/head.html` doit rester un document complet (doctype, `lang`, charset, viewport) : l'artefact claude.ai les ajoutait avant, mais pas un serveur, une PWA ni un store. Aperçu local : `.claude/launch.json` (serveur Python sur `dist/`, port 8000). Pour republier l'artefact, vérifier d'abord que le wrapper accepte un document complet.
+
 ## Publication
 - Version de test en ligne : artefact claude.ai https://claude.ai/artifact/N8GkW6nxPUin8HEqqo37wL (republier `dist/meridien.html` au même lien ; dernière version publiée : v12).
 - Publication mobile : voir `docs/ROADMAP.md` (PWA puis Capacitor).
