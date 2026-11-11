@@ -34,6 +34,7 @@ Tout est dans `src/` : `p*` = programme, `d*` = données. Moteurs de jeux = obje
 Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `dist/` par les builds ; `dist/` entier est à publier (GitHub Pages), pas seulement le HTML. Le service worker (seule exception à « pas de fetch », uniquement pour les fichiers de l'appli) est « réseau d'abord » ; changer `CACHE` dans `sw.js` pour vider les caches. Les icônes se régénèrent avec `python scripts/make-icons.py` (Pillow).
 
 ## Publication
+- **Version en ligne (PWA)** : https://chemsbellaza.github.io/Meridien-App/ — dépôt public https://github.com/ChemsBellaza/Meridien-App ; chaque envoi sur `main` déclenche `.github/workflows/pages.yml` (build Python + déploiement, ~25 s). Je committe en local ; **c'est Chems qui envoie (Push) depuis GitHub Desktop**. Git est celui de GitHub Desktop (`%LOCALAPPDATA%\GitHubDesktop\app-*\resources\app\git\cmd\git.exe`, pas dans le PATH).
 - Version de test en ligne : artefact claude.ai https://claude.ai/artifact/N8GkW6nxPUin8HEqqo37wL (republier `dist/meridien.html` au même lien ; dernière version publiée : v12).
 - Publication mobile : voir `docs/ROADMAP.md` (PWA puis Capacitor).
 
