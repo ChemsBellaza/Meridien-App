@@ -161,7 +161,11 @@ function setAppHTML(html) {
 }
 
 /* ---------- calendrier : jeu, saison et manches du jour ---------- */
-const fmtOf = k => CONFIG.formatOrder[mod(diffDays(CONFIG.formatAnchor, k), CONFIG.formatOrder.length)];
+// jeu du jour : en ligne, chaque groupe a sa rotation (décalage + pas) ; sinon la rotation d'origine
+const fmtOf = k => {
+  const g = typeof srvGroupNow === "function" && srvOn() ? srvGroupNow() : null, n = CONFIG.formatOrder.length;
+  return CONFIG.formatOrder[mod((g ? +g.fmt_offset || 0 : 0) + (g ? +g.fmt_stride || 1 : 1) * diffDays(CONFIG.formatAnchor, k), n)];
+};
 function seasonOf(k) {
   const i = Math.max(0, Math.floor(diffDays(CONFIG.seasonAnchor, k) / CONFIG.seasonDays));
   const start = addDays(CONFIG.seasonAnchor, i * CONFIG.seasonDays);

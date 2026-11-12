@@ -17,7 +17,9 @@ const SRV_MSG = {
   group_full: "Ce groupe est complet.",
   too_many_attempts: "Trop de codes essayés. Réessaie dans une heure.",
   bad_name: "Le nom du groupe doit faire entre 2 et 24 caractères.",
-  already_in_group: "Tu es déjà dans un groupe.",
+  already_in_group: "Tu es déjà dans ce groupe.",
+  too_many_groups: "Tu es déjà dans 5 groupes, le maximum. Quitte-en un pour en rejoindre un autre.",
+  not_in_group: "Tu ne fais pas (ou plus) partie de ce groupe.",
   no_profile: "Ton profil n'existe pas encore en ligne.",
   rate: "Trop d'e-mails demandés. Réessaie dans quelques minutes.",
   bad_email: "Cette adresse e-mail n'a pas l'air valide.",
@@ -92,13 +94,67 @@ async function srvOnboard(o, pet) {
   const p = await srvUpsertProfile(o.name, pet); if (!p.ok) return p;
   const call = () => o.mode === "create" ? srvRpc("create_group", { p_name: o.group }) : srvRpc("join_group", { p_code: o.code });
   let r = await call();
-  if (r && r.error === "already_in_group") { await srvRpc("leave_group"); r = await call(); } // ex. après une réinitialisation locale
+  if (r && r.error === "already_in_group" && o.mode !== "create") { // déjà membre : on y retourne simplement
+    const code = String(o.code || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); SRV.sess = SRV.sess || null;
+    const gr = await srvLoadGroups(), g = SRV.groups.find(x => x.code === code);
+    if (gr && g) r = { ok: true, group: { id: g.id, name: g.name, code: g.code } };
+  }
+  if (r && r.ok && r.group) SRV.gid = r.group.id; // le nouveau groupe devient le groupe actif
   return r && r.ok ? r : { ok: false, error: (r && r.error) || "server" };
+}
+/* ---------- plusieurs groupes : SRV.groups = tous mes groupes, SRV.group = le groupe actif (SRV.gid, mémorisé) ---------- */
+SRV.groups = []; SRV.gid = (() => { try { return localStorage.getItem("meridien.gid") || ""; } catch (e) { return ""; } })();
+function srvGroupNow() { return SRV.group; }
+function srvPickActive() {
+  const g = SRV.groups.find(x => x.id === SRV.gid) || SRV.groups[0] || null;
+  SRV.group = g; SRV.gid = g ? g.id : "";
+  try { localStorage.setItem("meridien.gid", SRV.gid); } catch (e) {}
+  if (g && store.profile && (store.profile.group !== g.name || store.profile.code !== g.code)) { store.profile.group = g.name; store.profile.code = g.code; save(); }
+  return g;
+}
+async function srvLoadGroups() {
+  const r = await srvGet("/rest/v1/group_members?select=role,joined_at,groups(id,name,code,max_members,fmt_offset,fmt_stride)&user_id=eq." + myUid() + "&order=joined_at");
+  if (!r.ok || !Array.isArray(r.data)) return false;
+  SRV.groups = r.data.filter(x => x.groups).map(x => ({ ...x.groups, role: x.role }));
+  srvPickActive(); return true;
+}
+function srvResetGroupData() { SRV.members = null; SRV.ov = null; SRV.attempts = {}; SRV.msgs = []; SRV.reacts = []; SRV.chatSig = ""; SRV.syncedAt = 0; ui.reactOpen = null; }
+async function srvSwitchGroup(id) {
+  ui.sheet = false;
+  if (id && id !== SRV.gid) { SRV.gid = id; srvPickActive(); srvResetGroupData(); }
+  render(); if (SRV.syncing) await SRV.syncing; await srvSync(true);
+}
+// fenêtre « Mes groupes » : changer de groupe, en créer ou en rejoindre un, en quitter un
+function vGroupsSheet() {
+  const a = ui.gadd = ui.gadd || { mode: "", msg: "" }, max = 5;
+  const rows = SRV.groups.map(x => {
+    const on = x.id === SRV.gid;
+    return `<li class="grow2"><button class="gbtn ${on ? "on" : ""}" data-act="gswitch" data-v="${x.id}" aria-pressed="${on}"><b>${esc(x.name)}</b><small>${esc(fmtCode(x.code))} · ${on ? "groupe affiché" : "afficher"}</small></button><button class="smallbtn ghost" data-act="gleave" data-v="${x.id}" aria-label="Quitter le groupe ${esc(x.name)}">Quitter</button></li>`;
+  }).join("");
+  const form = a.mode ? `<form id="groupAddForm" class="plainform" novalidate><div class="field"><label for="gaddv">${a.mode === "create" ? "Nom du nouveau groupe" : "Code du groupe"}</label><input id="gaddv" ${a.mode === "create" ? `maxlength="24"` : `maxlength="8" placeholder="Ex. : K7Q4ZP" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase"`}></div>${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<div class="btnline"><button class="smallbtn" type="submit">${a.mode === "create" ? "Créer" : "Rejoindre"}</button><button class="smallbtn ghost" type="button" data-act="gaddno">Annuler</button></div></form>`
+    : SRV.groups.length >= max ? `<p class="note">Tu es dans ${max} groupes, le maximum.</p>`
+    : `<div class="btnline"><button class="smallbtn" data-act="gaddmode" data-v="create">+ Nouveau groupe</button><button class="smallbtn" data-act="gaddmode" data-v="join">Rejoindre un groupe</button></div>`;
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Mes groupes" data-stop>
+    <div class="sheethead"><div><h3>Mes groupes</h3><div class="muted">Chaque groupe a son propre jeu du jour et son propre classement.</div></div></div>
+    ${rows ? `<ul class="glist">${rows}</ul>` : `<p class="note">Tu n'es dans aucun groupe pour l'instant.</p>`}
+    ${form}
+    <button class="btn ghost" data-act="closesheet">Fermer</button>
+  </div></div>`;
+}
+async function srvAddGroup(mode, value) { // créer ou rejoindre un groupe de plus ; renvoie { ok } ou { ok:false, error }
+  const r = mode === "create" ? await srvRpc("create_group", { p_name: value }) : await srvRpc("join_group", { p_code: value });
+  if (!r || !r.ok) return { ok: false, error: (r && r.error) || "server" };
+  SRV.gid = r.group.id; await srvLoadGroups(); srvResetGroupData(); return { ok: true, group: r.group };
+}
+async function srvLeaveGroup(id) {
+  const r = await srvRpc("leave_group", { p_group: id });
+  if (!r || !r.ok) return srvHomeMsg(srvMsg(r && r.error));
+  if (SRV.gid === id) SRV.gid = ""; await srvLoadGroups(); srvResetGroupData(); ui.sheet = false; render(); srvSync(true);
 }
 async function srvRefreshGroup() {
   if (!store.profile || !store.profile.srv || srvLost()) return;
-  const [g, m] = await Promise.all([srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members)"), srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet)&order=joined_at")]);
-  if (g.ok && Array.isArray(g.data)) { SRV.group = g.data[0] ? g.data[0].groups : null; if (SRV.group && (store.profile.group !== SRV.group.name || store.profile.code !== SRV.group.code)) { store.profile.group = SRV.group.name; store.profile.code = SRV.group.code; save(); } }
+  await srvLoadGroups();
+  const m = await srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet)&group_id=eq." + SRV.gid + "&order=joined_at");
   if (m.ok && Array.isArray(m.data)) SRV.members = m.data;
   const typing = document.activeElement && document.activeElement.matches && document.activeElement.matches("input,textarea");
   if (ui.sheet && !game && !typing) render();
@@ -147,8 +203,9 @@ async function srvRestoreProfile() {
   const uid = SRV.sess.user.id;
   const pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,created_at,photo&id=eq." + uid);
   if (!pr.ok || !Array.isArray(pr.data) || !pr.data.length) return { ok: false, error: pr.error || "no_profile" };
-  const g = await srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members)");
+  const g = await srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members,fmt_offset,fmt_stride)&user_id=eq." + uid + "&order=joined_at");
   const grp = g.ok && Array.isArray(g.data) && g.data[0] ? g.data[0].groups : null, p = pr.data[0];
+  if (g.ok && Array.isArray(g.data)) { SRV.groups = g.data.filter(x => x.groups).map(x => ({ ...x.groups, role: x.role })); }
   store.profile = { name: p.pseudo, group: grp ? grp.name : "Sans groupe", code: grp ? grp.code : "", created: (p.created_at || "").slice(0, 10) || today(), pet: p.pet, tuto: { done: true, seen: { joker: true, carnet: true, trophees: true } }, srv: { uid }, seen: [] };
   if (p.photo) store.profile.photo = p.photo; // ma photo suit mon compte
   store.profile.seen = unlockedIds(progress());
@@ -273,15 +330,17 @@ async function srvSync(force) {
       if (!(await srvSyncClock())) return false;
       await srvFlushPending();
       const day = srvToday();
-      const [mem, ov, att, sum, grp] = await Promise.all([
-        srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet,photo_v)&order=joined_at"),
-        srvRpc("season_overview"),
-        srvGet("/rest/v1/attempts?select=day,try_idx,score,submitted_at,fmt,slow&day=eq." + day + "&order=try_idx"),
+      await srvLoadGroups(); // tous mes groupes + groupe actif (SRV.gid)
+      const gid = SRV.gid;
+      if (!gid) { SRV.members = []; SRV.ov = []; SRV.attempts = {}; SRV.msgs = []; SRV.reacts = []; SRV.syncedAt = performance.now(); const s0 = await srvRpc("my_summary"); if (s0 && s0.gems_total !== undefined) SRV.sum = s0; return true; }
+      const [mem, ov, att, sum] = await Promise.all([
+        srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet,photo_v)&group_id=eq." + gid + "&order=joined_at"),
+        srvRpc("season_overview", { p_group: gid }),
+        srvGet("/rest/v1/attempts?select=day,try_idx,score,submitted_at,fmt,slow&group_id=eq." + gid + "&day=eq." + day + "&order=try_idx"),
         srvRpc("my_summary"),
-        srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members)"),
         srvLoadChat()
       ]);
-      if (grp.ok && Array.isArray(grp.data) && grp.data[0]) SRV.group = grp.data[0].groups;
+      if (gid !== SRV.gid) return false; // le joueur a changé de groupe pendant le chargement : on abandonne ce résultat
       if (mem.ok && Array.isArray(mem.data)) { SRV.members = mem.data; await srvFetchPhotos(); }
       if (Array.isArray(ov)) SRV.ov = ov;
       if (att.ok && Array.isArray(att.data)) SRV.attempts[day] = att.data;
@@ -375,8 +434,8 @@ const srvBlocked = uid => SRV.blocks.has(uid);
 async function srvLoadChat() {
   const since = new Date((srvNowMs() || Date.now()) - 48 * 3600e3).toISOString();
   const [m, r, b] = await Promise.all([
-    srvGet("/rest/v1/messages?select=id,user_id,body,created_at,profiles(pseudo,pet)&created_at=gte." + encodeURIComponent(since) + "&order=created_at.asc&limit=300"),
-    srvGet("/rest/v1/reactions?select=user_id,target_type,target_id,emoji&limit=3000"),
+    srvGet("/rest/v1/messages?select=id,user_id,body,created_at,profiles(pseudo,pet)&group_id=eq." + SRV.gid + "&created_at=gte." + encodeURIComponent(since) + "&order=created_at.asc&limit=300"),
+    srvGet("/rest/v1/reactions?select=user_id,target_type,target_id,emoji&group_id=eq." + SRV.gid + "&limit=3000"),
     srvGet("/rest/v1/blocks?select=blocked_id")
   ]);
   if (b.ok && Array.isArray(b.data)) SRV.blocks = new Set(b.data.map(x => x.blocked_id));
@@ -480,7 +539,7 @@ async function playToday() {
 }
 // « C'est parti » : l'essai est compté par le serveur (jour et jeu décidés par lui)
 async function srvBeginTry(g) {
-  const r = await srvRpc("start_try");
+  const r = await srvRpc("start_try", { p_group: SRV.gid || null });
   if (!r || !r.ok) return r || { ok: false, error: "server" };
   if (r.day !== g.k || r.fmt !== g.fmt) return { ok: false, error: "day_changed" };
   g.attemptId = r.attempt_id; g.slow = timeFactor();
@@ -526,7 +585,7 @@ const srvSubmitNote = g => g.submit === "pending" ? "Enregistrement de ton score
 /* ---------- formulaires (en plus des écouteurs de pC_events.js) ---------- */
 document.addEventListener("submit", async e => {
   const id = e.target.id;
-  if (!["onlineForm", "recForm1", "recForm2", "acctForm1", "acctForm2"].includes(id)) return;
+  if (!["onlineForm", "recForm1", "recForm2", "acctForm1", "acctForm2", "groupAddForm"].includes(id)) return;
   e.preventDefault();
   const btn = e.target.querySelector('button[type="submit"]'), val = n => { const el = document.getElementById(n); return el ? el.value.trim() : ""; };
   const busy = on => { if (btn) btn.disabled = on; };
@@ -543,6 +602,13 @@ document.addEventListener("submit", async e => {
     if (!r.ok) return fail(srvMsg(r.error));
     Object.assign(store.profile, { group: r.group.name, code: r.group.code, srv: { uid: SRV.sess.user.id } }); save(); SRV.members = null;
     go("group"); srvSync(true); if (store.profile.photo) srvPushPhoto(); return;
+  }
+  if (id === "groupAddForm") { // créer / rejoindre un groupe de plus
+    const a = ui.gadd, v = val("gaddv");
+    if (a.mode === "create" ? v.length < 2 : v.replace(/[^A-Za-z0-9]/g, "").length < 4) { a.msg = a.mode === "create" ? srvMsg("bad_name") : "Entre le code que ton ami t'a donné."; return render(); }
+    busy(true); const r = await srvAddGroup(a.mode, v);
+    if (!r.ok) { a.msg = srvMsg(r.error); return render(); }
+    ui.gadd = null; ui.sheet = false; render(); srvSync(true); return;
   }
   if (id === "recForm1") {
     const email = val("recEmail").toLowerCase(), r = ui.rec; r.email = email;

@@ -111,7 +111,7 @@ function vGroup() {
     <button class="crew" data-act="season" aria-label="${players().length} membres, voir la saison"><span class="avstack">${players().slice(0, 5).map(p => avatar(p, "md")).join("")}</span></button>
     <button class="plain" data-act="history" aria-label="Jeux précédents">${I.history}</button>
   </header>
-  <div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>
+  ${srvOn() ? `<button class="gname gswitch" data-act="groups" aria-label="Mes groupes : ${esc(store.profile.group)}. Changer de groupe"><b>${esc(store.profile.group)}<span class="gchev" aria-hidden="true">▾</span></b><span>Défi n°${issueNo(k)} · ${longDate(k)}${SRV.groups.length > 1 ? ` · ${SRV.groups.length} groupes` : ""}</span></button>` : `<div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>`}
   <div class="pills">
     ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
     ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
@@ -255,12 +255,14 @@ function vPet() {
 }
 
 function vSheet() {
+  if (ui.sheet === "groups") return vGroupsSheet();
   const me = meP();
   return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Menu" data-stop>
     <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">${esc(store.profile.group)}</div></div></div>
     <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button>${featureOn("carnet") ? `<button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button>` : ""}${featureOn("trophees") ? `<button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button>` : ""}</div>
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
     ${mobileSheetBlocks()}
+    ${srvOn() ? `<button class="smallbtn" data-act="groups">Mes groupes (${SRV.groups.length || 1})</button>` : ""}
     ${accountSheetBlock()}
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
     <button class="smallbtn" data-act="tuto">Revoir le tutoriel</button>
@@ -320,6 +322,11 @@ document.addEventListener("click", e => {
     case "evoclose": ui.evo = null; game ? renderGame() : render(); break;
     case "evoreplay": { const pet = store.profile.pet, st = stageOf(pet); if (st > 1) { openEvo(pet, st - 1, st); render(); } break; }
     case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); break;
+    case "groups": ui.sheet = "groups"; ui.gadd = null; render(); srvLoadGroups().then(() => { if (ui.sheet === "groups" && !game) render(); }); break;
+    case "gswitch": srvSwitchGroup(v); break;
+    case "gaddmode": ui.gadd = { mode: v, msg: "" }; render(); break;
+    case "gaddno": ui.gadd = null; render(); break;
+    case "gleave": { const gr = SRV.groups.find(x => x.id === v); if (!gr) break; ui.confirm = { title: `Quitter « ${gr.name} » ?`, text: "Tes scores dans ce groupe ne compteront plus pour lui. Tu pourras le rejoindre avec son code.", yes: "Quitter", no: "Annuler", run: () => srvLeaveGroup(gr.id) }; render(); break; }
     case "goonline": ui.sheet = false; go("online"); break;
     case "emailskip": go("welcome"); break;
     case "stkopen": ui.stickers = !ui.stickers; render(); break;

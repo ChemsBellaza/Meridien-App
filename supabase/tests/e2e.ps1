@@ -80,7 +80,7 @@ $ab = Call $B "Get" "/rest/v1/attempts?select=id" $null $null
 Check "Bob ne voit que ses propres essais (1)" (@($ab).Count -eq 1) ("" + @($ab).Count)
 $dr = Rpc $B "day_results"
 $bob = $dr | Where-Object { $_.pseudo -eq "Bob" }; $ali = $dr | Where-Object { $_.pseudo -eq "Alice" }
-Check "classement du jour : Bob 1er (+32), Alice 2e (+16)" ($bob.pos -eq 1 -and $bob.gems -eq 32 -and $ali.pos -eq 2 -and $ali.gems -eq 16) ($dr | ConvertTo-Json -Compress)
+Check "classement du jour : Bob 1er (base 32 et 16 + bonus du jour)" ($bob.pos -eq 1 -and $bob.gems -ge 32 -and $ali.pos -eq 2 -and $ali.gems -ge 16 -and $bob.gems -gt $ali.gems) ($dr | ConvertTo-Json -Compress)
 Check "pastille « temps rallongé » visible pour Alice, pas pour Bob" ($ali.slow -eq $true -and $bob.slow -eq $false) ($dr | ConvertTo-Json -Compress)
 Check "résultats provisoires (jour non clos)" ($bob.is_final -eq $false) ($dr | ConvertTo-Json -Compress)
 $drc = Rpc $C "day_results"
@@ -91,12 +91,12 @@ Check "heure du serveur lisible et proche de l'heure réelle" ($sn -and [math]::
 $so = Rpc $B "season_overview"
 $sb = $so | Where-Object { $_.pseudo -eq "Bob" }; $sa = $so | Where-Object { $_.pseudo -eq "Alice" }
 Check "saison : une ligne par joueur et par jour joué (2)" (@($so).Count -eq 2) ($so | ConvertTo-Json -Compress)
-Check "saison : Bob 1er (+32) et Alice 2e (+16) sur 2 joueurs" ($sb.pos -eq 1 -and $sb.gems -eq 32 -and $sa.pos -eq 2 -and $sa.gems -eq 16 -and $sb.n -eq 2) ($so | ConvertTo-Json -Compress)
+Check "saison : Bob 1er (base 32) et Alice 2e (base 16), bonus du jour compris sur 2 joueurs" ($sb.pos -eq 1 -and $sb.base -eq 32 -and $sb.gems -eq (32 + [math]::Round(32*$sb.pct/100,[MidpointRounding]::AwayFromZero)) -and $sa.pos -eq 2 -and $sa.base -eq 16 -and $sa.gems -eq (16 + [math]::Round(16*$sa.pct/100,[MidpointRounding]::AwayFromZero)) -and $sb.n -eq 2) ($so | ConvertTo-Json -Compress)
 Check "saison : aucune ligne pour Carol (hors groupe)" ((N (Rpc $C "season_overview")) -eq 0) ""
 $sm = Rpc $B "my_summary"
-Check "résumé de Bob : 32 boussoles, 1 victoire, 1 jour, série 1, solde 0 (non réglé)" ($sm.gems_total -eq 32 -and $sm.wins -eq 1 -and $sm.days -eq 1 -and $sm.streak -eq 1 -and $sm.wallet -eq 0) ($sm | ConvertTo-Json -Compress)
+Check "résumé de Bob : boussoles = classement, 1 victoire, 1 jour, série 1, solde 0 (non réglé)" ($sm.gems_total -eq $bob.gems -and $sm.wins -eq 1 -and $sm.days -eq 1 -and $sm.streak -eq 1 -and $sm.wallet -eq 0) ($sm | ConvertTo-Json -Compress)
 $sma = Rpc $A "my_summary"
-Check "résumé d'Alice : 16 boussoles, 0 victoire" ($sma.gems_total -eq 16 -and $sma.wins -eq 0) ($sma | ConvertTo-Json -Compress)
+Check "résumé d'Alice : boussoles = classement, 0 victoire" ($sma.gems_total -eq $ali.gems -and $sma.wins -eq 0) ($sma | ConvertTo-Json -Compress)
 $ic = Rpc $A "_group_scores" @{ gid = $gid; d1 = "2000-01-01"; d2 = "2100-01-01" }
 Check "la fonction interne _group_scores n'est pas appelable par l'application" ($ic.__http_error -ge 400) ($ic | ConvertTo-Json -Compress)
 Check "série d'Alice = 1" ((Rpc $A "my_streak") -eq 1) ("" + (Rpc $A "my_streak"))
