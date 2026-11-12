@@ -6,7 +6,7 @@ const CONFIG = {
   tries: 2,                         // essais par jour
   mult: [1, 1.25, 1.5],             // multiplicateurs Facile / Moyen / Difficile
   gemsPerRank: 16,                  // boussoles gagnées par place devancée
-  seasonDays: 28,                   // durée d'une saison (= un tour de tous les jeux)
+  seasonDays: 21,                   // durée d'une saison ; bonus de boussoles : +5 % par jour (jour 1 = 0 %, jour 21 = +100 %)
   seasonAnchor: "2026-10-19",       // début de la saison 1 (et défi n°1)
   formatAnchor: "2026-10-25",       // ce jour-là = premier jeu de la liste
   jokerCost: 25,                    // prix d'un joker en boussoles

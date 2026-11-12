@@ -171,6 +171,9 @@ function seasonOf(k) {
   const start = addDays(CONFIG.seasonAnchor, i * CONFIG.seasonDays);
   return { n: i + 1, start, end: addDays(start, CONFIG.seasonDays - 1) };
 }
+// bonus de boussoles selon l'avancement de la saison : jour 1 = 0 %, +5 % par jour, jour 21 = +100 %
+const dayBonusPct = k => 5 * mod(diffDays(CONFIG.seasonAnchor, k), CONFIG.seasonDays);
+const dayInSeason = k => mod(diffDays(CONFIG.seasonAnchor, k), CONFIG.seasonDays) + 1;
 function manchesOf(seed, fmt) {
   const F = FORMATS[fmt], r = rng(seed + "|" + fmt + "|man");
   if (F.man === "themes") return shuffle(F.themes, r).slice(0, 3).map(t => ({ type: "theme", key: t, label: THEMES[t].label, color: THEMES[t].color }));
@@ -225,7 +228,8 @@ function dayResults(k) {
   played.forEach(r => {
     r.pos = played.findIndex(x => x.best === r.best) + 1;
     const worst = played.filter(x => x.best >= r.best).length;
-    r.gems = CONFIG.gemsPerRank * (N - worst + 1);
+    r.base = N >= 2 ? CONFIG.gemsPerRank * (N - worst + 1) : 0; r.beaten = N - worst; r.pct = dayBonusPct(k); r.bonus = Math.round(r.base * r.pct / 100);
+    r.gems = r.base + r.bonus;
     r.win = r.pos === 1;
   });
   return { played, waiting: rows.filter(r => r.best === null), N };
