@@ -181,6 +181,13 @@ Check "Bob a quitté les groupes ajoutés (il reste dans le premier)" ($left -eq
 $pc = ($sb.pct); $exp = 5 * ((([datetime]$sb.play_day - [datetime]"2026-10-19").Days % 21 + 21) % 21)
 Check "bonus de saison = 5 % par jour (jour 1 = 0 %)" ($pc -eq $exp) "pct=$pc attendu=$exp"
 
+"--- Rattrapage (migration 20261118) ---"
+$yd = ([datetime]::UtcNow.Date.AddDays(-1)).ToString("yyyy-MM-dd")
+$cu = Rpc $B "my_catchup" @{ p_group = $gid }
+Check "membre arrivé le jour même du groupe : rien à rattraper" ((N $cu) -eq 0) ($cu | ConvertTo-Json -Compress)
+$cx = Rpc $B "start_try" @{ p_group = $gid; p_day = $yd }
+Check "rattraper un jour non autorisé est refusé" ($cx.error -eq "catchup_unavailable") ($cx | ConvertTo-Json -Compress)
+
 "--- Propriété du groupe ---"
 $rm = Rpc $B "remove_member" @{ p_user = $users.Alice.id }
 Check "un simple membre ne peut pas retirer un joueur" ($rm.error -eq "not_owner") ($rm | ConvertTo-Json -Compress)
