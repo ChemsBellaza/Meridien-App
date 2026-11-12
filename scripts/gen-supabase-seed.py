@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère supabase/seed.sql (réglages et table des 28 formats) à partir de src/p1_config.js.
+"""Génère supabase/seed.sql (réglages et table des formats) à partir de src/p1_config.js.
 La source de vérité des règles reste CONFIG / FORMATS dans le code : relancer ce script après toute modification, puis appliquer le seed."""
 import os, re, sys
 
@@ -18,7 +18,11 @@ def text(name):
 
 order = re.search(r"formatOrder:\s*\[(.*?)\]", cfg, re.S)
 keys = re.findall(r'"([a-z0-9]+)"', order.group(1))
-if len(keys) != 28: sys.exit(f"28 formats attendus, {len(keys)} trouvés")
+more = open(os.path.join(ROOT, "src", "pQ_more.js"), encoding="utf-8").read()   # jeux ajoutés après coup (v26)
+push = re.search(r"formatOrder\.push\((.*?)\)", more, re.S)
+if push: keys += re.findall(r'"([a-z0-9]+)"', push.group(1))
+cfg += "\n" + more
+if len(set(keys)) != len(keys): sys.exit("Format en double dans formatOrder")
 mult = re.search(r"mult:\s*\[([^\]]+)\]", cfg).group(1).replace(" ", "")
 
 maxes = {}

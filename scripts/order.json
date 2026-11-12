@@ -15,6 +15,7 @@
   "pS_server.js",
   "pK_stickers.js",
   "p3_art.js",
+  "pQ_more.js",
   "p4_draw.js",
   "p5_ui.js",
   "pC_events.js",

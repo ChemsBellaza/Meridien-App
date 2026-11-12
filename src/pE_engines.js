@@ -30,6 +30,7 @@ ENG.mcq = {
     if (g.fmt === "rebus") return fromPool(g, REBUS[m.key][d], per, `rebus|${m.key}|${d}`).map(q => ({ kind: "emoji", big: q[0], prompt: m.key === "cine" ? "Quel film ?" : m.key === "geo" ? "Quel lieu ?" : "Quelle expression ?", opts: q[1], fact: q[2], learn: { t: `${q[0]} ${q[1][0]}`, f: q[2] } }));
     if (g.fmt === "citations") return fromPool(g, QUOTES[m.key][d], per, `quote|${m.key}|${d}`).map(q => ({ kind: "quote", quote: q[0], prompt: "Qui a dit ça ?", opts: q[1], fact: q[2], learn: { t: `« ${q[0]} »`, f: `${q[1][0]}. ${q[2]}` } }));
     if (g.fmt === "sigles") return fromPool(g, SIGLES[m.key][d], per, `sig|${m.key}|${d}`).map(q => ({ kind: "sigle", big: q[0], opts: q.slice(1, 5), fact: q[5], learn: { t: q[0], f: q[1] } }));
+    if (NEWQ[g.fmt]) return fromPool(g, NEWQ[g.fmt][m.key][d], per, `${g.fmt}|${m.key}|${d}`).map(q => ({ kind: "text", prompt: q[0], opts: q[1], fact: q[2], learn: { t: q[1][0], f: q[2] } }));
     if (g.fmt === "drapeaux") {
       const pool = COUNTRIES.filter(c => contGroup(c) === m.key);
       return countryQueue(m.key, d, r).slice(0, per).map(c => ({ kind: "flag", flag: flagOf(c), id: c.id, opts: [c.name, ...distractors(c, 3, r, pool).map(o => o.name)], stamp: c.id,

@@ -1,7 +1,7 @@
 -- GÉNÉRÉ par scripts/gen-supabase-seed.py à partir de src/p1_config.js : ne pas modifier à la main.
 
 insert into public.app_config (id, tries_per_day, gems_per_rank, joker_cost, mult, format_anchor, season_anchor, season_days, timezone)
-values (1, 2, 16, 25, '{1,1.25,1.5}', date '2026-10-25', date '2026-10-19', 28, 'Europe/Paris')
+values (1, 2, 16, 25, '{1,1.25,1.5}', date '2026-10-25', date '2026-10-19', 21, 'Europe/Paris')
 on conflict (id) do update set tries_per_day = excluded.tries_per_day, gems_per_rank = excluded.gems_per_rank, joker_cost = excluded.joker_cost,
   mult = excluded.mult, format_anchor = excluded.format_anchor, season_anchor = excluded.season_anchor, season_days = excluded.season_days;
 
@@ -33,5 +33,9 @@ insert into public.formats (position, key, max_points) values
   (24, 'voisins', 300),
   (25, 'citations', 200),
   (26, 'classement', 300),
-  (27, 'blocs', 300)
+  (27, 'blocs', 300),
+  (28, 'expressions', 300),
+  (29, 'inventions', 300),
+  (30, 'monuments', 300),
+  (31, 'corps', 300)
 on conflict (position) do update set key = excluded.key, max_points = excluded.max_points;

@@ -71,7 +71,7 @@ function tutoIntro(g) {
   const pet = store.profile.pet, F = FORMATS[g.fmt];
   return `<div class="rowtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button><span class="flag">Manche d'essai · non comptée</span><span></span></div>
     <div class="hcard static">${art(g.fmt, g.k)}${labels("Manche d'essai", F.name)}</div>
-    ${coach("Voici le Quiz éclair, l'un des 28 jeux. Chaque jour, un jeu différent t'attend. Ici : 3 questions pour t'échauffer.")}
+    ${coach("Voici le Quiz éclair, l'un des 32 jeux. Chaque jour, un jeu différent t'attend. Ici : 3 questions pour t'échauffer.")}
     <p class="qsub">${fr(F.sub)}</p>
     <button class="btn" data-g="start" style="margin-top:auto">C'est parti</button>`;
 }

@@ -1,6 +1,6 @@
 # Méridien — contexte pour Claude Code
 
-Méridien est un jeu communautaire quotidien de culture générale (inspiré de Playus) : **un jeu par jour** en rotation parmi 28 formats, 3 manches avec choix de difficulté (×1 / ×1,25 / ×1,5), 2 essais par jour, pseudo + code de groupe, classement de saison, carnet de voyage, jokers (boussoles), succès et familiers collectionnables à évoluer.
+Méridien est un jeu communautaire quotidien de culture générale (inspiré de Playus) : **un jeu par jour** en rotation parmi 32 formats, 3 manches avec choix de difficulté (×1 / ×1,25 / ×1,5), 2 essais par jour, pseudo + code de groupe, classement de saison, carnet de voyage, jokers (boussoles), succès et familiers collectionnables à évoluer.
 Le propriétaire (Chems) parle **français** : toute l'interface, les messages, les commits et les échanges sont en français. Fuseau Europe/Madrid.
 
 ## Commandes
@@ -47,6 +47,10 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 - Un joueur peut être dans 5 groupes ; **chaque groupe a son jeu du jour** (rotation propre : `fmt_offset` + `fmt_stride` × jour, modulo le nombre de formats). Côté client, `fmtOf(k)` suit le groupe actif (`srvGroupNow()`), jamais de rotation globale en ligne. Groupe actif = `SRV.gid` (mémorisé `meridien.gid`), liste = `SRV.groups`. Toute requête de lecture est filtrée par `group_id=eq.<gid>` ; `start_try` / `season_overview` reçoivent `p_group`. Changer de groupe : `srvSwitchGroup` (réinitialise les caches du groupe).
 - Saison de 21 jours ; bonus de boussoles +5 % par jour (`dayBonusPct`, côté serveur dans `_group_scores`). Le serveur reste seul juge ; les deux formules (JS pour les profils locaux, SQL) doivent rester identiques.
 - Les anciennes signatures sans `p_group` sont conservées en comportement (plus ancien groupe) : migration appliquée avant le code, comme toujours.
+
+## Jeux ajoutés (v26)
+- 4 jeux QCM dans `src/pQ_more.js` (données `NEWQ[format][catégorie][niveau]`, 8 questions par case, bonne réponse en premier) ; ajouter un jeu = entrée `FORMATS` + `formatOrder.push` + illustration `ART2` + ligne dans `formats` côté serveur (migration) + `python scripts/gen-supabase-seed.py`. Les pas de rotation des groupes doivent rester premiers avec le nombre de jeux (impairs tant que 32).
+- `fromPool` : ordre fixe par réserve, avance d'un bloc à chaque passage du jeu ; ne pas y remettre la date.
 
 ## Smartphone d'abord (le jeu se joue au doigt)
 - Toute zone tapable fait **au moins 44 × 44 px** (hauteur minimale ou zone invisible `::after` élargie). Champs de saisie ≥ 16 px (sinon iOS zoome).
