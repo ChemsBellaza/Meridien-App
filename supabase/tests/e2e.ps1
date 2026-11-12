@@ -155,6 +155,32 @@ Check "une photo trop lourde (> 60 Ko) est refusée" ($bad2.__http_error -ge 400
 $bad3 = Call $A "Patch" "/rest/v1/profiles?id=eq.$($users.Bob.id)" @{ photo = $null } @{ Prefer = "return=representation" }
 $still = Call $A "Get" "/rest/v1/profiles?select=photo_v&id=eq.$($users.Bob.id)" $null $null
 Check "Alice ne peut pas modifier la photo de Bob" ($still.photo_v -eq 1700000000) ($still | ConvertTo-Json -Compress)
+"--- Plusieurs groupes (migration 20261117) ---"
+$g2 = Rpc $B "create_group" @{ p_name = "Second groupe" }
+Check "Bob crée un second groupe (il est déjà dans le premier)" ($g2.ok -eq $true) ($g2 | ConvertTo-Json -Compress)
+$gid2 = $g2.group.id
+Check "Bob appartient à 2 groupes" ((Cnt $B "/rest/v1/group_members?select=group_id&user_id=eq.$($users.Bob.id)") -eq 2) ""
+$tg = Rpc $B "start_try" @{ p_group = $gid2 }
+Check "essai dans le second groupe : indépendant du premier (essai n°0)" ($tg.ok -eq $true -and $tg.try_idx -eq 0 -and $tg.group_id -eq $gid2) ($tg | ConvertTo-Json -Compress)
+$fo = Rpc $B "format_of" @{ p_day = $tg.day; p_group = $gid2 }
+Check "le jeu de l'essai est celui du groupe" ($fo -eq $tg.fmt) "$fo / $($tg.fmt)"
+$tg2 = Rpc $B "start_try" @{ p_group = $gid2 }; $tg3 = Rpc $B "start_try" @{ p_group = $gid2 }
+Check "2 essais par jour et par groupe : le 3e est refusé" ($tg2.ok -eq $true -and $tg3.error -eq "no_tries_left") ($tg3 | ConvertTo-Json -Compress)
+Check "Alice (hors du second groupe) ne le voit pas" ((Cnt $A "/rest/v1/groups?select=id&id=eq.$gid2") -eq 0) ""
+$sox = Rpc $A "season_overview" @{ p_group = $gid2 }
+Check "Alice ne lit pas le classement du second groupe" ((N $sox) -eq 0) ($sox | ConvertTo-Json -Compress)
+$nig = Rpc $C "start_try" @{ p_group = $gid2 }
+Check "Carol ne peut pas jouer dans un groupe qui n'est pas le sien" ($nig.error -eq "not_in_group") ($nig | ConvertTo-Json -Compress)
+$extra = @(); foreach ($i in 1..3) { $x = Rpc $B "create_group" @{ p_name = "Extra $i" }; $extra += $x.group.id }
+$six = Rpc $B "create_group" @{ p_name = "Sixième" }
+Check "limite de 5 groupes par joueur" ($six.error -eq "too_many_groups") ($six | ConvertTo-Json -Compress)
+$extra += $gid2; $lv = @(); foreach ($e in $extra) { $lv += (Rpc $B "leave_group" @{ p_group = $e }) }
+$raw = Call $B "Get" "/rest/v1/group_members?select=group_id,user_id" $null $null
+$left = @($raw | Where-Object { $_.user_id -eq $users.Bob.id }).Count
+Check "Bob a quitté les groupes ajoutés (il reste dans le premier)" ($left -eq 1) ("restants=$left ; " + ($lv | ConvertTo-Json -Compress))
+$pc = ($sb.pct); $exp = 5 * ((([datetime]$sb.play_day - [datetime]"2026-10-19").Days % 21 + 21) % 21)
+Check "bonus de saison = 5 % par jour (jour 1 = 0 %)" ($pc -eq $exp) "pct=$pc attendu=$exp"
+
 "--- Propriété du groupe ---"
 $rm = Rpc $B "remove_member" @{ p_user = $users.Alice.id }
 Check "un simple membre ne peut pas retirer un joueur" ($rm.error -eq "not_owner") ($rm | ConvertTo-Json -Compress)

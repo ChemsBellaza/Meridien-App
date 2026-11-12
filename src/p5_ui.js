@@ -260,8 +260,17 @@ function vPet() {
     <p class="dextext">${fr(S.dex[st - 1])}</p>
     <div class="traits">${S.traits.map(t => `<span>${t}</span>`).join("")}</div>
   </div>
+  <div class="avprev">${avatar(me, "xl")}<div class="grow"><b>${esc(store.profile.name)}</b><p class="note">${me.photo ? `Ta photo, avec ${esc(petName(pet))} en médaillon.` : `Ajoute ta photo : ${esc(petName(pet))} se posera en médaillon.`}</p><div class="btnline"><button class="smallbtn" data-act="rename">Changer de pseudo</button>${photoBtn(me.photo ? "Changer" : "Ajouter ma photo")}${me.photo ? `<button class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
+  <div class="kicker pers">Personnaliser ton familier</div>
+  <div class="chips" role="group" aria-label="Catégorie">${["species", "shiny", "bg"].map(c => `<button data-act="pettab" data-v="${c}" aria-pressed="${cat === c}">${ITEMS[c].label}</button>`).join("")}</div>
+  <div class="items">${(cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list).map(it => {
+    const open = isUnlocked(it, prog), on = pet[cat] === it.id, sil = cat === "species" && !open;
+    const shown = { ...pet, [cat]: it.id };
+    const lbl = cat === "species" ? SPECIES[it.id].names[stageOf(pet) - 1] : it.label;
+    return `<${open ? "button" : "div"} class="item ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="${cat}|${it.id}" aria-pressed="${on}"` : ""}>
+      ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
+  }).join("")}</div>
   <div class="evorow"><span class="kicker">Évolutions</span><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div>
-  <div class="avprev">${avatar(me, "xl")}<div class="grow"><b>Ton avatar</b><p class="note">${me.photo ? `Ta photo, avec ${esc(petName(pet))} en médaillon.` : `Ajoute ta photo : ${esc(petName(pet))} se posera en médaillon.`}</p><div class="btnline">${photoBtn(me.photo ? "Changer" : "Ajouter ma photo")}${me.photo ? `<button class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
   <div class="pills four">
     ${pill(I.compass(22), fmtNum(prog.gems), "noop", `${fmtNum(prog.gems)} boussoles gagnées`)}
     ${pill(I.fire(22), prog.streak, "noop", `Série de ${prog.streak} jours`)}
@@ -270,19 +279,16 @@ function vPet() {
   </div>
   <div class="homerow"><button class="hrow" data-act="trophees">${I.medal(24)}<span class="grow"><b>Succès</b></span><b class="num">${Object.keys(store.ach).length}<small>/${ACH.length}</small></b></button><button class="hrow" data-act="carnet">${I.book(24)}<span class="grow"><b>Carnet</b></span><b class="num">${prog.carnet}</b></button></div>
   ${nx ? `<div class="nextup"><span class="kicker">Prochain déblocage</span><b>${esc(nx.cat === "species" ? `${SPECIES[nx.it.id].names[0]} · nouveau familier` : nx.cat === "stage" ? `Évolution en ${S.names[+nx.it.id - 1]}` : `${nx.it.label} · ${ITEMS[nx.cat].label.toLowerCase()}`)}</b><span class="note">${reqText(nx.it.need)} : encore ${fmtNum(nx.left)}.</span><div class="bar" aria-hidden="true"><i style="width:${Math.min(100, Math.round(100 * nx.have / nx.it.need.v))}%"></i></div></div>` : `<div class="nextup"><b>Tout est débloqué. Bravo !</b></div>`}
-  <div class="chips" role="group" aria-label="Catégorie">${["species", "shiny", "bg"].map(c => `<button data-act="pettab" data-v="${c}" aria-pressed="${cat === c}">${ITEMS[c].label}</button>`).join("")}</div>
-  <div class="items">${(cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list).map(it => {
-    const open = isUnlocked(it, prog), on = pet[cat] === it.id, sil = cat === "species" && !open;
-    const shown = { ...pet, [cat]: it.id };
-    const lbl = cat === "species" ? SPECIES[it.id].names[stageOf(pet) - 1] : it.label;
-    return `<${open ? "button" : "div"} class="item ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="${cat}|${it.id}" aria-pressed="${on}"` : ""}>
-      ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
-  }).join("")}</div>`;
+`;
 }
 
 function vSheet() {
   if (ui.sheet === "groups") return vGroupsSheet();
   if (ui.sheet === "detail") return vDetailSheet();
+  if (ui.sheet === "rename") return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Changer de pseudo" data-stop>
+    <div class="sheethead"><div><h3>Changer de pseudo</h3><div class="muted">Tes amis verront ce nouveau nom (2 à 16 caractères).</div></div></div>
+    <form id="renameForm" class="plainform" novalidate><div class="field"><label for="newName">Pseudo</label><input id="newName" maxlength="16" autocomplete="nickname" value="${esc(store.profile.name)}"></div>${ui.renameMsg ? `<p class="err" role="alert">${esc(ui.renameMsg)}</p>` : ""}<div class="btnline"><button class="smallbtn" type="submit">Enregistrer</button><button class="smallbtn ghost" type="button" data-act="closesheet">Annuler</button></div></form>
+  </div></div>`;
   const me = meP();
   return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Menu" data-stop>
     <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">${esc(store.profile.group)}</div></div></div>
@@ -372,6 +378,7 @@ document.addEventListener("click", e => {
     case "evoreplay": { const pet = store.profile.pet, st = stageOf(pet); if (st > 1) { openEvo(pet, st - 1, st); render(); } break; }
     case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); break;
     case "detail": { const [pid, dk] = String(v).split("|"); ui.detail = { pid, k: dk }; ui.sheet = "detail"; render(); break; }
+    case "rename": ui.sheet = "rename"; ui.renameMsg = ""; render(); break;
     case "groups": ui.sheet = "groups"; ui.gadd = null; render(); srvLoadGroups().then(() => { if (ui.sheet === "groups" && !game) render(); }); break;
     case "gswitch": srvSwitchGroup(v); break;
     case "gaddmode": ui.gadd = { mode: v, msg: "" }; render(); break;

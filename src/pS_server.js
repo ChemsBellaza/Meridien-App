@@ -591,7 +591,7 @@ const srvSubmitNote = g => g.submit === "pending" ? "Enregistrement de ton score
 /* ---------- formulaires (en plus des écouteurs de pC_events.js) ---------- */
 document.addEventListener("submit", async e => {
   const id = e.target.id;
-  if (!["onlineForm", "recForm1", "recForm2", "acctForm1", "acctForm2", "groupAddForm"].includes(id)) return;
+  if (!["onlineForm", "recForm1", "recForm2", "acctForm1", "acctForm2", "groupAddForm", "renameForm"].includes(id)) return;
   e.preventDefault();
   const btn = e.target.querySelector('button[type="submit"]'), val = n => { const el = document.getElementById(n); return el ? el.value.trim() : ""; };
   const busy = on => { if (btn) btn.disabled = on; };
@@ -608,6 +608,16 @@ document.addEventListener("submit", async e => {
     if (!r.ok) return fail(srvMsg(r.error));
     Object.assign(store.profile, { group: r.group.name, code: r.group.code, srv: { uid: SRV.sess.user.id } }); save(); SRV.members = null;
     go("group"); srvSync(true); if (store.profile.photo) srvPushPhoto(); return;
+  }
+  if (id === "renameForm") { // nouveau pseudo : local, puis envoyé au serveur si le profil est en ligne
+    const v = val("newName").replace(/\s+/g, " ");
+    if (v.length < 2 || v.length > 16) { ui.renameMsg = "Le pseudo doit faire entre 2 et 16 caractères."; return render(); }
+    if (srvOn()) {
+      busy(true); const tok = await srvToken();
+      const r = tok ? await srvFetch("/rest/v1/profiles?id=eq." + myUid(), { method: "PATCH", token: tok, prefer: "return=minimal", body: { pseudo: v } }) : { ok: false, offline: true };
+      if (!r.ok) { ui.renameMsg = r.offline ? srvMsg("offline") : "Pseudo non enregistré. Réessaie."; return render(); }
+    }
+    store.profile.name = v; save(); ui.sheet = false; ui.renameMsg = ""; render(); if (srvOn()) srvSync(true); return;
   }
   if (id === "groupAddForm") { // créer / rejoindre un groupe de plus
     const a = ui.gadd, v = val("gaddv");

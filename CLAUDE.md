@@ -43,6 +43,11 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 - **Secrets** : jamais de clé `service_role`, de mot de passe de base ni de jeton dans le dépôt (public) ni dans une conversation. Le client n'a besoin que de l'URL du projet et de la clé `anon`. Je ne crée pas de compte à la place de Chems.
 - Les règles du jeu (`CONFIG`, `FORMATS`) restent la source de vérité dans le code ; après toute modification, relancer `python scripts/gen-supabase-seed.py` et réappliquer le seed.
 
+## Plusieurs groupes et bonus de saison (v24)
+- Un joueur peut être dans 5 groupes ; **chaque groupe a son jeu du jour** (rotation propre : `fmt_offset` + `fmt_stride` × jour, modulo le nombre de formats). Côté client, `fmtOf(k)` suit le groupe actif (`srvGroupNow()`), jamais de rotation globale en ligne. Groupe actif = `SRV.gid` (mémorisé `meridien.gid`), liste = `SRV.groups`. Toute requête de lecture est filtrée par `group_id=eq.<gid>` ; `start_try` / `season_overview` reçoivent `p_group`. Changer de groupe : `srvSwitchGroup` (réinitialise les caches du groupe).
+- Saison de 21 jours ; bonus de boussoles +5 % par jour (`dayBonusPct`, côté serveur dans `_group_scores`). Le serveur reste seul juge ; les deux formules (JS pour les profils locaux, SQL) doivent rester identiques.
+- Les anciennes signatures sans `p_group` sont conservées en comportement (plus ancien groupe) : migration appliquée avant le code, comme toujours.
+
 ## Smartphone d'abord (le jeu se joue au doigt)
 - Toute zone tapable fait **au moins 44 × 44 px** (hauteur minimale ou zone invisible `::after` élargie). Champs de saisie ≥ 16 px (sinon iOS zoome).
 - Écran de jeu : `.game` est `position: fixed` et s'arrête à `bottom: var(--kb)` (hauteur du clavier, `pM_mobile.js`) ; un bouton d'action sous des champs de saisie reçoit `.stickybtn`.
