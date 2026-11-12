@@ -405,7 +405,7 @@ function onlineDayResults(k) {
   const pl = onlinePlayers(), uid = myUid(), rows = (SRV.ov || []).filter(r => r.play_day === k);
   const played = rows.map(r => {
     const p = r.player_id === uid ? pl[0] : (pl.find(x => x.id === r.player_id) || { id: r.player_id, name: r.pseudo, color: colorOf(r.player_id), pet: defaultPet("renard") });
-    return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, base: r.base || 0, bonus: r.bonus || 0, pct: r.pct || 0, beaten: r.beaten || 0, win: r.pos === 1 && r.n >= 2, slow: !!r.slow, sk: r.score_key || `${r.player_id}-${r.play_day}` };
+    return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, tryScores: Array.isArray(r.try_scores) ? r.try_scores : null, base: r.base || 0, bonus: r.bonus || 0, pct: r.pct || 0, beaten: r.beaten || 0, win: r.pos === 1 && r.n >= 2, slow: !!r.slow, sk: r.score_key || `${r.player_id}-${r.play_day}` };
   }).sort((a, b) => a.pos - b.pos || String(a.name).localeCompare(String(b.name), "fr"));
   const ids = new Set(played.map(p => p.id));
   return { played, waiting: pl.filter(p => !ids.has(p.id)), N: played.length };

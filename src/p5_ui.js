@@ -307,6 +307,7 @@ function vSheet() {
   </div></div>`;
 }
 
+const tryList = r => { const l = r.tryScores || (r.plays && r.plays.length > 1 ? r.plays.map(p => p.score) : null); return l && l.length > 1 ? l : null; };
 // détail d'un score (clic sur une ligne du classement) : points du jeu, rang et décompte des boussoles
 function vDetailSheet() {
   const d = ui.detail || {}, k = d.k || today(), res = dayResults(k), r = res.played.find(x => String(x.id) === String(d.pid));
@@ -318,6 +319,7 @@ function vDetailSheet() {
     <div class="dhead">${avatar(r, "lg")}<div><h3>${esc(r.name)}${r.me ? toi : ""}</h3><div class="muted">${esc(FORMATS[f].name)} · ${shortDate(k)}</div></div></div>
     <div class="dpills"><span class="dpill">${I.trophy(18)}Classement <b class="num">#${r.pos}</b></span><span class="dpill">${I.compass(18)}Boussoles <b class="num">${fmtNum(tot || 0)}</b></span></div>
     <div class="dscore"><b class="num">${fmtNum(r.best)} pts</b><span>${r.tries > 1 ? `meilleur de ${r.tries} essais` : "1 essai"}</span></div>
+    ${tryList(r) ? `<ul class="dtries" aria-label="Score de chaque essai">${tryList(r).map((s, i) => `<li class="${s === r.best ? "top" : ""}"><span>Essai ${i + 1}</span><b class="num">${fmtNum(s)} pts</b>${s === r.best ? `<i>meilleur</i>` : ""}</li>`).join("")}</ul>` : ""}
     ${res.N >= 2 ? `<ul class="dlines">
       ${line("✓", "Partie jouée", "+" + g)}
       ${line(I.trophy(16), `${n} autre${n > 1 ? "s" : ""} battu${n > 1 ? "s" : ""}`, "+" + (g * n))}

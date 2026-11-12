@@ -22,8 +22,11 @@ const roundRng = (g, extra = "") => g.practice ? Math.random : rng(`${g.k}|${g.f
 function fromPool(g, pool, per, poolKey, shared) {
   if (!pool || !pool.length) return [];
   if (g.practice) return shuffle(pool).slice(0, per);
-  const order = shuffle(pool.map((_, i) => i), rng(`${g.k}|${g.fmt}|${poolKey}`));
-  const off = shared ? (g.tryIdx * 3 + g.round) * per : g.tryIdx * per;
+  // ordre fixe pour ce jeu et cette réserve (indépendant du jour) ; chaque passage du jeu (tous les 28 jours) avance de tout un bloc :
+  // les questions ne reviennent qu'après avoir fait le tour de la réserve
+  const order = shuffle(pool.map((_, i) => i), rng(`${g.fmt}|${poolKey}`));
+  const occ = Math.max(0, Math.floor(diffDays(CONFIG.formatAnchor, g.k) / CONFIG.formatOrder.length)), block = (shared ? 3 : 1) * per * CONFIG.tries;
+  const off = occ * block + (shared ? (g.tryIdx * 3 + g.round) * per : g.tryIdx * per);
   return Array.from({ length: per }, (_, i) => pool[order[(off + i) % order.length]]);
 }
 function beginTry() {
