@@ -36,13 +36,13 @@ function renderGame() {
   } else if (g.phase === "intro") {
     const pet = store.profile.pet, Sp = SPECIES[pet.species];
     body = `
-      <div class="rowtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button>${g.practice ? `<span class="flag">Entraînement · non compté</span>` : `<span class="kicker">Défi n°${issueNo(g.k)} · essai ${g.tryIdx + 1}/${CONFIG.tries}</span>`}<span></span></div>
+      <div class="rowtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button>${g.practice ? `<span class="flag">Entraînement · non compté</span>` : g.catchup ? `<span class="kicker">Rattrapage · ${shortDate(g.k)} · 1 seul essai</span>` : `<span class="kicker">Défi n°${issueNo(g.k)} · essai ${g.tryIdx + 1}/${CONFIG.tries}</span>`}<span></span></div>
       <div class="hcard static">${art(g.fmt, g.k)}${labels("3 manches", F.name)}</div>
       <p class="qsub">${fr(F.sub)}</p>
       <div class="rounds center">${g.manches.map((m, i) => roundChip(m, i)).join("")}</div>
       <div class="facts">
         <div class="f"><span class="kicker">Difficulté</span><span><b>À choisir avant chaque manche.</b> Facile ${fmtMult(CONFIG.mult[0])}, Moyen ${fmtMult(CONFIG.mult[1])}, Difficile ${fmtMult(CONFIG.mult[2])}.</span></div>
-        <div class="f"><span class="kicker">${g.practice ? "Entraînement" : "Essais"}</span><span>${g.practice ? "Contenu au hasard, sans effet sur ton classement." : `<b>Essai ${g.tryIdx + 1} sur ${CONFIG.tries}.</b> Seul ton meilleur score compte${g.tryIdx === 0 ? ", et le 2e essai change le contenu" : ""}. L'essai est compté dès que tu commences.`}</span></div>
+        <div class="f"><span class="kicker">${g.practice ? "Entraînement" : "Essais"}</span><span>${g.practice ? "Contenu au hasard, sans effet sur ton classement." : g.catchup ? `<b>Rattrapage : un seul essai.</b> Ton score est classé face aux joueurs de ce jour-là, sans changer leur place. L'essai est compté dès que tu commences.` : `<b>Essai ${g.tryIdx + 1} sur ${CONFIG.tries}.</b> Seul ton meilleur score compte${g.tryIdx === 0 ? ", et le 2e essai change le contenu" : ""}. L'essai est compté dès que tu commences.`}</span></div>
         ${CHRONO[g.fmt] ? `<div class="f"><span class="kicker">Chrono</span><span><b>${chronoLabel(g.fmt)}</b> ${["connexions", "relier", "paysmystere", "plusmoins"].includes(g.fmt) ? "pour la manche" : "par question"}. Quand le temps est écoulé, ce qui est en cours est validé.</span></div>` : ""}
         ${E().joker && featureOn("joker") ? `<div class="f"><span class="kicker">Joker</span><span><b>${esc(E().joker.label)}</b>, une fois par manche, pour ${CONFIG.jokerCost} boussoles. ${esc(E().joker.help || "")}</span></div>` : ""}
       </div>
@@ -106,7 +106,7 @@ function vEnd() {
   const best = g.practice ? g.score : Math.max(...mine.map(p => p.score));
   const res = g.practice ? null : dayResults(g.k);
   const me = res && res.played.find(r => r.me);
-  const left = g.practice ? 0 : CONFIG.tries - mine.length;
+  const left = g.practice || g.catchup ? 0 : CONFIG.tries - mine.length;
   const pet = store.profile.pet, Sp = SPECIES[pet.species];
   const maxP = g.manches.reduce((s, m, i) => s + F.max * CONFIG.mult[g.diffs[i] ?? 0], 0), ratio = g.score / maxP, kind = ratio >= .6 ? "good" : ratio >= .3 ? "mid" : "bad";
   const stamps = g.newStamps || [];
@@ -114,7 +114,7 @@ function vEnd() {
   const tiles = me ? `<div class="stats3">
       <div class="stile"><span class="sm">Rang du jour</span><b class="big num">N°${me.pos}</b><span class="sm">sur ${res.N} joueur${res.N > 1 ? "s" : ""}</span></div>
       <div class="stile"><span class="sm">Boussoles</span><b class="big num">+${me.gems}</b><span class="sm">${I.compass(14)}gagnées</span></div>
-      <div class="stile"><span class="sm">Essai</span><b class="big num">${g.tryIdx + 1}/${CONFIG.tries}</b><span class="sm">meilleur : ${fmtNum(best)}</span></div>
+      <div class="stile"><span class="sm">Essai</span><b class="big num">${g.catchup ? "1/1" : `${g.tryIdx + 1}/${CONFIG.tries}`}</b><span class="sm">${g.catchup ? "rattrapage" : `meilleur : ${fmtNum(best)}`}</span></div>
     </div>` : "";
   return `
     <div class="endhead"><span class="mono muted">${esc(F.name)} · ${g.practice ? "entraînement" : "essai " + (g.tryIdx + 1)}</span>${g.practice ? `<span class="flag mono">Non compté</span>` : ""}</div>

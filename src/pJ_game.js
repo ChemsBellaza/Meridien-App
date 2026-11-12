@@ -1,16 +1,17 @@
 /* ============ JEU : démarrage, manches, barème, chrono ============ */
-function startGame(practice, fmtForced) {
-  const k = today();
+function startGame(practice, fmtForced, catchDay) {
+  const k = catchDay || today(); // catchDay : rattrapage d'un jeu précédent de la saison (1 seul essai, en ligne)
   const fmt = practice ? fmtForced : fmtOf(k);
   const online = !practice && srvOn(); // en ligne : essais et jour décidés par le serveur
   let tryIdx = 0;
-  if (!practice) {
+  if (catchDay && !online) return;
+  if (!practice && !catchDay) {
     const mine = online ? (SRV.attempts[k] || []) : (store.plays[k] = store.plays[k] || []);
     if (mine.length >= CONFIG.tries) return;
     tryIdx = mine.length;
   }
   const seed = practice ? "p" + Date.now() : k;
-  game = { k, fmt, seed, practice, online, tryIdx, manches: manchesOf(seed, fmt), round: 0, phase: "intro", diffs: [], qs: [], qi: 0, score: 0, roundPts: [0, 0, 0],
+  game = { k, fmt, seed, practice, online, tryIdx, catchup: !!catchDay, manches: manchesOf(seed, fmt), round: 0, phase: "intro", diffs: [], qs: [], qi: 0, score: 0, roundPts: [0, 0, 0],
     learned: [], answer: null, playIdx: null, newUnlocks: [], newAch: [], jokers: [false, false, false], stamps: [], mlabel: [], grid: [], usedLetters: [] };
   renderGame();
 }

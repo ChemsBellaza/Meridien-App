@@ -65,7 +65,7 @@ function vOnboard() {
     <form class="form" id="onbForm" novalidate>
       <div class="chosen">${avatar(preview, "xl")}<div class="grow"><b>${esc(S.names[0])}</b> ${typeBadge(S.type, 12)}<p class="note">${ui.draftPhoto ? `Ta photo, avec ${esc(S.names[0])} en médaillon.` : `Ajoute une photo si tu veux : ${esc(S.names[0])} se posera dessus.`}</p>
         <div class="btnline">${photoBtn(ui.draftPhoto ? "Changer" : "Ajouter ma photo")}${ui.draftPhoto ? `<button type="button" class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
-      <div class="field"><label for="pseudo">Ton pseudo</label><input id="pseudo" maxlength="16" autocomplete="nickname" placeholder="Ex. : Chems" value="${esc(ui.draftName)}"></div>
+      <div class="field"><label for="pseudo">Ton pseudo</label><input id="pseudo" maxlength="16" autocomplete="nickname" placeholder="Ex. : Guerrier astral" value="${esc(ui.draftName)}"><button type="button" class="ideabtn" data-act="pseudoidea">🎲 Une idée de pseudo</button></div>
       <div class="field"><label for="obmail">E-mail <small>(facultatif)</small></label><input id="obmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="Pour retrouver ton compte si tu changes de téléphone" value="${esc(ui.draftMail || "")}"></div>
       <div class="seg light" role="group" aria-label="Groupe">
         <button type="button" data-act="onbtab" data-v="create" aria-pressed="${t === "create"}">Créer un groupe</button>
@@ -128,6 +128,7 @@ function vGroup() {
       <div class="countdown">Prochain défi dans <b id="cd" class="num">--:--:--</b></div>
     </div>
   </section>
+  ${vCatchup()}
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
@@ -315,7 +316,7 @@ function vDetailSheet() {
   const line = (ic, label, v) => `<li class="dline"><span class="dic" aria-hidden="true">${ic}</span><span>${label}</span><b class="num">${v}</b></li>`;
   return `<div class="scrim" data-act="closesheet"><div class="sheet detail" role="dialog" aria-label="Détail des points de ${esc(r.name)}" data-stop>
     <div class="dhead">${avatar(r, "lg")}<div><h3>${esc(r.name)}${r.me ? toi : ""}</h3><div class="muted">${esc(FORMATS[f].name)} · ${shortDate(k)}</div></div></div>
-    <div class="dpills"><span class="dpill">${I.trophy(18)}Classement <b class="num">#${r.pos}</b></span><span class="dpill">${I.compass(18)}Saison <b class="num">${fmtNum(tot || 0)}</b></span></div>
+    <div class="dpills"><span class="dpill">${I.trophy(18)}Classement <b class="num">#${r.pos}</b></span><span class="dpill">${I.compass(18)}Boussoles <b class="num">${fmtNum(tot || 0)}</b></span></div>
     <div class="dscore"><b class="num">${fmtNum(r.best)} pts</b><span>${r.tries > 1 ? `meilleur de ${r.tries} essais` : "1 essai"}</span></div>
     ${res.N >= 2 ? `<ul class="dlines">
       ${line("✓", "Partie jouée", "+" + g)}
@@ -378,6 +379,8 @@ document.addEventListener("click", e => {
     case "evoreplay": { const pet = store.profile.pet, st = stageOf(pet); if (st > 1) { openEvo(pet, st - 1, st); render(); } break; }
     case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); break;
     case "detail": { const [pid, dk] = String(v).split("|"); ui.detail = { pid, k: dk }; ui.sheet = "detail"; render(); break; }
+    case "pseudoidea": { captureDrafts(); const A = ["Guerrier", "Capitaine", "Ninja", "Pirate", "Sorcier", "Explorateur", "Chevalier", "Dragon", "Renard", "Astronaute"], B = ["astral", "cosmique", "des étoiles", "électrique", "mystère", "turbo", "lunaire", "sauvage", "zen", "solaire"]; let s = ""; for (let i = 0; i < 20; i++) { s = A[Math.floor(Math.random() * A.length)] + " " + B[Math.floor(Math.random() * B.length)]; if (s.length <= 16) break; } ui.draftName = s.slice(0, 16); render(); break; }
+    case "catchup": playCatchup(v); break;
     case "rename": ui.sheet = "rename"; ui.renameMsg = ""; render(); break;
     case "groups": ui.sheet = "groups"; ui.gadd = null; render(); srvLoadGroups().then(() => { if (ui.sheet === "groups" && !game) render(); }); break;
     case "gswitch": srvSwitchGroup(v); break;

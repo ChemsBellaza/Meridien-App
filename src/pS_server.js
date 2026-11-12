@@ -124,7 +124,7 @@ async function srvLoadHistory() {
   if (Array.isArray(r)) SRV.hist = r; else if (SRV.hist === null) SRV.hist = [];
   if (ui.view === "history" && !game && !ui.sheet) render();
 }
-function srvResetGroupData() { SRV.members = null; SRV.ov = null; SRV.attempts = {}; SRV.msgs = []; SRV.reacts = []; SRV.chatSig = ""; SRV.syncedAt = 0; ui.reactOpen = null; }
+function srvResetGroupData() { SRV.catchup = []; SRV.members = null; SRV.ov = null; SRV.attempts = {}; SRV.msgs = []; SRV.reacts = []; SRV.chatSig = ""; SRV.syncedAt = 0; ui.reactOpen = null; }
 async function srvSwitchGroup(id) {
   ui.sheet = false;
   if (id && id !== SRV.gid) { SRV.gid = id; srvPickActive(); srvResetGroupData(); }
@@ -339,13 +339,15 @@ async function srvSync(force) {
       await srvLoadGroups(); // tous mes groupes + groupe actif (SRV.gid)
       const gid = SRV.gid;
       if (!gid) { SRV.members = []; SRV.ov = []; SRV.attempts = {}; SRV.msgs = []; SRV.reacts = []; SRV.syncedAt = performance.now(); const s0 = await srvRpc("my_summary"); if (s0 && s0.gems_total !== undefined) SRV.sum = s0; return true; }
-      const [mem, ov, att, sum] = await Promise.all([
+      const [mem, ov, att, sum, cu] = await Promise.all([
         srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet,photo_v)&group_id=eq." + gid + "&order=joined_at"),
         srvRpc("season_overview", { p_group: gid }),
         srvGet("/rest/v1/attempts?select=day,try_idx,score,submitted_at,fmt,slow&group_id=eq." + gid + "&day=eq." + day + "&order=try_idx"),
         srvRpc("my_summary"),
+        srvRpc("my_catchup", { p_group: gid }),
         srvLoadChat()
       ]);
+      SRV.catchup = Array.isArray(cu) ? cu : [];
       if (gid !== SRV.gid) return false; // le joueur a changé de groupe pendant le chargement : on abandonne ce résultat
       if (mem.ok && Array.isArray(mem.data)) { SRV.members = mem.data; await srvFetchPhotos(); }
       if (Array.isArray(ov)) SRV.ov = ov;
@@ -532,7 +534,7 @@ function msgActions(ev) {
 
 /* jouer le défi du jour : synchronisation avec le serveur d'abord (jour, essais restants) */
 function srvHomeMsg(m) { ui.homeMsg = m; if (!game) render(); clearTimeout(srvHomeMsg._t); srvHomeMsg._t = setTimeout(() => { ui.homeMsg = ""; if (!game && ui.view === "group") render(); }, 7000); }
-const SRV_PLAYMSG = { no_tries_left: "Tu as déjà joué tes 2 essais aujourd'hui. Reviens demain !", no_profile: "Ton profil n'existe pas encore en ligne." };
+const SRV_PLAYMSG = { catchup_unavailable: "Ce jeu n'est plus disponible au rattrapage.", no_tries_left: "Tu as déjà joué tes 2 essais aujourd'hui. Reviens demain !", no_profile: "Ton profil n'existe pas encore en ligne." };
 async function playToday() {
   if (!srvOn()) return startGame(false);
   if (ui.busyPlay) return;
@@ -545,12 +547,27 @@ async function playToday() {
 }
 // « C'est parti » : l'essai est compté par le serveur (jour et jeu décidés par lui)
 async function srvBeginTry(g) {
-  const r = await srvRpc("start_try", { p_group: SRV.gid || null });
+  const r = await srvRpc("start_try", { p_group: SRV.gid || null, p_day: g.catchup ? g.k : null });
   if (!r || !r.ok) return r || { ok: false, error: "server" };
+  if (g.catchup) SRV.catchup = (SRV.catchup || []).filter(x => x.day !== g.k); // l'essai de rattrapage est compté dès qu'il démarre
   if (r.day !== g.k || r.fmt !== g.fmt) return { ok: false, error: "day_changed" };
   g.attemptId = r.attempt_id; g.slow = timeFactor();
   (SRV.attempts[r.day] = SRV.attempts[r.day] || []).push({ day: r.day, try_idx: r.try_idx, score: null, submitted_at: null, fmt: r.fmt, slow: g.slow });
   return r;
+}
+// rattraper un jeu précédent de la saison (nouveau membre) : 1 seul essai, décidé par le serveur
+async function playCatchup(day) {
+  if (!srvOn() || ui.busyPlay) return;
+  ui.busyPlay = true; render();
+  const ok = await srvSync(true);
+  ui.busyPlay = false;
+  if (!ok) { render(); return srvHomeMsg(srvLost() ? srvMsg("session") : "Connexion nécessaire pour rattraper un jeu."); }
+  if (!(SRV.catchup || []).some(x => x.day === day)) { render(); return srvHomeMsg("Ce jeu n'est plus disponible au rattrapage."); }
+  startGame(false, null, day);
+}
+function vCatchup() { // cartes « Jeux à rattraper » de l'accueil
+  const list = SRV.catchup || []; if (!list.length || !srvOn()) return "";
+  return `<section class="catchup" aria-label="Jeux à rattraper"><div class="kicker">Jeux à rattraper · 1 seul essai chacun</div><p class="note">Tu es arrivé en cours de saison : tu peux jouer une fois chaque jeu que le groupe a déjà joué. Ton score est classé sans changer la place des autres.</p><div class="cgrid">${list.map(x => { const F = FORMATS[x.fmt]; if (!F) return ""; return `<button class="hcard sq" data-act="catchup" data-v="${x.day}" aria-label="Rattraper ${esc(F.name)}, ${longDate(x.day)}">${art(x.fmt, x.day)}${labels(`${shortDate(x.day)} · à rattraper`, F.name)}</button>`; }).join("")}</div></section>`;
 }
 function srvStartFailed(r) {
   return r && r.error === "day_changed" ? "Le jour a changé pendant que tu te préparais. Relance le défi." : (SRV_PLAYMSG[r && r.error] || srvMsg(r && r.error));
