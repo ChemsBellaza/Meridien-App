@@ -37,5 +37,8 @@ insert into public.formats (position, key, max_points) values
   (28, 'expressions', 300),
   (29, 'inventions', 300),
   (30, 'monuments', 300),
-  (31, 'corps', 300)
+  (31, 'corps', 300),
+  (32, 'popculture', 300),
+  (33, 'chanson', 300),
+  (34, 'mythes', 300)
 on conflict (position) do update set key = excluded.key, max_points = excluded.max_points;

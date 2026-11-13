@@ -339,14 +339,18 @@ async function srvSync(force) {
       await srvLoadGroups(); // tous mes groupes + groupe actif (SRV.gid)
       const gid = SRV.gid;
       if (!gid) { SRV.members = []; SRV.ov = []; SRV.attempts = {}; SRV.msgs = []; SRV.reacts = []; SRV.syncedAt = performance.now(); const s0 = await srvRpc("my_summary"); if (s0 && s0.gems_total !== undefined) SRV.sum = s0; return true; }
-      const [mem, ov, att, sum, cu] = await Promise.all([
+      const [mem, ov, att, sum, cu, rec, bo] = await Promise.all([
         srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet,photo_v)&group_id=eq." + gid + "&order=joined_at"),
         srvRpc("season_overview", { p_group: gid }),
         srvGet("/rest/v1/attempts?select=day,try_idx,score,submitted_at,fmt,slow&group_id=eq." + gid + "&day=eq." + day + "&order=try_idx"),
         srvRpc("my_summary"),
         srvRpc("my_catchup", { p_group: gid }),
+        srvRpc("my_history", { p_days: 10 }),
+        srvRpc("my_boost", { p_group: gid }),
         srvLoadChat()
       ]);
+      SRV.boost = bo && bo.season_start ? bo : null;
+      if (Array.isArray(rec)) SRV.recent = rec;
       SRV.catchup = Array.isArray(cu) ? cu : [];
       if (gid !== SRV.gid) return false; // le joueur a changé de groupe pendant le chargement : on abandonne ce résultat
       if (mem.ok && Array.isArray(mem.data)) { SRV.members = mem.data; await srvFetchPhotos(); }
@@ -405,7 +409,7 @@ function onlineDayResults(k) {
   const pl = onlinePlayers(), uid = myUid(), rows = (SRV.ov || []).filter(r => r.play_day === k);
   const played = rows.map(r => {
     const p = r.player_id === uid ? pl[0] : (pl.find(x => x.id === r.player_id) || { id: r.player_id, name: r.pseudo, color: colorOf(r.player_id), pet: defaultPet("renard") });
-    return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, tryScores: Array.isArray(r.try_scores) ? r.try_scores : null, base: r.base || 0, bonus: r.bonus || 0, pct: r.pct || 0, beaten: r.beaten || 0, win: r.pos === 1 && r.n >= 2, slow: !!r.slow, sk: r.score_key || `${r.player_id}-${r.play_day}` };
+    return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, tryScores: Array.isArray(r.try_scores) ? r.try_scores : null, mult: r.mult || 1, boost: !!r.boost, base: r.base || 0, bonus: r.bonus || 0, pct: r.pct || 0, beaten: r.beaten || 0, win: r.pos === 1 && r.n >= 2, slow: !!r.slow, sk: r.score_key || `${r.player_id}-${r.play_day}` };
   }).sort((a, b) => a.pos - b.pos || String(a.name).localeCompare(String(b.name), "fr"));
   const ids = new Set(played.map(p => p.id));
   return { played, waiting: pl.filter(p => !ids.has(p.id)), N: played.length };
@@ -542,7 +546,7 @@ async function playToday() {
   const ok = await srvSync(true);
   ui.busyPlay = false;
   if (!ok) { render(); return srvHomeMsg(srvLost() ? srvMsg("session") : "Connexion nécessaire pour jouer le défi du jour. Tu peux t'entraîner hors ligne depuis le menu."); }
-  if (playsOf(today()).length >= CONFIG.tries) { render(); return srvHomeMsg(SRV_PLAYMSG.no_tries_left); }
+  if (playsOf(today()).length >= triesOf(today())) { render(); return srvHomeMsg(SRV_PLAYMSG.no_tries_left); }
   startGame(false);
 }
 // « C'est parti » : l'essai est compté par le serveur (jour et jeu décidés par lui)
@@ -568,6 +572,19 @@ async function playCatchup(day) {
 function vCatchup() { // cartes « Jeux à rattraper » de l'accueil
   const list = SRV.catchup || []; if (!list.length || !srvOn()) return "";
   return `<section class="catchup" aria-label="Jeux à rattraper"><div class="kicker">Jeux à rattraper · 1 seul essai chacun</div><p class="note">Tu es arrivé en cours de saison : tu peux jouer une fois chaque jeu que le groupe a déjà joué. Ton score est classé sans changer la place des autres.</p><div class="cgrid">${list.map(x => { const F = FORMATS[x.fmt]; if (!F) return ""; return `<button class="hcard sq" data-act="catchup" data-v="${x.day}" aria-label="Rattraper ${esc(F.name)}, ${longDate(x.day)}">${art(x.fmt, x.day)}${labels(`${shortDate(x.day)} · à rattraper`, F.name)}</button>`; }).join("")}</div></section>`;
+}
+// boost : une fois par saison, ×1,5 sur le score d'un jeu ; à activer avant le premier essai du jour dans ce groupe
+function vBoost() {
+  const b = srvOn() && SRV.boost; if (!b) return "";
+  if (b.active_today) return `<p class="boostnote on" role="status"><span aria-hidden="true">⚡</span> Boost actif : ton score d'aujourd'hui compte ×1,5.</p>`;
+  if (b.can_use) return `<button class="boostbtn" data-act="boostask"><span aria-hidden="true">⚡</span><span class="stack">Activer mon boost<small>1 par saison · ton score de ce jeu compte ×1,5</small></span></button>`;
+  return "";
+}
+async function srvUseBoost() {
+  const r = await srvRpc("use_boost", { p_group: SRV.gid || null });
+  if (!r || !r.ok) { srvHomeMsg(r && r.error === "already_started" ? "Trop tard : tu as déjà commencé ce jeu aujourd'hui." : r && r.error === "boost_already_used" ? "Tu as déjà utilisé ton boost cette saison." : srvMsg(r && r.error)); }
+  else srvHomeMsg("Boost activé : ton score d'aujourd'hui comptera ×1,5 !");
+  await srvSync(true);
 }
 function srvStartFailed(r) {
   return r && r.error === "day_changed" ? "Le jour a changé pendant que tu te préparais. Relance le défi." : (SRV_PLAYMSG[r && r.error] || srvMsg(r && r.error));

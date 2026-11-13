@@ -1,5 +1,5 @@
 /* ---------- état de l'interface ---------- */
-const ui = { view: store.profile ? "group" : "onboard", tab: "chat", sheet: false, onbTab: "create", onbStep: "pet", petTab: "species", dayKey: null, confirm: null, toast: "", draftPet: "renard", draftName: "", draftGroup: "Les Cartographes", draftCode: "", draftPhoto: null, prevView: "group" };
+const ui = { view: store.profile ? "group" : "onboard", tab: "chat", sheet: false, onbTab: "create", onbStep: "welcome", petTab: "species", dayKey: null, confirm: null, toast: "", draftPet: "renard", draftName: "", draftGroup: "Les Cartographes", draftCode: "", draftPhoto: null, prevView: "group" };
 let game = null;
 
 function go(view, extra = {}) { Object.assign(ui, { view, ...extra }); window.scrollTo(0, 0); render(); }
@@ -50,7 +50,19 @@ const toi = `<span class="toi">TOI</span>`;
 const logoMark = (px = 44) => `<svg class="logomark" width="${px}" height="${px}" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><rect width="512" height="512" rx="112" fill="#6B5BE2"/><circle cx="256" cy="274" r="144" fill="#4C3EBE"/><circle cx="256" cy="256" r="144" fill="#FFF6EC" stroke="#2A2333" stroke-width="16"/><g fill="none" stroke="#2A2333" stroke-width="12" stroke-linecap="round"><ellipse cx="256" cy="256" rx="64" ry="144"/><path d="M256 112V400M112 256H400"/></g><path d="M370 100l10 36 36 10-36 10-10 36-10-36-36-10 36-10z" fill="#FFC24A" stroke="#2A2333" stroke-width="10" stroke-linejoin="round"/></svg>`;
 
 function vOnboard() {
+  if (ui.onbStep === "welcome") return `<div class="onb welcome">
+    <div class="whero"><span class="brand">${logoMark(88)}</span><h1 class="display">Méridien</h1><p class="wtag">Une énigme par jour, la même pour tous tes amis.</p></div>
+    <ol class="wsteps">
+      <li><span class="wic" aria-hidden="true">🌍</span><div><b>Un défi par jour</b><span>Un seul jeu de culture générale, une surprise chaque matin. 3 manches, 2 essais.</span></div></li>
+      <li><span class="wic" aria-hidden="true">👥</span><div><b>Un groupe d'amis</b><span>Crée ton groupe ou rejoins celui d'un ami avec son code. Même jeu, même classement.</span></div></li>
+      <li><span class="wic" aria-hidden="true">🧭</span><div><b>Des boussoles à gagner</b><span>Plus tu devances d'amis, plus tu en gagnes, et plus la saison avance, plus elles valent.</span></div></li>
+      <li><span class="wic" aria-hidden="true">🦊</span><div><b>Un familier à faire grandir</b><span>Il évolue à chaque partie, réagit à tes scores et se débloque en jouant.</span></div></li>
+    </ol>
+    <button class="btn" data-act="onbstart">C'est parti</button>
+    <button class="linkbtn plainlink" data-act="recover">J'ai déjà un compte</button>
+  </div>`;
   if (ui.onbStep === "pet") return `<div class="onb">
+    <div class="rowtop">${backBtn("onbwelcome")}<span class="kicker">Étape 1 sur 2</span><span></span></div>
     <div class="ohead"><span class="brand">${logoMark(52)}<span class="kicker">Méridien</span></span><h1 class="display">Choisis ton familier</h1><p class="qsub">Il t'accompagne, réagit à tes parties et se personnalise au fil des jours.</p></div>
     ${petPicker()}
     <button class="btn" data-act="onbnext">Partir avec ${esc(SPECIES[ui.draftPet].names[0])}</button>
@@ -77,7 +89,7 @@ function vOnboard() {
       <p class="err" id="onbErr" role="alert" hidden></p>
       <button class="btn" type="submit">${t === "create" ? "Créer le groupe" : "Rejoindre"}</button>
     </form>
-    <p class="note center">Une connexion est nécessaire pour créer ton profil. Les autres membres de ton groupe sont de vrais joueurs ; le classement reste simulé pour l'instant.</p>
+    <p class="note center">Une connexion est nécessaire pour créer ton profil. Les autres membres de ton groupe sont de vrais joueurs.</p>
   </div>`;
 }
 
@@ -98,10 +110,10 @@ function myToday() {
 function vGroup() {
   const k = today(), fmt = fmtOf(k), F = FORMATS[fmt], mans = manchesOf(k, fmt);
   const st = standings(k), me = st.list.find(r => r.me), prog = progress();
-  const mt = myToday(), left = CONFIG.tries - mt.used, pet = store.profile.pet, S = SPECIES[pet.species];
+  const mt = myToday(), left = triesOf(k) - mt.used, pet = store.profile.pet, S = SPECIES[pet.species];
   let btn;
   if (ui.busyPlay) btn = `<button class="btn" disabled><span class="stack">Connexion…<small>Vérification de ton défi du jour</small></span></button>`;
-  else if (left === CONFIG.tries) btn = `<button class="btn" data-act="play"><span class="stack">Jouer<small>${CONFIG.tries} essais · le meilleur compte</small></span></button>`;
+  else if (left === triesOf(k)) btn = `<button class="btn" data-act="play"><span class="stack">Jouer<small>${triesOf(k) > 1 ? triesOf(k) + " essais · le meilleur compte" : "1 seul essai · jeu spécial du dimanche"}</small></span></button>`;
   else if (left > 0) btn = `<button class="btn" data-act="play"><span class="stack">Rejouer<small>Dernier essai · nouvelles questions · meilleur : ${fmtNum(mt.best)} pts</small></span></button>`;
   else btn = `<button class="btn" disabled><span class="stack">Défi terminé<small>Ton meilleur score : ${fmtNum(mt.best)} pts</small></span></button>`;
   const hello = mt.used ? (left > 0 ? petLine(pet.species, "mid", k) : petLine(pet.species, mt.best >= 400 ? "good" : "mid", k + "d")) : petLine(pet.species, "hello", k);
@@ -117,13 +129,15 @@ function vGroup() {
     ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
     ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
   </div>
-  ${tutoNotice()}${onlineNotice()}
+  ${streakStrip()}
+  ${tutoNotice()}${onlineNotice()}${recapCard()}
   <section class="today" aria-label="Défi du jour">
     <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
       <p class="sub">${fr(F.sub)}</p>
       <div class="rounds">${mans.map((m, i) => roundChip(m, i)).join("")}</div>
       ${btn}
+      ${vBoost()}
       ${ui.homeMsg ? `<p class="err" role="alert">${esc(ui.homeMsg)}</p>` : ""}
       <div class="countdown">Prochain défi dans <b id="cd" class="num">--:--:--</b></div>
     </div>
@@ -154,7 +168,7 @@ function vRanking(k) {
     out += `<button class="rkp" data-act="detail" data-v="${esc(r.id)}|${k}" aria-label="Détail des points de ${esc(r.name)}, ${fmtNum(r.best)} points, rang ${r.pos}" style="--c:${r.color}">
       <span class="pos num">#${r.pos}</span>
       <span class="main">${avatar(r, "md")}<span class="info"><b class="num">${fmtNum(r.best)} pts</b><span class="nm">${esc(r.name)}${r.me ? toi : ""}</span></span></span>
-      <span class="badges">${r.tries > 1 ? `<i class="num">${r.tries} ${I.retry(13)}</i>` : ""}<i class="num">+${r.gems} ${I.compass(13)}</i></span>
+      <span class="badges">${r.boost ? `<i class="num" title="Boost ×1,5">⚡×1,5</i>` : ""}${r.tries > 1 ? `<i class="num">${r.tries} ${I.retry(13)}</i>` : ""}<i class="num">+${r.gems} ${I.compass(13)}</i></span>
     </button>`;
   });
   return `<div class="rank">${out}
@@ -286,6 +300,7 @@ function vPet() {
 function vSheet() {
   if (ui.sheet === "groups") return vGroupsSheet();
   if (ui.sheet === "detail") return vDetailSheet();
+  if (ui.sheet === "recap") return vRecapSheet();
   if (ui.sheet === "rename") return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Changer de pseudo" data-stop>
     <div class="sheethead"><div><h3>Changer de pseudo</h3><div class="muted">Tes amis verront ce nouveau nom (2 à 16 caractères).</div></div></div>
     <form id="renameForm" class="plainform" novalidate><div class="field"><label for="newName">Pseudo</label><input id="newName" maxlength="16" autocomplete="nickname" value="${esc(store.profile.name)}"></div>${ui.renameMsg ? `<p class="err" role="alert">${esc(ui.renameMsg)}</p>` : ""}<div class="btnline"><button class="smallbtn" type="submit">Enregistrer</button><button class="smallbtn ghost" type="button" data-act="closesheet">Annuler</button></div></form>
@@ -296,6 +311,8 @@ function vSheet() {
     <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button>${featureOn("carnet") ? `<button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button>` : ""}${featureOn("trophees") ? `<button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button>` : ""}</div>
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
     ${mobileSheetBlocks()}
+    <button class="smallbtn" data-act="recap">Récap de la semaine</button>
+    ${reminderBlock()}
     ${srvOn() ? `<button class="smallbtn" data-act="groups">Mes groupes (${SRV.groups.length || 1})</button>` : ""}
     ${accountSheetBlock()}
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
@@ -318,11 +335,13 @@ function vDetailSheet() {
   return `<div class="scrim" data-act="closesheet"><div class="sheet detail" role="dialog" aria-label="Détail des points de ${esc(r.name)}" data-stop>
     <div class="dhead">${avatar(r, "lg")}<div><h3>${esc(r.name)}${r.me ? toi : ""}</h3><div class="muted">${esc(FORMATS[f].name)} · ${shortDate(k)}</div></div></div>
     <div class="dpills"><span class="dpill">${I.trophy(18)}Classement <b class="num">#${r.pos}</b></span><span class="dpill">${I.compass(18)}Boussoles <b class="num">${fmtNum(tot || 0)}</b></span></div>
+    ${r.boost ? `<p class="boostnote on"><span aria-hidden="true">⚡</span> Boost ×1,5 activé : les scores ci-dessous en tiennent compte.</p>` : ""}
     <div class="dscore"><b class="num">${fmtNum(r.best)} pts</b><span>${r.tries > 1 ? `meilleur de ${r.tries} essais` : "1 essai"}</span></div>
     ${tryList(r) ? `<ul class="dtries" aria-label="Score de chaque essai">${tryList(r).map((s, i) => `<li class="${s === r.best ? "top" : ""}"><span>Essai ${i + 1}</span><b class="num">${fmtNum(s)} pts</b>${s === r.best ? `<i>meilleur</i>` : ""}</li>`).join("")}</ul>` : ""}
     ${res.N >= 2 ? `<ul class="dlines">
       ${line("✓", "Partie jouée", "+" + g)}
       ${line(I.trophy(16), `${n} autre${n > 1 ? "s" : ""} battu${n > 1 ? "s" : ""}`, "+" + (g * n))}
+      ${r.mult === 2 ? line("☀", "Jeu du dimanche : boussoles ×2", "+" + (r.base || 0)) : ""}
       ${line("↗", `Jour ${dayInSeason(k)} (+${r.pct != null ? r.pct : dayBonusPct(k)} %)`, "+" + (r.bonus || 0))}
       <li class="dline total"><span class="dic" aria-hidden="true">${I.compass(18)}</span><span>Total</span><b class="num">+${r.gems}</b></li>
     </ul>` : `<p class="note">Il faut au moins 2 joueurs ce jour-là pour gagner des boussoles.</p>`}
@@ -373,6 +392,8 @@ document.addEventListener("click", e => {
   switch (a) {
     case "onbtab": captureDrafts(); ui.onbTab = v; render(); break;
     case "pickpet": captureDrafts(); if (speciesOpen(v, store.profile ? progress() : null)) { ui.draftPet = v; render(); } break;
+    case "onbstart": ui.onbStep = "pet"; render(); break;
+    case "onbwelcome": ui.onbStep = "welcome"; render(); break;
     case "onbnext": ui.onbStep = "form"; render(); break;
     case "onbback": captureDrafts(); ui.onbStep = "pet"; render(); break;
     case "pickpet-ok": store.profile.pet = defaultPet(ui.draftPet); store.profile.seen = unlockedIds(progress()); save(); go("group"); break;
@@ -383,6 +404,10 @@ document.addEventListener("click", e => {
     case "detail": { const [pid, dk] = String(v).split("|"); ui.detail = { pid, k: dk }; ui.sheet = "detail"; render(); break; }
     case "pseudoidea": { captureDrafts(); const A = ["Guerrier", "Capitaine", "Ninja", "Pirate", "Sorcier", "Explorateur", "Chevalier", "Dragon", "Renard", "Astronaute"], B = ["astral", "cosmique", "des étoiles", "électrique", "mystère", "turbo", "lunaire", "sauvage", "zen", "solaire"]; let s = ""; for (let i = 0; i < 20; i++) { s = A[Math.floor(Math.random() * A.length)] + " " + B[Math.floor(Math.random() * B.length)]; if (s.length <= 16) break; } ui.draftName = s.slice(0, 16); render(); break; }
     case "catchup": playCatchup(v); break;
+    case "boostask": ui.confirm = { title: "Activer ton boost ?", text: `Une seule fois par saison. Ton score de ce jeu dans « ${(SRV.group && SRV.group.name) || "ce groupe"} » comptera ×1,5 dans le classement. Impossible de l'annuler, et à faire avant ton premier essai.`, yes: "Activer le boost", no: "Plus tard", run: () => srvUseBoost() }; render(); break;
+    case "recap": ui.sheet = "recap"; render(); break;
+    case "recapclose": if (store.profile) { store.profile.recapSeen = weekKeyOf(today()); save(); } render(); break;
+    case "remindics": { const el2 = document.getElementById("remindTime"); remindICS(el2 ? el2.value : "08:00"); ui.remindMsg = "Fichier envoyé : ouvre-le pour l'ajouter à ton calendrier (sur iPhone, touche « Ajouter »)."; render(); break; }
     case "rename": ui.sheet = "rename"; ui.renameMsg = ""; render(); break;
     case "groups": ui.sheet = "groups"; ui.gadd = null; render(); srvLoadGroups().then(() => { if (ui.sheet === "groups" && !game) render(); }); break;
     case "gswitch": srvSwitchGroup(v); break;

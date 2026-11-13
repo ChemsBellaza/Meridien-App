@@ -7,7 +7,7 @@ function startGame(practice, fmtForced, catchDay) {
   if (catchDay && !online) return;
   if (!practice && !catchDay) {
     const mine = online ? (SRV.attempts[k] || []) : (store.plays[k] = store.plays[k] || []);
-    if (mine.length >= CONFIG.tries) return;
+    if (mine.length >= triesOf(k)) return;
     tryIdx = mine.length;
   }
   const seed = practice ? "p" + Date.now() : k;
@@ -25,7 +25,7 @@ function fromPool(g, pool, per, poolKey, shared) {
   // ordre fixe pour ce jeu et cette réserve (indépendant du jour) ; chaque passage du jeu (tous les 28 jours) avance de tout un bloc :
   // les questions ne reviennent qu'après avoir fait le tour de la réserve
   const order = shuffle(pool.map((_, i) => i), rng(`${g.fmt}|${poolKey}`));
-  const occ = Math.max(0, Math.floor(diffDays(CONFIG.formatAnchor, g.k) / CONFIG.formatOrder.length)), block = (shared ? 3 : 1) * per * CONFIG.tries;
+  const occ = Math.max(0, Math.floor(diffDays(CONFIG.formatAnchor, g.k) / (g.fmt === "megaquiz" ? 7 : CONFIG.formatOrder.length))), block = (shared ? 3 : 1) * per * CONFIG.tries;
   const off = occ * block + (shared ? (g.tryIdx * 3 + g.round) * per : g.tryIdx * per);
   return Array.from({ length: per }, (_, i) => pool[order[(off + i) % order.length]]);
 }

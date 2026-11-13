@@ -16,6 +16,7 @@
   "pK_stickers.js",
   "p3_art.js",
   "pQ_more.js",
+  "pQ_pop.js",
   "p4_draw.js",
   "p5_ui.js",
   "pC_events.js",
@@ -24,6 +25,7 @@
   "pG_gameviews.js",
   "pE_engines.js",
   "pN_engines.js",
+  "pW_rituals.js",
   "pB_logic.js",
   "pV_evo.js",
   "pF_flags.js"

@@ -160,12 +160,32 @@ $g2 = Rpc $B "create_group" @{ p_name = "Second groupe" }
 Check "Bob crée un second groupe (il est déjà dans le premier)" ($g2.ok -eq $true) ($g2 | ConvertTo-Json -Compress)
 $gid2 = $g2.group.id
 Check "Bob appartient à 2 groupes" ((Cnt $B "/rest/v1/group_members?select=group_id&user_id=eq.$($users.Bob.id)") -eq 2) ""
+"--- Boost et jeu spécial (migration 20261121) ---"
+$ab1 = Rpc $A "use_boost" @{ p_group = $gid }
+Check "boost refusé après le premier essai du jour dans ce groupe" ($ab1.error -eq "already_started") ($ab1 | ConvertTo-Json -Compress)
+$mb0 = Rpc $B "my_boost" @{ p_group = $gid2 }
+Check "boost disponible dans un groupe où je n'ai pas encore joué" ($mb0.can_use -eq $true -and $mb0.used -eq $false) ($mb0 | ConvertTo-Json -Compress)
+$bb1 = Rpc $B "use_boost" @{ p_group = $gid2 }
+Check "Bob active son boost" ($bb1.ok -eq $true) ($bb1 | ConvertTo-Json -Compress)
+$bb2 = Rpc $B "use_boost" @{ p_group = $gid }
+Check "un seul boost par saison" ($bb2.error -eq "boost_already_used") ($bb2 | ConvertTo-Json -Compress)
+$mb1 = Rpc $B "my_boost" @{ p_group = $gid2 }
+Check "le boost est actif aujourd'hui dans ce groupe" ($mb1.active_today -eq $true -and $mb1.used -eq $true) ($mb1 | ConvertTo-Json -Compress)
+$fmtsp = Rpc $B "format_of" @{ p_day = "2026-11-15" }
+Check "le dimanche, le jeu du jour est le méga-quiz" ($fmtsp -eq "megaquiz") "$fmtsp"
+$fmtlu = Rpc $B "format_of" @{ p_day = "2026-11-16" }
+Check "le lundi, la rotation reprend (jeu normal)" ($fmtlu -ne "megaquiz" -and $fmtlu) "$fmtlu"
 $tg = Rpc $B "start_try" @{ p_group = $gid2 }
 Check "essai dans le second groupe : indépendant du premier (essai n°0)" ($tg.ok -eq $true -and $tg.try_idx -eq 0 -and $tg.group_id -eq $gid2) ($tg | ConvertTo-Json -Compress)
 $fo = Rpc $B "format_of" @{ p_day = $tg.day; p_group = $gid2 }
 Check "le jeu de l'essai est celui du groupe" ($fo -eq $tg.fmt) "$fo / $($tg.fmt)"
 $tg2 = Rpc $B "start_try" @{ p_group = $gid2 }; $tg3 = Rpc $B "start_try" @{ p_group = $gid2 }
 Check "2 essais par jour et par groupe : le 3e est refusé" ($tg2.ok -eq $true -and $tg3.error -eq "no_tries_left") ($tg3 | ConvertTo-Json -Compress)
+Start-Sleep -Seconds 22
+$brounds = @(@{ m = "a"; diff = 0; pts = 40 }, @{ m = "b"; diff = 0; pts = 40 }, @{ m = "c"; diff = 0; pts = 40 })
+$bs = Rpc $B "submit_score" @{ p_attempt = $tg.attempt_id; p_rounds = $brounds }
+$bov = Rpc $B "season_overview" @{ p_group = $gid2 }; $bme = $bov | Where-Object { $_.pseudo -eq "Bob" } | Select-Object -First 1
+Check "le boost multiplie le score du classement par 1,5 (120 → 180)" ($bs.ok -eq $true -and $bme.boost -eq $true -and $bme.best -eq 180) (($bs | ConvertTo-Json -Compress) + " / " + ($bme | ConvertTo-Json -Compress))
 Check "Alice (hors du second groupe) ne le voit pas" ((Cnt $A "/rest/v1/groups?select=id&id=eq.$gid2") -eq 0) ""
 $sox = Rpc $A "season_overview" @{ p_group = $gid2 }
 Check "Alice ne lit pas le classement du second groupe" ((N $sox) -eq 0) ($sox | ConvertTo-Json -Compress)

@@ -162,7 +162,10 @@ function setAppHTML(html) {
 
 /* ---------- calendrier : jeu, saison et manches du jour ---------- */
 // jeu du jour : en ligne, chaque groupe a sa rotation (décalage + pas) ; sinon la rotation d'origine
+const isSunday = k => new Date(k + "T12:00:00").getDay() === 0;
+const triesOf = k => (isSunday(k) ? 1 : CONFIG.tries); // le dimanche : jeu spécial, un seul essai
 const fmtOf = k => {
+  if (isSunday(k)) return "megaquiz"; // le dimanche, tous les groupes jouent le méga-quiz
   const g = typeof srvGroupNow === "function" && srvOn() ? srvGroupNow() : null, n = CONFIG.formatOrder.length;
   return CONFIG.formatOrder[mod((g ? +g.fmt_offset || 0 : 0) + (g ? +g.fmt_stride || 1 : 1) * diffDays(CONFIG.formatAnchor, k), n)];
 };
@@ -228,8 +231,8 @@ function dayResults(k) {
   played.forEach(r => {
     r.pos = played.findIndex(x => x.best === r.best) + 1;
     const worst = played.filter(x => x.best >= r.best).length;
-    r.base = N >= 2 ? CONFIG.gemsPerRank * (N - worst + 1) : 0; r.beaten = N - worst; r.pct = dayBonusPct(k); r.bonus = Math.round(r.base * r.pct / 100);
-    r.gems = r.base + r.bonus;
+    r.base = N >= 2 ? CONFIG.gemsPerRank * (N - worst + 1) : 0; r.beaten = N - worst; r.pct = dayBonusPct(k); r.mult = isSunday(k) ? 2 : 1; r.bonus = Math.round(r.base * r.mult * r.pct / 100);
+    r.gems = r.base * r.mult + r.bonus;
     r.win = r.pos === 1;
   });
   return { played, waiting: rows.filter(r => r.best === null), N };

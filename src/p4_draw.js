@@ -362,7 +362,12 @@ function avatar(p, cls = "") {
 }
 const petAv = (pet, cls = "", label = "Familier", opt = {}) => `<span class="av ${cls}" role="img" aria-label="${esc(label)}"><span class="in">${petSVG(pet, { head: true, plain: true, ...opt })}</span></span>`;
 const speciesOpen = (k, prog) => !SPECIES[k].need || (prog && isUnlocked(SPECIES[k], prog));
-const SPECIES_ORDER = () => Object.keys(SPECIES).sort((a, b) => SPECIES[a].num - SPECIES[b].num);
+// ordre du choix : d'abord les familiers débloqués (numéro de fiche), puis les verrouillés du plus proche au plus lointain à débloquer
+const SPECIES_ORDER = () => {
+  const prog = store.profile ? progress() : null, open = k => (speciesOpen(k, prog) ? 1 : 0);
+  const left = k => { const n = SPECIES[k].need; return !n ? 0 : prog ? Math.max(0, (n.v - (prog[n.k] || 0)) / n.v) : n.v; };
+  return Object.keys(SPECIES).sort((a, b) => open(b) - open(a) || (open(a) ? 0 : left(a) - left(b)) || SPECIES[a].num - SPECIES[b].num);
+};
 function petPicker() {
   const prog = store.profile ? progress() : null, keys = SPECIES_ORDER(), sel = ui.draftPet, S = SPECIES[sel];
   return `<div class="carousel" id="carousel" role="group" aria-label="Choisis ton familier">${keys.map(k => {
