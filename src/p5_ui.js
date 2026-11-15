@@ -123,7 +123,7 @@ function vGroup() {
     <button class="crew" data-act="season" aria-label="${players().length} membres, voir la saison"><span class="avstack">${players().slice(0, 5).map(p => avatar(p, "md")).join("")}</span></button>
     <button class="plain" data-act="history" aria-label="Jeux précédents">${I.history}</button>
   </header>
-  ${srvOn() ? `<button class="gname gswitch" data-act="groups" aria-label="Mes groupes : ${esc(store.profile.group)}. Changer de groupe"><b>${esc(store.profile.group)}<span class="gchev" aria-hidden="true">▾</span></b><span>Défi n°${issueNo(k)} · ${longDate(k)}${SRV.groups.length > 1 ? ` · ${SRV.groups.length} groupes` : ""}</span></button>` : `<div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>`}
+  ${srvOn() ? `<button class="gname gswitch" data-act="groups" aria-label="Mes groupes : ${esc(store.profile.group)}. Changer de groupe"><b>${esc(store.profile.group)}<span class="gchev" aria-hidden="true">▾</span></b><span>Défi n°${issueNo(k)} · ${longDate(k)}${SRV.groups.length > 1 ? ` · ${SRV.groups.length} groupes` : ""}</span><span class="gadd">${SRV.groups.length > 1 ? "Changer de groupe" : "+ Créer ou rejoindre un autre groupe"}</span></button>` : `<div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>`}
   <div class="pills">
     ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
     ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
