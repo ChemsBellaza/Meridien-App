@@ -118,6 +118,45 @@ async function srvLoadGroups() {
   SRV.groups = r.data.filter(x => x.groups).map(x => ({ ...x.groups, role: x.role }));
   srvPickActive(); return true;
 }
+/* ---------- écran d'accueil « Mes groupes » (comme Playus) : une carte par groupe, au lancement de l'application ---------- */
+SRV.hub = null; // { rows: {group_id: ligne de my_groups_overview}, members: {group_id: [membres]} }
+async function srvLoadHub() {
+  if (!srvOn() || srvLost()) return;
+  const [ov, mem] = await Promise.all([srvRpc("my_groups_overview"), srvGet("/rest/v1/group_members?select=group_id,user_id,profiles(pseudo,pet,photo_v)&order=joined_at")]);
+  const rows = {}, members = {};
+  if (Array.isArray(ov)) ov.forEach(r => { rows[r.group_id] = r; });
+  if (mem.ok && Array.isArray(mem.data)) mem.data.forEach(m => { (members[m.group_id] = members[m.group_id] || []).push(m); });
+  SRV.hub = { rows, members };
+  if (ui.view === "hub" && !game) render();
+  let changed = false; const uid = myUid(); // photos des 8 premiers membres de chaque groupe (téléchargées seulement si leur version a changé)
+  for (const gid of Object.keys(members)) for (const m of members[gid].slice(0, 8)) {
+    if (m.user_id === uid) continue;
+    const v = (m.profiles && m.profiles.photo_v) || 0, c = SRV.photos[m.user_id];
+    if (!v || (c && c.v === v)) continue;
+    const r = await srvGet("/rest/v1/profiles?select=photo&id=eq." + m.user_id);
+    if (r.ok && Array.isArray(r.data) && r.data[0] && r.data[0].photo) { SRV.photos[m.user_id] = { v, d: r.data[0].photo }; changed = true; }
+  }
+  if (changed) { savePhotos(); if (ui.view === "hub" && !game) render(); }
+}
+function vHub() {
+  const k = today(), prog = progress(), h = SRV.hub, groups = SRV.groups, uid = myUid();
+  const loading = !groups.length && !SRV.syncedAt;
+  const cards = groups.map(g => {
+    const f = fmtOfFor(k, g), F = FORMATS[f], r = h && h.rows[g.id], mem = (h && h.members[g.id]) || [], played = !!(r && r.played_today);
+    const av = mem.slice(0, 8).map(m => avatar({ id: m.user_id, name: m.profiles ? m.profiles.pseudo : "Joueur", color: colorOf(m.user_id), pet: (m.profiles && m.profiles.pet) || defaultPet("renard"), photo: m.user_id === uid ? store.profile.photo : (SRV.photos[m.user_id] || {}).d }, "md")).join("");
+    const more = mem.length > 8 ? `<span class="avmore num">+${mem.length - 8}</span>` : "";
+    return `<button class="gcard" data-act="gopen" data-v="${esc(g.id)}" aria-label="${esc(g.name)}, ${esc(F ? F.name : "")}, ${played ? "déjà joué aujourd'hui" : "à jouer aujourd'hui"}${r && r.my_rank ? ", rang " + r.my_rank : ""}">
+      <span class="gcover">${F ? art(f, k) : ""}<span class="gstat ${played ? "done" : ""}">${played ? `✓ Joué · ${fmtNum(r.best_today)} pts` : "À jouer"}</span></span>
+      <span class="gavs">${av}${more}</span>
+      <span class="gbody"><span class="gtxt"><b>${esc(g.name)}</b><small>${esc(F ? F.name : "")}${mem.length ? ` · ${mem.length} joueur${mem.length > 1 ? "s" : ""}` : ""}</small></span>
+      <span class="gbadges"><i class="num">${prog.streak} ${I.fire(14)}</i>${r && r.my_rank ? `<i class="num">#${r.my_rank} ${I.trophy(14)}</i>` : ""}</span></span></button>`;
+  }).join("");
+  return `<header class="top hubhead"><span class="hubbrand">${logoMark(34)}<b>Méridien</b></span><span class="hubicons"><button class="plain" data-act="history" aria-label="Mes jeux joués">${I.history}</button><button class="plain" data-act="menu" aria-label="Menu">${I.menu}</button></span></header>
+  ${onlineNotice()}${recapCard()}
+  <h1 class="sr">Mes groupes</h1>
+  ${loading ? `<p class="note center">Chargement de tes groupes…</p>` : cards || `<p class="note center">Tu n'es dans aucun groupe pour l'instant. Crée-en un ou rejoins celui d'un ami avec son code.</p>`}
+  ${groups.length < 5 ? `<button class="btn gold" data-act="hubnew">+ Nouveau groupe</button><button class="linkbtn plainlink" data-act="hubjoin">Rejoindre un groupe</button>` : `<p class="note center">Tu es dans 5 groupes, le maximum.</p>`}`;
+}
 SRV.hist = null; // historique de mes jeux joués (my_history), chargé à l'ouverture de l'écran
 async function srvLoadHistory() {
   const r = await srvRpc("my_history", { p_days: 3650 });
@@ -338,6 +377,7 @@ async function srvSync(force) {
       const day = srvToday();
       await srvLoadGroups(); // tous mes groupes + groupe actif (SRV.gid)
       const gid = SRV.gid;
+      if (ui.view === "hub") srvLoadHub();
       if (!gid) { SRV.members = []; SRV.ov = []; SRV.attempts = {}; SRV.msgs = []; SRV.reacts = []; SRV.syncedAt = performance.now(); const s0 = await srvRpc("my_summary"); if (s0 && s0.gems_total !== undefined) SRV.sum = s0; return true; }
       const [mem, ov, att, sum, cu, rec, bo] = await Promise.all([
         srvGet("/rest/v1/group_members?select=user_id,role,joined_at,profiles(pseudo,pet,photo_v)&group_id=eq." + gid + "&order=joined_at"),
@@ -658,7 +698,7 @@ document.addEventListener("submit", async e => {
     if (a.mode === "create" ? v.length < 2 : v.replace(/[^A-Za-z0-9]/g, "").length < 4) { a.msg = a.mode === "create" ? srvMsg("bad_name") : "Entre le code que ton ami t'a donné."; return render(); }
     busy(true); const r = await srvAddGroup(a.mode, v);
     if (!r.ok) { a.msg = srvMsg(r.error); return render(); }
-    ui.gadd = null; ui.sheet = false; render(); srvSync(true); return;
+    ui.gadd = null; ui.sheet = false; ui.view = "group"; window.scrollTo(0, 0); render(); srvSync(true); return;
   }
   if (id === "recForm1") {
     const email = val("recEmail").toLowerCase(), r = ui.rec; r.email = email;

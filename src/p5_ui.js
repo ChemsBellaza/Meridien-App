@@ -1,5 +1,5 @@
 /* ---------- état de l'interface ---------- */
-const ui = { view: store.profile ? "group" : "onboard", tab: "chat", sheet: false, onbTab: "create", onbStep: "welcome", petTab: "species", dayKey: null, confirm: null, toast: "", draftPet: "renard", draftName: "", draftGroup: "Les Cartographes", draftCode: "", draftPhoto: null, prevView: "group" };
+const ui = { view: store.profile ? (store.profile.srv ? "hub" : "group") : "onboard", tab: "chat", sheet: false, onbTab: "create", onbStep: "welcome", petTab: "species", dayKey: null, confirm: null, toast: "", draftPet: "renard", draftName: "", draftGroup: "Les Cartographes", draftCode: "", draftPhoto: null, prevView: "group" };
 let game = null;
 
 function go(view, extra = {}) { Object.assign(ui, { view, ...extra }); window.scrollTo(0, 0); render(); }
@@ -17,6 +17,7 @@ function render() {
   if (store.profile && store.profile.pet && !store.profile.pet.stage) { // anciens familiers : on garde l'espèce, on calcule l'évolution
     const pp = progress(); Object.assign(store.profile.pet, { stage: String(ITEMS.stage.list.filter(it => isUnlocked(it, pp)).length), shiny: "normal", bg: "type" }); save();
   }
+  if (ui.view === "hub" && store.profile && (!srvOn() || !tutoState().done)) ui.view = "group"; // l'écran « Mes groupes » : profils en ligne, une fois le tutoriel fait
   let html = "";
   if (ui.view === "recover") html = vRecover();
   else if (ui.view === "emailcode" && store.profile) html = vEmailCode();
@@ -24,6 +25,7 @@ function render() {
   else if (!store.profile.pet) html = vPickPet();
   else if (ui.view === "online") html = vOnline();
   else if (ui.view === "welcome" || (ui.view === "group" && !tutoState().done)) html = vWelcome();
+  else if (ui.view === "hub") html = vHub();
   else if (ui.view === "history") html = vHistory();
   else if (ui.view === "season") html = vSeason();
   else if (ui.view === "day") html = vDay(ui.dayKey);
@@ -123,7 +125,8 @@ function vGroup() {
     <button class="crew" data-act="season" aria-label="${players().length} membres, voir la saison"><span class="avstack">${players().slice(0, 5).map(p => avatar(p, "md")).join("")}</span></button>
     <button class="plain" data-act="history" aria-label="Jeux précédents">${I.history}</button>
   </header>
-  ${srvOn() ? `<button class="gname gswitch" data-act="groups" aria-label="Mes groupes : ${esc(store.profile.group)}. Changer de groupe"><b>${esc(store.profile.group)}<span class="gchev" aria-hidden="true">▾</span></b><span>Défi n°${issueNo(k)} · ${longDate(k)}${SRV.groups.length > 1 ? ` · ${SRV.groups.length} groupes` : ""}</span><span class="gadd">${SRV.groups.length > 1 ? "Changer de groupe" : "+ Créer ou rejoindre un autre groupe"}</span></button>` : `<div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>`}
+  ${srvOn() ? `<button class="hubback" data-act="hub" aria-label="Retour à mes groupes"><span aria-hidden="true">‹</span> Mes groupes</button>` : ""}
+  <div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>
   <div class="pills">
     ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
     ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
@@ -409,6 +412,9 @@ document.addEventListener("click", e => {
     case "recapclose": if (store.profile) { store.profile.recapSeen = weekKeyOf(today()); save(); } render(); break;
     case "remindics": { const el2 = document.getElementById("remindTime"); remindICS(el2 ? el2.value : "08:00"); ui.remindMsg = "Fichier envoyé : ouvre-le pour l'ajouter à ton calendrier (sur iPhone, touche « Ajouter »)."; render(); break; }
     case "rename": ui.sheet = "rename"; ui.renameMsg = ""; render(); break;
+    case "hub": ui.sheet = false; go("hub"); srvLoadHub(); break;
+    case "gopen": ui.view = "group"; window.scrollTo(0, 0); srvSwitchGroup(v); break;
+    case "hubnew": case "hubjoin": ui.sheet = "groups"; ui.gadd = { mode: a === "hubnew" ? "create" : "join", msg: "" }; render(); break;
     case "groups": ui.sheet = "groups"; ui.gadd = null; render(); srvLoadGroups().then(() => { if (ui.sheet === "groups" && !game) render(); }); break;
     case "gswitch": srvSwitchGroup(v); break;
     case "gaddmode": ui.gadd = { mode: v, msg: "" }; render(); break;
