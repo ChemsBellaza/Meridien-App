@@ -52,6 +52,9 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 - 4 jeux QCM dans `src/pQ_more.js` (données `NEWQ[format][catégorie][niveau]`, 8 questions par case, bonne réponse en premier) ; ajouter un jeu = entrée `FORMATS` + `formatOrder.push` + illustration `ART2` + ligne dans `formats` côté serveur (migration) + `python scripts/gen-supabase-seed.py`. Les pas de rotation des groupes doivent rester premiers avec le nombre de jeux (impairs tant que 32).
 - `fromPool` : ordre fixe par réserve, avance d'un bloc à chaque passage du jeu ; ne pas y remettre la date.
 
+## Reconstruire la base
+- `supabase/apply_all.sql` (généré par `scripts/gen-apply-all.ps1` : toutes les migrations dans l'ordre + réglages) recrée une base VIDE ; à régénérer après chaque nouvelle migration. Jamais sur une base qui contient des données. Non testé sur un projet neuf à ce jour. Pas de sauvegarde automatique sur l'offre gratuite : exporter régulièrement.
+
 ## Smartphone d'abord (le jeu se joue au doigt)
 - Toute zone tapable fait **au moins 44 × 44 px** (hauteur minimale ou zone invisible `::after` élargie). Champs de saisie ≥ 16 px (sinon iOS zoome).
 - Écran de jeu : `.game` est `position: fixed` et s'arrête à `bottom: var(--kb)` (hauteur du clavier, `pM_mobile.js`) ; un bouton d'action sous des champs de saisie reçoit `.stickybtn`.

@@ -1,7 +1,12 @@
--- Méridien lot 3 : tout en un (migrations dans l'ordre + seed). Pour un projet VIERGE uniquement.
--- Pour un projet déjà en place, n'appliquer que les migrations récentes (voir docs/LOT3-MAQUETTE.md).
+-- =====================================================================================
+-- Méridien : schéma COMPLET à jour (reconstruction d'une base VIDE). GÉNÉRÉ par scripts/gen-apply-all.ps1 : ne pas modifier à la main.
+-- À coller dans Supabase > SQL Editor d'un projet NEUF, puis Run. NE JAMAIS le lancer sur une base qui contient déjà des données :
+-- les tables existent déjà (erreur) et les réglages seraient remis à zéro.
+-- Contenu, dans l'ordre : 20261112, 20261113, 20261114, 20261115, 20261116, 20261117, 20261118, 20261119, 20261120, 20261121, 20261122 (réglages et liste des jeux insérés juste après la première).
+-- Après l'exécution : Authentication > Providers > activer « Anonymous sign-ins » ; régler les modèles d'e-mail (voir CLAUDE.md).
+-- =====================================================================================
 
--- ===== 20261112000000_lot3_init.sql =====
+-- ######## 20261112000000_lot3_init.sql ########
 -- =====================================================================================
 -- Méridien — lot 3 : multijoueur réel (schéma Supabase / Postgres)
 -- Principe : le SERVEUR décide de tout ce qui se compare (jour, essais, score enregistré,
@@ -518,8 +523,53 @@ end $$;
 -- Étape 6 (chat en direct), à activer le moment venu :
 --   alter publication supabase_realtime add table public.messages, public.reactions;
 
+-- ######## réglages et liste des jeux (supabase/seed.sql) ########
+-- GÉNÉRÉ par scripts/gen-supabase-seed.py à partir de src/p1_config.js : ne pas modifier à la main.
 
--- ===== 20261113000000_season_overview.sql =====
+insert into public.app_config (id, tries_per_day, gems_per_rank, joker_cost, mult, format_anchor, season_anchor, season_days, timezone)
+values (1, 2, 16, 25, '{1,1.25,1.5}', date '2026-10-25', date '2026-10-19', 21, 'Europe/Paris')
+on conflict (id) do update set tries_per_day = excluded.tries_per_day, gems_per_rank = excluded.gems_per_rank, joker_cost = excluded.joker_cost,
+  mult = excluded.mult, format_anchor = excluded.format_anchor, season_anchor = excluded.season_anchor, season_days = excluded.season_days;
+
+insert into public.formats (position, key, max_points) values
+  (0, 'sprint', 300),
+  (1, 'quiz', 300),
+  (2, 'motdujour', 300),
+  (3, 'carte', 200),
+  (4, 'petitbac', 300),
+  (5, 'paysmystere', 300),
+  (6, 'drapeaux', 300),
+  (7, 'connexions', 300),
+  (8, 'anagrammes', 300),
+  (9, 'frise', 200),
+  (10, 'capitales', 300),
+  (11, 'neavant', 300),
+  (12, 'intrus', 300),
+  (13, 'plusmoins', 300),
+  (14, 'comptebon', 300),
+  (15, 'quisuisje', 200),
+  (16, 'top10', 300),
+  (17, 'distance', 300),
+  (18, 'silhouettes', 300),
+  (19, 'relier', 300),
+  (20, 'sigles', 300),
+  (21, 'vraifaux', 300),
+  (22, 'rebus', 300),
+  (23, 'chaine', 300),
+  (24, 'voisins', 300),
+  (25, 'citations', 200),
+  (26, 'classement', 300),
+  (27, 'blocs', 300),
+  (28, 'expressions', 300),
+  (29, 'inventions', 300),
+  (30, 'monuments', 300),
+  (31, 'corps', 300),
+  (32, 'popculture', 300),
+  (33, 'chanson', 300),
+  (34, 'mythes', 300)
+on conflict (position) do update set key = excluded.key, max_points = excluded.max_points;
+
+-- ######## 20261113000000_season_overview.sql ########
 -- =====================================================================================
 -- Lot 3, étape 4 : lecture du classement réel.
 --   server_now()       : heure du serveur (l'application s'en sert pour ignorer l'horloge du téléphone)
@@ -592,42 +642,983 @@ revoke execute on function public._group_scores(uuid, date, date) from public, a
 revoke execute on function public.server_now(), public.season_overview(date), public.my_summary() from public, anon;
 grant execute on function public.server_now(), public.season_overview(date), public.my_summary() to authenticated;
 
+-- ######## 20261114000000_chat.sql ########
+-- =====================================================================================
+-- Lot 3, étape 6 : chat des amis (messages, réactions, signalement, blocage).
+-- Les tables et la plupart des règles existent déjà (20261112000000_lot3_init.sql). Cette migration :
+--   1. ajoute une clé de réaction aux scores dans season_overview (score_key) ;
+--   2. durcit les réactions : on ne réagit à un message que s'il appartient au groupe de l'appelant ;
+--   3. limite le nombre de réactions par joueur ;
+--   4. nettoie chaque nuit les messages de plus de 30 jours (base gratuite : 500 Mo) et les réactions orphelines.
+-- À appliquer après 20261113000000_season_overview.sql, AVANT de publier le code du chat.
+-- =====================================================================================
 
--- ===== seed.sql =====
--- GÉNÉRÉ par scripts/gen-supabase-seed.py à partir de src/p1_config.js : ne pas modifier à la main.
+-- 1. season_overview : ajoute score_key (identifiant stable d'un score du jour, cible des réactions)
+drop function if exists public.season_overview(date);
+create function public.season_overview(p_day date default null)
+returns table (play_day date, player_id uuid, pseudo text, best int, tries int, pos int, n int, gems int, slow boolean, at timestamptz, score_key uuid)
+language sql stable security definer set search_path = public as $$
+  with cfg as (select season_anchor, season_days from app_config where id = 1),
+  s as (
+    select c.season_anchor + (((coalesce(p_day, public.game_day()) - c.season_anchor) / c.season_days) * c.season_days) as d1, c.season_days
+    from cfg c
+  )
+  select g.play_day, g.user_id, pr.pseudo, g.best, g.tries, g.pos, g.n, g.gems, g.slow, g.at,
+         md5(g.play_day::text || g.user_id::text)::uuid
+  from s
+  cross join lateral public._group_scores(public.my_group(), s.d1, s.d1 + s.season_days - 1) g
+  join profiles pr on pr.id = g.user_id
+  order by g.play_day, g.pos, pr.pseudo
+$$;
+revoke execute on function public.season_overview(date) from public, anon;
+grant execute on function public.season_overview(date) to authenticated;
 
-insert into public.app_config (id, tries_per_day, gems_per_rank, joker_cost, mult, format_anchor, season_anchor, season_days, timezone)
-values (1, 2, 16, 25, '{1,1.25,1.5}', date '2026-10-25', date '2026-10-19', 28, 'Europe/Paris')
-on conflict (id) do update set tries_per_day = excluded.tries_per_day, gems_per_rank = excluded.gems_per_rank, joker_cost = excluded.joker_cost,
-  mult = excluded.mult, format_anchor = excluded.format_anchor, season_anchor = excluded.season_anchor, season_days = excluded.season_days;
+-- 2. réactions : un message ciblé doit appartenir au même groupe (les cibles « score » sont des clés dérivées, non vérifiables ici)
+drop policy if exists reactions_insert on public.reactions;
+drop policy if exists reactions_update on public.reactions;
+create policy reactions_insert on public.reactions for insert to authenticated
+  with check (group_id = public.my_group() and user_id = auth.uid()
+              and (target_type <> 'message' or exists (select 1 from public.messages m where m.id = target_id and m.group_id = reactions.group_id)));
+create policy reactions_update on public.reactions for update to authenticated
+  using (user_id = auth.uid())
+  with check (group_id = public.my_group() and user_id = auth.uid()
+              and (target_type <> 'message' or exists (select 1 from public.messages m where m.id = target_id and m.group_id = reactions.group_id)));
 
+-- 3. plafond de réactions par joueur
+create or replace function public.reactions_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if (select count(*) from reactions where user_id = new.user_id) >= 2000 then
+    raise exception 'too_many_reactions' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+drop trigger if exists reactions_guard on public.reactions;
+create trigger reactions_guard before insert on public.reactions for each row execute function public.reactions_guard();
+
+-- 4. nettoyage nocturne
+create or replace function public.purge_old_chat() returns int
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  delete from messages where created_at < now() - interval '30 days';
+  get diagnostics n = row_count;
+  delete from reactions r where r.target_type = 'message' and not exists (select 1 from messages m where m.id = r.target_id);
+  return n;
+end $$;
+revoke execute on function public.purge_old_chat() from public, anon, authenticated;
+
+do $$
+begin
+  create extension if not exists pg_cron;
+  perform cron.schedule('meridien-purge-chat', '30 3 * * *', 'select public.purge_old_chat()');
+exception when others then
+  raise notice 'pg_cron indisponible (%). Planifier select public.purge_old_chat() chaque nuit depuis le tableau de bord.', sqlerrm;
+end $$;
+
+-- ######## 20261115000000_reactions_fix.sql ########
+-- =====================================================================================
+-- Correctif de 20261114000000_chat.sql : les politiques d'insertion des réactions que cette migration avait
+-- réécrites (avec une sous-requête) refusaient TOUTES les réactions. On rétablit les politiques d'origine, simples,
+-- et la vérification « le message appartient au groupe » passe dans un déclencheur (il ne dépend pas de la sécurité par ligne).
+-- À appliquer APRÈS 20261114000000_chat.sql.
+-- =====================================================================================
+
+drop policy if exists reactions_insert on public.reactions;
+drop policy if exists reactions_update on public.reactions;
+create policy reactions_insert on public.reactions for insert to authenticated
+  with check (group_id = public.my_group() and user_id = auth.uid());
+create policy reactions_update on public.reactions for update to authenticated
+  using (user_id = auth.uid())
+  with check (group_id = public.my_group() and user_id = auth.uid());
+
+create or replace function public.reactions_guard() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' and (select count(*) from reactions where user_id = new.user_id) >= 2000 then
+    raise exception 'too_many_reactions' using errcode = 'P0001';
+  end if;
+  if new.target_type = 'message'
+     and not exists (select 1 from messages m where m.id = new.target_id and m.group_id = new.group_id) then
+    raise exception 'unknown_message' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists reactions_guard on public.reactions;
+create trigger reactions_guard before insert or update on public.reactions
+  for each row execute function public.reactions_guard();
+
+-- ######## 20261116000000_photo.sql ########
+-- =====================================================================================
+-- Photo de profil visible par les amis du groupe.
+-- La photo (JPEG 240 px, environ 15 Ko) est stockée dans le profil ; photo_v est sa « version » : les téléphones ne
+-- retéléchargent une photo que lorsque sa version change (économie de transfert sur l'offre gratuite).
+-- Lecture : membres du même groupe seulement (règle profiles_read existante). Écriture : le joueur, sur son propre profil
+-- (règle profiles_update existante). À appliquer après 20261115000000_reactions_fix.sql.
+-- =====================================================================================
+alter table public.profiles
+  add column if not exists photo text
+    check (photo is null or (length(photo) < 60000 and photo like 'data:image/jpeg;base64,%')),
+  add column if not exists photo_v int not null default 0;
+
+-- ######## 20261117000000_multigroups.sql ########
+-- =====================================================================================
+-- Lot 4 : plusieurs groupes, un jeu par groupe, saison de 21 jours avec bonus de gemmes.
+--   1. Un joueur peut être dans jusqu'à 5 groupes. Chaque groupe a SON jeu du jour (rotation propre au groupe :
+--      groups.fmt_offset / fmt_stride). Les groupes existants gardent la rotation d'origine (décalage 0, pas 1).
+--   2. Chaque essai appartient à un groupe (attempts.group_id) : 2 essais par jour ET PAR GROUPE.
+--   3. Les boussoles sont gagnées par groupe et par jour, avec un bonus qui monte avec la saison :
+--      jour 1 = +0 %, jour 2 = +5 %, … jour 9 = +40 %, jour 21 = +100 % (saison de 21 jours).
+--   4. Les fonctions de lecture acceptent un groupe (p_group) ; sans groupe, elles utilisent le plus ancien
+--      (l'ancienne version de l'application continue donc de fonctionner).
+-- À appliquer après 20261116000000_photo.sql, AVANT de publier le code qui en dépend.
+-- =====================================================================================
+
+-- ---------- 1. Schéma ----------
+update public.app_config set season_days = 21 where id = 1;
+
+alter table public.groups
+  add column if not exists fmt_offset smallint not null default 0,
+  add column if not exists fmt_stride smallint not null default 1;
+
+alter table public.group_members drop constraint if exists group_members_user_id_key;
+create index if not exists group_members_user_idx on public.group_members (user_id);
+
+alter table public.attempts add column if not exists group_id uuid references public.groups (id) on delete cascade;
+update public.attempts a set group_id = (select gm.group_id from public.group_members gm where gm.user_id = a.user_id order by gm.joined_at limit 1)
+  where a.group_id is null;
+alter table public.attempts drop constraint if exists attempts_user_id_day_try_idx_key;
+create unique index if not exists attempts_user_group_day_try
+  on public.attempts (user_id, (coalesce(group_id, '00000000-0000-0000-0000-000000000000'::uuid)), day, try_idx);
+create index if not exists attempts_group_day on public.attempts (group_id, day);
+
+-- registre des boussoles : une ligne par joueur, jour et groupe (on le recalcule entièrement ci-dessous)
+alter table public.gem_ledger drop constraint if exists gem_ledger_pkey;
+delete from public.gem_ledger;
+delete from public.settled_days;
+create unique index if not exists gem_ledger_user_day_group
+  on public.gem_ledger (user_id, day, (coalesce(group_id, '00000000-0000-0000-0000-000000000000'::uuid)));
+
+-- ---------- 2. Fonctions utilitaires ----------
+create or replace function public.my_group() returns uuid       -- compatibilité : le plus ancien groupe
+language sql stable security definer set search_path = public as $$
+  select group_id from group_members where user_id = auth.uid() order by joined_at, group_id limit 1
+$$;
+
+create or replace function public.my_groups() returns setof uuid
+language sql stable security definer set search_path = public as $$
+  select group_id from group_members where user_id = auth.uid()
+$$;
+
+-- groupe visé : celui demandé s'il fait partie de ceux de l'appelant, sinon le plus ancien
+create or replace function public._pick_group(p_group uuid) returns uuid
+language sql stable security definer set search_path = public as $$
+  select case when p_group is null then public.my_group()
+              when exists (select 1 from group_members where user_id = auth.uid() and group_id = p_group) then p_group
+              else null end
+$$;
+
+-- jeu d'un jour pour un groupe : pas premier avec 28, donc aucun jeu ne revient avant 28 jours
+create or replace function public.format_of(p_day date, p_group uuid) returns text
+language sql stable set search_path = public as $$
+  select f.key
+  from formats f, app_config c, (select count(*)::int as n from formats) t
+  left join groups g on g.id = p_group
+  where c.id = 1
+    and f.position = (((coalesce(g.fmt_offset, 0)::bigint + coalesce(g.fmt_stride, 1)::bigint * (p_day - c.format_anchor)) % t.n) + t.n) % t.n
+$$;
+
+-- ---------- 3. Groupes ----------
+create or replace function public.create_group(p_name text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  alphabet constant text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  strides constant smallint[] := array[1,3,5,9,11,13,15,17,19,23,25,27];
+  c text; i int; gid uuid; nf int;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  if not exists (select 1 from profiles where profiles.id = uid) then return jsonb_build_object('ok', false, 'error', 'no_profile'); end if;
+  if (select count(*) from group_members where user_id = uid) >= 5 then return jsonb_build_object('ok', false, 'error', 'too_many_groups'); end if;
+  if char_length(btrim(p_name)) not between 2 and 24 then return jsonb_build_object('ok', false, 'error', 'bad_name'); end if;
+  select count(*) into nf from formats;
+  loop
+    c := '';
+    for i in 1..6 loop c := c || substr(alphabet, 1 + (get_byte(extensions.gen_random_bytes(1), 0) % 32), 1); end loop;
+    exit when not exists (select 1 from groups g where g.code = c);
+  end loop;
+  insert into groups (code, name, owner_id, fmt_offset, fmt_stride)
+    values (c, btrim(p_name), uid, floor(random() * nf)::smallint, strides[1 + floor(random() * array_length(strides, 1))::int])
+    returning groups.id into gid;
+  insert into group_members (group_id, user_id, role) values (gid, uid, 'owner');
+  return jsonb_build_object('ok', true, 'group', jsonb_build_object('id', gid, 'code', c, 'name', btrim(p_name)));
+end $$;
+
+create or replace function public.join_group(p_code text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  g record; n int; fails int;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  if not exists (select 1 from profiles where profiles.id = uid) then return jsonb_build_object('ok', false, 'error', 'no_profile'); end if;
+  select count(*) into fails from join_attempts where user_id = uid and not ok and at > now() - interval '1 hour';
+  if fails >= 10 then return jsonb_build_object('ok', false, 'error', 'too_many_attempts'); end if;
+  select * into g from groups where code = upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g'));
+  if not found then
+    insert into join_attempts (user_id, ok) values (uid, false);
+    return jsonb_build_object('ok', false, 'error', 'invalid_code');
+  end if;
+  if exists (select 1 from group_members where user_id = uid and group_id = g.id) then return jsonb_build_object('ok', false, 'error', 'already_in_group'); end if;
+  if (select count(*) from group_members where user_id = uid) >= 5 then return jsonb_build_object('ok', false, 'error', 'too_many_groups'); end if;
+  select count(*) into n from group_members where group_id = g.id;
+  if n >= g.max_members then return jsonb_build_object('ok', false, 'error', 'group_full'); end if;
+  insert into group_members (group_id, user_id) values (g.id, uid);
+  insert into join_attempts (user_id, ok) values (uid, true);
+  return jsonb_build_object('ok', true, 'group', jsonb_build_object('id', g.id, 'code', g.code, 'name', g.name));
+end $$;
+
+drop function if exists public.leave_group();
+create function public.leave_group(p_group uuid default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  gid uuid; m record; heir uuid;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  gid := public._pick_group(p_group);
+  select * into m from group_members where user_id = uid and group_id = gid;
+  if not found then return jsonb_build_object('ok', false, 'error', 'not_in_group'); end if;
+  delete from group_members where user_id = uid and group_id = gid;
+  select user_id into heir from group_members where group_id = gid order by joined_at limit 1;
+  if heir is null then
+    delete from groups where id = gid;
+  elsif m.role = 'owner' then
+    update group_members set role = 'owner' where group_id = gid and user_id = heir;
+    update groups set owner_id = heir where id = gid;
+  end if;
+  return jsonb_build_object('ok', true);
+end $$;
+
+drop function if exists public.remove_member(uuid);
+create function public.remove_member(p_user uuid, p_group uuid default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare uid uuid := auth.uid(); gid uuid;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  gid := public._pick_group(p_group);
+  if gid is null or not exists (select 1 from group_members where user_id = uid and group_id = gid and role = 'owner') then
+    return jsonb_build_object('ok', false, 'error', 'not_owner');
+  end if;
+  if p_user = uid then return jsonb_build_object('ok', false, 'error', 'cannot_remove_self'); end if;
+  delete from group_members where group_id = gid and user_id = p_user;
+  return jsonb_build_object('ok', true);
+end $$;
+
+create or replace function public.delete_my_account() returns void
+language plpgsql security definer set search_path = public as $$
+declare g uuid;
+begin
+  if auth.uid() is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  for g in select group_id from group_members where user_id = auth.uid() loop
+    perform public.leave_group(g);
+  end loop;
+  delete from auth.users where id = auth.uid();
+end $$;
+
+-- ---------- 4. Essais : un jeu par groupe ----------
+drop function if exists public.start_try();
+create function public.start_try(p_group uuid default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  d date := game_day(); f text; n int; maxtries int; a attempts; gid uuid;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  if not exists (select 1 from profiles where profiles.id = uid) then return jsonb_build_object('ok', false, 'error', 'no_profile'); end if;
+  gid := public._pick_group(p_group);
+  if p_group is not null and gid is null then return jsonb_build_object('ok', false, 'error', 'not_in_group'); end if;
+  perform pg_advisory_xact_lock(hashtext('try:' || uid::text));
+  select tries_per_day into maxtries from app_config where id = 1;
+  select count(*) into n from attempts where user_id = uid and day = d and group_id is not distinct from gid;
+  if n >= maxtries then return jsonb_build_object('ok', false, 'error', 'no_tries_left', 'day', d); end if;
+  f := format_of(d, gid);
+  insert into attempts (user_id, group_id, day, try_idx, fmt) values (uid, gid, d, n, f) returning * into a;
+  return jsonb_build_object('ok', true, 'attempt_id', a.id, 'day', d, 'fmt', f, 'try_idx', n, 'started_at', a.started_at, 'group_id', gid);
+end $$;
+
+-- ---------- 5. Classement et boussoles ----------
+-- base = gems_per_rank × (N − joueurs ayant au moins le même score + 1) ; bonus = base × 5 % × (jour de saison − 1)
+drop function if exists public._group_scores(uuid, date, date);
+create function public._group_scores(gid uuid, d1 date, d2 date)
+returns table (play_day date, user_id uuid, best int, tries int, slow boolean, at timestamptz, pos int, n int, gems int,
+               base int, bonus int, pct int, beaten int, fmt text)
+language sql stable security definer set search_path = public as $$
+  with cfg as (select gems_per_rank, season_anchor, season_days from app_config where id = 1),
+  played as (
+    select a.day as play_day, a.user_id, max(a.score) as best, count(*)::int as tries,
+           bool_or(a.slow > 1) as slow, max(a.submitted_at) as at
+    from attempts a
+    join group_members gm on gm.user_id = a.user_id and gm.group_id = gid
+    where a.group_id = gid and a.submitted_at is not null and a.day between d1 and d2
+    group by a.day, a.user_id
+  ),
+  ranked as (
+    select p.play_day, p.user_id, p.best, p.tries, p.slow, p.at,
+           rank() over (partition by p.play_day order by p.best desc)::int as pos,
+           count(*) over (partition by p.play_day)::int as n,
+           count(*) over (partition by p.play_day order by p.best desc)::int as at_least
+    from played p
+  ),
+  calc as (
+    select r.*, case when r.n >= 2 then cfg.gems_per_rank * (r.n - r.at_least + 1) else 0 end as base,
+           (5 * (((r.play_day - cfg.season_anchor) % cfg.season_days + cfg.season_days) % cfg.season_days))::int as pct
+    from ranked r, cfg
+  )
+  select c.play_day, c.user_id, c.best, c.tries, c.slow, c.at, c.pos, c.n,
+         c.base + round(c.base * c.pct / 100.0)::int, c.base, round(c.base * c.pct / 100.0)::int, c.pct,
+         c.n - c.at_least, public.format_of(c.play_day, gid)
+  from calc c
+$$;
+
+drop function if exists public.season_overview(date);
+create function public.season_overview(p_day date default null, p_group uuid default null)
+returns table (play_day date, player_id uuid, pseudo text, best int, tries int, pos int, n int, gems int, slow boolean, at timestamptz,
+               score_key uuid, base int, bonus int, pct int, beaten int, fmt text)
+language sql stable security definer set search_path = public as $$
+  with gx as (select public._pick_group(p_group) as gid),
+  cfg as (select season_anchor, season_days from app_config where id = 1),
+  s as (
+    select c.season_anchor + (((coalesce(p_day, public.game_day()) - c.season_anchor) / c.season_days) * c.season_days) as d1, c.season_days
+    from cfg c
+  )
+  select g.play_day, g.user_id, pr.pseudo, g.best, g.tries, g.pos, g.n, g.gems, g.slow, g.at,
+         md5(g.play_day::text || g.user_id::text || gx.gid::text)::uuid,
+         g.base, g.bonus, g.pct, g.beaten, g.fmt
+  from gx, s
+  cross join lateral public._group_scores(gx.gid, s.d1, s.d1 + s.season_days - 1) g
+  join profiles pr on pr.id = g.user_id
+  where gx.gid is not null
+  order by g.play_day, g.pos, pr.pseudo
+$$;
+
+-- Historique d'un joueur : tous ses jeux joués, tous groupes confondus (« mois glissant » / « all time » filtrés côté appli)
+create or replace function public.my_history(p_days int default 3650)
+returns table (play_day date, group_id uuid, group_name text, fmt text, best int, pos int, n int, gems int)
+language sql stable security definer set search_path = public as $$
+  select s.play_day, gm.group_id, g.name, s.fmt, s.best, s.pos, s.n, s.gems
+  from group_members gm
+  join groups g on g.id = gm.group_id
+  cross join lateral public._group_scores(gm.group_id, public.game_day() - greatest(1, least(p_days, 3650)), public.game_day()) s
+  where gm.user_id = auth.uid() and s.user_id = auth.uid()
+  order by s.play_day desc, g.name
+$$;
+
+drop function if exists public.day_results(date);
+create function public.day_results(p_day date default null, p_group uuid default null)
+returns table (player_id uuid, pseudo text, best int, tries int, pos int, gems int, slow boolean, is_final boolean)
+language sql stable security definer set search_path = public as $$
+  with gx as (select public._pick_group(p_group) as gid), cfg as (select timezone from app_config where id = 1),
+  dd as (select coalesce(p_day, game_day()) as day)
+  select g.user_id, pr.pseudo, g.best, g.tries, g.pos, g.gems, g.slow,
+         (((dd.day + 1)::timestamp at time zone cfg.timezone) + interval '1 hour' < now())
+  from gx, dd, cfg
+  cross join lateral public._group_scores(gx.gid, dd.day, dd.day) g
+  join profiles pr on pr.id = g.user_id
+  where gx.gid is not null
+  order by g.pos, pr.pseudo
+$$;
+
+drop function if exists public.season_standings(date);
+create function public.season_standings(p_day date default null, p_group uuid default null)
+returns table (player_id uuid, pseudo text, total int, days_played int, pos int)
+language sql stable security definer set search_path = public as $$
+  with gx as (select public._pick_group(p_group) as gid),
+  cfg as (select season_anchor, season_days from app_config where id = 1),
+  s as (
+    select c.season_anchor + (((coalesce(p_day, game_day()) - c.season_anchor) / c.season_days) * c.season_days) as start_day, c.season_days
+    from cfg c
+  ),
+  t as (
+    select gm.user_id,
+           coalesce(sum(l.amount) filter (where l.day >= s.start_day and l.day < s.start_day + s.season_days), 0)::int as total,
+           (count(l.day) filter (where l.day >= s.start_day and l.day < s.start_day + s.season_days and l.amount > 0))::int as days_played
+    from gx cross join s
+    join group_members gm on gm.group_id = gx.gid
+    left join gem_ledger l on l.user_id = gm.user_id and l.group_id = gx.gid
+    group by gm.user_id
+  )
+  select t.user_id, pr.pseudo, t.total, t.days_played, rank() over (order by t.total desc)::int
+  from t join profiles pr on pr.id = t.user_id
+  order by 5, pr.pseudo
+$$;
+
+-- Total tous groupes : boussoles, victoires, jours joués (nourrit l'évolution du familier)
+drop function if exists public.my_summary();
+create function public.my_summary(p_group uuid default null) returns jsonb
+language sql stable security definer set search_path = public as $$
+  with sc as (
+    select s.* from group_members gm
+    cross join lateral public._group_scores(gm.group_id, date '2000-01-01', public.game_day() + 1) s
+    where gm.user_id = auth.uid() and s.user_id = auth.uid()
+  )
+  select jsonb_build_object(
+    'gems_total', coalesce((select sum(gems) from sc), 0),
+    'wins',       (select count(*) from sc where pos = 1 and n >= 2),
+    'days',       (select count(*) from sc),
+    'wallet',     public.my_wallet(),
+    'streak',     public.my_streak()
+  )
+$$;
+
+-- Règlement : par groupe, avec la même formule (bonus compris) ; recalcule tout ce qui a été effacé plus haut
+create or replace function public.settle_closed_days() returns int
+language plpgsql security definer set search_path = public as $$
+declare tz text; d date; g uuid; done int := 0;
+begin
+  select timezone into tz from app_config where id = 1;
+  for d in
+    select distinct a.day from attempts a
+    where a.submitted_at is not null
+      and ((a.day + 1)::timestamp at time zone tz) + interval '1 hour' < now()
+      and not exists (select 1 from settled_days s where s.day = a.day)
+    order by a.day
+  loop
+    for g in select distinct a.group_id from attempts a where a.day = d and a.submitted_at is not null and a.group_id is not null loop
+      insert into gem_ledger (user_id, day, group_id, amount)
+      select s.user_id, d, g, s.gems from public._group_scores(g, d, d) s
+      on conflict (user_id, day, (coalesce(group_id, '00000000-0000-0000-0000-000000000000'::uuid))) do nothing;
+    end loop;
+    insert into settled_days (day) values (d) on conflict do nothing;
+    done := done + 1;
+  end loop;
+  return done;
+end $$;
+
+-- ---------- 6. Sécurité par ligne : « un de mes groupes » au lieu de « mon groupe » ----------
+drop policy if exists profiles_read on public.profiles;
+create policy profiles_read on public.profiles for select to authenticated
+  using (id = auth.uid() or exists (select 1 from public.group_members gm where gm.user_id = profiles.id and gm.group_id in (select public.my_groups())));
+
+drop policy if exists groups_read on public.groups;
+create policy groups_read on public.groups for select to authenticated using (id in (select public.my_groups()));
+drop policy if exists members_read on public.group_members;
+create policy members_read on public.group_members for select to authenticated using (group_id in (select public.my_groups()));
+
+drop policy if exists messages_read on public.messages;
+create policy messages_read on public.messages for select to authenticated
+  using (group_id in (select public.my_groups())
+         and user_id not in (select b.blocked_id from public.blocks b where b.blocker_id = auth.uid()));
+drop policy if exists messages_insert on public.messages;
+create policy messages_insert on public.messages for insert to authenticated
+  with check (group_id in (select public.my_groups()) and user_id = auth.uid());
+
+drop policy if exists reactions_read on public.reactions;
+create policy reactions_read on public.reactions for select to authenticated using (group_id in (select public.my_groups()));
+drop policy if exists reactions_insert on public.reactions;
+create policy reactions_insert on public.reactions for insert to authenticated
+  with check (group_id in (select public.my_groups()) and user_id = auth.uid());
+drop policy if exists reactions_update on public.reactions;
+create policy reactions_update on public.reactions for update to authenticated
+  using (user_id = auth.uid())
+  with check (group_id in (select public.my_groups()) and user_id = auth.uid());
+
+drop policy if exists reports_insert on public.reports;
+create policy reports_insert on public.reports for insert to authenticated
+  with check (reporter_id = auth.uid() and exists (select 1 from public.messages m where m.id = message_id and m.group_id in (select public.my_groups())));
+
+-- ---------- 7. Droits ----------
+revoke execute on function public._group_scores(uuid, date, date), public._pick_group(uuid), public.settle_closed_days() from public, anon, authenticated;
+revoke execute on function public.my_groups(), public.my_history(int), public.format_of(date, uuid),
+  public.start_try(uuid), public.leave_group(uuid), public.remove_member(uuid, uuid),
+  public.season_overview(date, uuid), public.day_results(date, uuid), public.season_standings(date, uuid), public.my_summary(uuid)
+  from public, anon;
+grant execute on function public.my_groups(), public.my_history(int),
+  public.start_try(uuid), public.leave_group(uuid), public.remove_member(uuid, uuid),
+  public.season_overview(date, uuid), public.day_results(date, uuid), public.season_standings(date, uuid), public.my_summary(uuid)
+  to authenticated;
+
+-- Recalcule les boussoles des jours déjà clos avec la nouvelle formule
+select public.settle_closed_days();
+
+-- ######## 20261118000000_catchup.sql ########
+-- =====================================================================================
+-- Rattrapage : un joueur qui arrive dans un groupe en cours de saison peut jouer UN SEUL essai sur chacun des jeux
+-- précédents de la saison (jours depuis le début de la saison ou la création du groupe, jusqu'à la veille de son arrivée).
+--   - le score de rattrapage est classé face aux joueurs qui ont joué ce jour-là, SANS changer leur place ni leurs boussoles ;
+--   - le bonus de saison est celui du jour rattrapé ;
+--   - les boussoles du joueur sont inscrites dans son registre au moment de l'envoi du score ;
+--   - un rattrapage ne compte pas dans la série (flamme).
+-- À appliquer après 20261117000000_multigroups.sql, AVANT de publier le code qui en dépend.
+-- =====================================================================================
+
+alter table public.attempts add column if not exists catchup boolean not null default false;
+
+-- jours rattrapables par un joueur dans un groupe (interne)
+create or replace function public._catchup_days(p_user uuid, p_group uuid)
+returns table (day date)
+language sql stable security definer set search_path = public as $$
+  with c as (select season_anchor, season_days, timezone from app_config where id = 1),
+  t as (select (now() at time zone c.timezone)::date as today, c.* from c),
+  b as (
+    select greatest(
+             t.season_anchor + (((t.today - t.season_anchor) / t.season_days) * t.season_days),
+             (select (g.created_at at time zone t.timezone)::date from groups g where g.id = p_group)
+           ) as first_day,
+           least(t.today - 1,
+                 (select (gm.joined_at at time zone t.timezone)::date from group_members gm where gm.group_id = p_group and gm.user_id = p_user) - 1) as last_day
+    from t
+  )
+  select d::date
+  from b, generate_series(b.first_day::timestamp, b.last_day::timestamp, interval '1 day') d
+  where not exists (select 1 from attempts a where a.user_id = p_user and a.group_id = p_group and a.day = d::date)
+$$;
+
+create or replace function public.my_catchup(p_group uuid default null)
+returns table (day date, fmt text)
+language sql stable security definer set search_path = public as $$
+  with gx as (select public._pick_group(p_group) as gid)
+  select x.day, public.format_of(x.day, gx.gid)
+  from gx cross join lateral public._catchup_days(auth.uid(), gx.gid) x
+  where gx.gid is not null
+  order by x.day desc
+$$;
+
+-- start_try : p_day (facultatif) = jour à rattraper ; sans lui, le jeu du jour comme avant
+drop function if exists public.start_try(uuid);
+create function public.start_try(p_group uuid default null, p_day date default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  d date := game_day(); f text; n int; maxtries int; a attempts; gid uuid; late boolean := false;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  if not exists (select 1 from profiles where profiles.id = uid) then return jsonb_build_object('ok', false, 'error', 'no_profile'); end if;
+  gid := public._pick_group(p_group);
+  if p_group is not null and gid is null then return jsonb_build_object('ok', false, 'error', 'not_in_group'); end if;
+  perform pg_advisory_xact_lock(hashtext('try:' || uid::text));
+  select tries_per_day into maxtries from app_config where id = 1;
+  if p_day is not null and p_day <> d then
+    if gid is null or not exists (select 1 from public._catchup_days(uid, gid) x where x.day = p_day) then
+      return jsonb_build_object('ok', false, 'error', 'catchup_unavailable');
+    end if;
+    d := p_day; maxtries := 1; late := true;
+  end if;
+  select count(*) into n from attempts where user_id = uid and day = d and group_id is not distinct from gid;
+  if n >= maxtries then return jsonb_build_object('ok', false, 'error', 'no_tries_left', 'day', d); end if;
+  f := format_of(d, gid);
+  insert into attempts (user_id, group_id, day, try_idx, fmt, catchup) values (uid, gid, d, n, f, late) returning * into a;
+  return jsonb_build_object('ok', true, 'attempt_id', a.id, 'day', d, 'fmt', f, 'try_idx', n, 'started_at', a.started_at, 'group_id', gid, 'catchup', late);
+end $$;
+
+-- classement : les rattrapages se placent face aux joueurs « normaux » du jour sans les déplacer
+drop function if exists public._group_scores(uuid, date, date);
+create function public._group_scores(gid uuid, d1 date, d2 date)
+returns table (play_day date, user_id uuid, best int, tries int, slow boolean, at timestamptz, pos int, n int, gems int,
+               base int, bonus int, pct int, beaten int, fmt text)
+language sql stable security definer set search_path = public as $$
+  with cfg as (select gems_per_rank, season_anchor, season_days from app_config where id = 1),
+  played as (
+    select a.day as play_day, a.user_id, max(a.score) as best, count(*)::int as tries,
+           bool_or(a.slow > 1) as slow, max(a.submitted_at) as at, bool_or(a.catchup) as late
+    from attempts a
+    join group_members gm on gm.user_id = a.user_id and gm.group_id = gid
+    where a.group_id = gid and a.submitted_at is not null and a.day between d1 and d2
+    group by a.day, a.user_id
+  ),
+  reg as (
+    select p.*, rank() over (partition by p.play_day order by p.best desc)::int as pos,
+           count(*) over (partition by p.play_day)::int as n,
+           count(*) over (partition by p.play_day order by p.best desc)::int as at_least
+    from played p where not p.late
+  ),
+  lat as (
+    select p.*,
+           (select count(*) from reg r where r.play_day = p.play_day and r.best > p.best)::int + 1 as pos,
+           (select count(*) from reg r where r.play_day = p.play_day)::int + 1 as n,
+           (select count(*) from reg r where r.play_day = p.play_day and r.best >= p.best)::int + 1 as at_least
+    from played p where p.late
+  ),
+  ranked as (select * from reg union all select * from lat),
+  calc as (
+    select r.*, case when r.n >= 2 then cfg.gems_per_rank * (r.n - r.at_least + 1) else 0 end as base,
+           (5 * (((r.play_day - cfg.season_anchor) % cfg.season_days + cfg.season_days) % cfg.season_days))::int as pct
+    from ranked r, cfg
+  )
+  select c.play_day, c.user_id, c.best, c.tries, c.slow, c.at, c.pos, c.n,
+         c.base + round(c.base * c.pct / 100.0)::int, c.base, round(c.base * c.pct / 100.0)::int, c.pct,
+         c.n - c.at_least, public.format_of(c.play_day, gid)
+  from calc c
+$$;
+
+-- envoi du score : un rattrapage inscrit tout de suite les boussoles du joueur (le jour est déjà réglé pour les autres)
+create or replace function public.submit_score(p_attempt uuid, p_rounds jsonb, p_slow numeric default 1) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  a attempts; mx int; mults numeric[]; r jsonb; d int; p int; total int := 0; elapsed interval; fl text[] := '{}';
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  select * into a from attempts where id = p_attempt and user_id = uid for update;
+  if not found then return jsonb_build_object('ok', false, 'error', 'unknown_attempt'); end if;
+  if a.submitted_at is not null then return jsonb_build_object('ok', false, 'error', 'already_submitted'); end if;
+  if p_slow not in (1, 1.5, 2) then return jsonb_build_object('ok', false, 'error', 'bad_slow'); end if;
+  elapsed := now() - a.started_at;
+  if elapsed > interval '60 minutes' then return jsonb_build_object('ok', false, 'error', 'expired'); end if;
+  if elapsed < interval '20 seconds' then return jsonb_build_object('ok', false, 'error', 'too_fast'); end if;
+  if jsonb_typeof(p_rounds) <> 'array' or jsonb_array_length(p_rounds) <> 3 then return jsonb_build_object('ok', false, 'error', 'bad_rounds'); end if;
+  select max_points into mx from formats where key = a.fmt;
+  select mult into mults from app_config where id = 1;
+  begin
+    for r in select * from jsonb_array_elements(p_rounds) loop
+      d := (r ->> 'diff')::int; p := (r ->> 'pts')::int;
+      if d is null or d not between 0 and 2 or p is null or p < 0 or p > ceil(mx * mults[d + 1]) then
+        return jsonb_build_object('ok', false, 'error', 'bad_rounds');
+      end if;
+      total := total + p;
+    end loop;
+  exception when invalid_text_representation or numeric_value_out_of_range then
+    return jsonb_build_object('ok', false, 'error', 'bad_rounds');
+  end;
+  if elapsed < interval '45 seconds' then fl := array_append(fl, 'fast'); end if;
+  update attempts set submitted_at = now(), score = total, rounds = p_rounds, slow = p_slow, flags = fl where id = a.id;
+  if a.catchup and a.group_id is not null then
+    insert into gem_ledger (user_id, day, group_id, amount)
+    select s.user_id, a.day, a.group_id, s.gems from public._group_scores(a.group_id, a.day, a.day) s where s.user_id = uid
+    on conflict (user_id, day, (coalesce(group_id, '00000000-0000-0000-0000-000000000000'::uuid))) do nothing;
+  end if;
+  return jsonb_build_object('ok', true, 'score', total);
+end $$;
+
+-- la série (flamme) ignore les rattrapages
+create or replace function public.my_streak() returns int
+language sql stable security definer set search_path = public as $$
+  with d as (select distinct day from attempts where user_id = auth.uid() and submitted_at is not null and not catchup),
+  g as (select day, day - (row_number() over (order by day))::int as grp from d),
+  runs as (select max(day) as last_day, count(*)::int as len from g group by grp order by max(day) desc limit 1)
+  select coalesce((select len from runs where last_day >= game_day() - 1), 0)
+$$;
+
+-- droits
+revoke execute on function public._catchup_days(uuid, uuid), public._group_scores(uuid, date, date) from public, anon, authenticated;
+revoke execute on function public.my_catchup(uuid), public.start_try(uuid, date) from public, anon;
+grant execute on function public.my_catchup(uuid), public.start_try(uuid, date) to authenticated;
+
+-- ######## 20261119000000_try_scores.sql ########
+-- =====================================================================================
+-- Score de chaque essai : _group_scores / season_overview renvoient aussi la liste des scores des essais (dans l'ordre),
+-- pour afficher « Essai 1 : 410 pts · Essai 2 : 527 pts » dans le détail d'un score.
+-- Ne change aucune règle de classement ni de boussoles. À appliquer après 20261118000000_catchup.sql,
+-- AVANT de publier le code qui en dépend (l'ancien code ignore simplement la colonne en plus).
+-- =====================================================================================
+
+drop function if exists public._group_scores(uuid, date, date);
+create function public._group_scores(gid uuid, d1 date, d2 date)
+returns table (play_day date, user_id uuid, best int, tries int, slow boolean, at timestamptz, pos int, n int, gems int,
+               base int, bonus int, pct int, beaten int, fmt text, try_scores int[])
+language sql stable security definer set search_path = public as $$
+  with cfg as (select gems_per_rank, season_anchor, season_days from app_config where id = 1),
+  played as (
+    select a.day as play_day, a.user_id, max(a.score) as best, count(*)::int as tries,
+           bool_or(a.slow > 1) as slow, max(a.submitted_at) as at, bool_or(a.catchup) as late,
+           array_agg(a.score order by a.try_idx) as try_scores
+    from attempts a
+    join group_members gm on gm.user_id = a.user_id and gm.group_id = gid
+    where a.group_id = gid and a.submitted_at is not null and a.day between d1 and d2
+    group by a.day, a.user_id
+  ),
+  reg as (
+    select p.*, rank() over (partition by p.play_day order by p.best desc)::int as pos,
+           count(*) over (partition by p.play_day)::int as n,
+           count(*) over (partition by p.play_day order by p.best desc)::int as at_least
+    from played p where not p.late
+  ),
+  lat as (
+    select p.*,
+           (select count(*) from reg r where r.play_day = p.play_day and r.best > p.best)::int + 1 as pos,
+           (select count(*) from reg r where r.play_day = p.play_day)::int + 1 as n,
+           (select count(*) from reg r where r.play_day = p.play_day and r.best >= p.best)::int + 1 as at_least
+    from played p where p.late
+  ),
+  ranked as (select * from reg union all select * from lat),
+  calc as (
+    select r.*, case when r.n >= 2 then cfg.gems_per_rank * (r.n - r.at_least + 1) else 0 end as base,
+           (5 * (((r.play_day - cfg.season_anchor) % cfg.season_days + cfg.season_days) % cfg.season_days))::int as pct
+    from ranked r, cfg
+  )
+  select c.play_day, c.user_id, c.best, c.tries, c.slow, c.at, c.pos, c.n,
+         c.base + round(c.base * c.pct / 100.0)::int, c.base, round(c.base * c.pct / 100.0)::int, c.pct,
+         c.n - c.at_least, public.format_of(c.play_day, gid), c.try_scores
+  from calc c
+$$;
+
+drop function if exists public.season_overview(date, uuid);
+create function public.season_overview(p_day date default null, p_group uuid default null)
+returns table (play_day date, player_id uuid, pseudo text, best int, tries int, pos int, n int, gems int, slow boolean, at timestamptz,
+               score_key uuid, base int, bonus int, pct int, beaten int, fmt text, try_scores int[])
+language sql stable security definer set search_path = public as $$
+  with gx as (select public._pick_group(p_group) as gid),
+  cfg as (select season_anchor, season_days from app_config where id = 1),
+  s as (
+    select c.season_anchor + (((coalesce(p_day, public.game_day()) - c.season_anchor) / c.season_days) * c.season_days) as d1, c.season_days
+    from cfg c
+  )
+  select g.play_day, g.user_id, pr.pseudo, g.best, g.tries, g.pos, g.n, g.gems, g.slow, g.at,
+         md5(g.play_day::text || g.user_id::text || gx.gid::text)::uuid,
+         g.base, g.bonus, g.pct, g.beaten, g.fmt, g.try_scores
+  from gx, s
+  cross join lateral public._group_scores(gx.gid, s.d1, s.d1 + s.season_days - 1) g
+  join profiles pr on pr.id = g.user_id
+  where gx.gid is not null
+  order by g.play_day, g.pos, pr.pseudo
+$$;
+
+revoke execute on function public._group_scores(uuid, date, date) from public, anon, authenticated;
+revoke execute on function public.season_overview(date, uuid) from public, anon;
+grant execute on function public.season_overview(date, uuid) to authenticated;
+
+-- ######## 20261120000000_more_formats.sql ########
+-- =====================================================================================
+-- 4 nouveaux jeux de culture générale (v26) : Expressions françaises, Inventions et découvertes, Monuments du monde,
+-- Corps humain et santé. Le serveur compte les jeux dans la table formats : la rotation passe de 28 à 32 jeux
+-- (le jeu du jour de chaque groupe change donc une fois, à l'application de cette migration).
+-- Les pas de rotation des groupes sont tous impairs, donc premiers avec 32 : un jeu ne revient pas avant 32 jours.
+-- À appliquer AVANT de publier le code v26 (ou immédiatement avant : l'ancien code, qui connaît 28 jeux, afficherait
+-- « Le jour a changé » au lancement d'un essai tant que la page n'est pas rechargée).
+-- =====================================================================================
 insert into public.formats (position, key, max_points) values
-  (0, 'sprint', 300),
-  (1, 'quiz', 300),
-  (2, 'motdujour', 300),
-  (3, 'carte', 200),
-  (4, 'petitbac', 300),
-  (5, 'paysmystere', 300),
-  (6, 'drapeaux', 300),
-  (7, 'connexions', 300),
-  (8, 'anagrammes', 300),
-  (9, 'frise', 200),
-  (10, 'capitales', 300),
-  (11, 'neavant', 300),
-  (12, 'intrus', 300),
-  (13, 'plusmoins', 300),
-  (14, 'comptebon', 300),
-  (15, 'quisuisje', 200),
-  (16, 'top10', 300),
-  (17, 'distance', 300),
-  (18, 'silhouettes', 300),
-  (19, 'relier', 300),
-  (20, 'sigles', 300),
-  (21, 'vraifaux', 300),
-  (22, 'rebus', 300),
-  (23, 'chaine', 300),
-  (24, 'voisins', 300),
-  (25, 'citations', 200),
-  (26, 'classement', 300),
-  (27, 'blocs', 300)
+  (28, 'expressions', 300),
+  (29, 'inventions', 300),
+  (30, 'monuments', 300),
+  (31, 'corps', 300)
 on conflict (position) do update set key = excluded.key, max_points = excluded.max_points;
+
+-- ######## 20261121000000_boost_sunday.sql ########
+-- =====================================================================================
+-- v27 : Boost (une fois par saison et par joueur), Méga-quiz du dimanche (jeu spécial, 1 seul essai, boussoles ×2),
+--       3 jeux de plus dans la rotation (Pop culture, Chanson, Mythes et littérature → 35 jeux).
+--   - formats.special : un jeu spécial ne fait pas partie de la rotation ; le dimanche, TOUS les groupes jouent « megaquiz ».
+--   - boosts : un joueur peut, une fois par saison, faire compter son score ×1,5 sur UN jeu (ses 2 essais, dans le
+--     classement du jour). Il faut l'activer AVANT le premier essai du jour dans ce groupe.
+--   - le dimanche, les boussoles gagnées sont doublées (avant le bonus de saison).
+-- À appliquer après 20261120000000_more_formats.sql, AVANT de publier le code v27.
+-- =====================================================================================
+
+alter table public.formats add column if not exists special boolean not null default false;
+insert into public.formats (position, key, max_points, special) values
+  (32, 'popculture', 300, false),
+  (33, 'chanson', 300, false),
+  (34, 'mythes', 300, false),
+  (100, 'megaquiz', 400, true)
+on conflict (position) do update set key = excluded.key, max_points = excluded.max_points, special = excluded.special;
+
+-- jeu du jour : le dimanche = méga-quiz pour tout le monde, sinon la rotation (sur les jeux non spéciaux)
+create or replace function public.format_of(p_day date) returns text
+language sql stable set search_path = public as $$
+  select case when extract(dow from p_day) = 0 then 'megaquiz' else (
+    select f.key from formats f, app_config c, (select count(*)::int as n from formats where not special) t
+    where c.id = 1 and not f.special and f.position = (((p_day - c.format_anchor) % t.n) + t.n) % t.n
+  ) end
+$$;
+
+create or replace function public.format_of(p_day date, p_group uuid) returns text
+language sql stable set search_path = public as $$
+  select case when extract(dow from p_day) = 0 then 'megaquiz' else (
+    select f.key
+    from formats f, app_config c, (select count(*)::int as n from formats where not special) t
+    left join groups g on g.id = p_group
+    where c.id = 1 and not f.special
+      and f.position = (((coalesce(g.fmt_offset, 0)::bigint + coalesce(g.fmt_stride, 1)::bigint * (p_day - c.format_anchor)) % t.n) + t.n) % t.n
+  ) end
+$$;
+
+-- ---------- boosts ----------
+create table if not exists public.boosts (
+  user_id      uuid not null references public.profiles (id) on delete cascade,
+  group_id     uuid not null references public.groups (id) on delete cascade,
+  day          date not null,
+  season_start date not null,
+  created_at   timestamptz not null default now(),
+  primary key (user_id, season_start)           -- un seul boost par saison et par joueur
+);
+alter table public.boosts enable row level security;
+drop policy if exists boosts_read_own on public.boosts;
+create policy boosts_read_own on public.boosts for select to authenticated using (user_id = auth.uid());
+revoke all on public.boosts from anon;
+revoke insert, update, delete, truncate on public.boosts from authenticated;
+
+create or replace function public.my_boost(p_group uuid default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid(); gid uuid := public._pick_group(p_group); d date := game_day(); c record; s0 date; b record; started boolean;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  select season_anchor, season_days into c from app_config where id = 1;
+  s0 := c.season_anchor + (((d - c.season_anchor) / c.season_days) * c.season_days);
+  select * into b from boosts where user_id = uid and season_start = s0;
+  select exists (select 1 from attempts a where a.user_id = uid and a.group_id is not distinct from gid and a.day = d) into started;
+  return jsonb_build_object('season_start', s0, 'season_end', s0 + c.season_days - 1,
+    'used', b.user_id is not null, 'used_day', b.day, 'used_group', b.group_id,
+    'active_today', b.user_id is not null and b.day = d and b.group_id is not distinct from gid,
+    'can_use', gid is not null and b.user_id is null and not started);
+end $$;
+
+create or replace function public.use_boost(p_group uuid default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid(); gid uuid := public._pick_group(p_group); d date := game_day(); c record; s0 date;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  if gid is null then return jsonb_build_object('ok', false, 'error', 'not_in_group'); end if;
+  perform pg_advisory_xact_lock(hashtext('boost:' || uid::text));
+  select season_anchor, season_days into c from app_config where id = 1;
+  s0 := c.season_anchor + (((d - c.season_anchor) / c.season_days) * c.season_days);
+  if exists (select 1 from boosts where user_id = uid and season_start = s0) then return jsonb_build_object('ok', false, 'error', 'boost_already_used'); end if;
+  if exists (select 1 from attempts a where a.user_id = uid and a.group_id = gid and a.day = d) then return jsonb_build_object('ok', false, 'error', 'already_started'); end if;
+  insert into boosts (user_id, group_id, day, season_start) values (uid, gid, d, s0);
+  return jsonb_build_object('ok', true, 'day', d, 'group_id', gid);
+end $$;
+
+-- ---------- start_try : un jeu spécial n'a qu'un essai ----------
+drop function if exists public.start_try(uuid, date);
+create function public.start_try(p_group uuid default null, p_day date default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  d date := game_day(); f text; n int; maxtries int; a attempts; gid uuid; late boolean := false; sp boolean;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  if not exists (select 1 from profiles where profiles.id = uid) then return jsonb_build_object('ok', false, 'error', 'no_profile'); end if;
+  gid := public._pick_group(p_group);
+  if p_group is not null and gid is null then return jsonb_build_object('ok', false, 'error', 'not_in_group'); end if;
+  perform pg_advisory_xact_lock(hashtext('try:' || uid::text));
+  select tries_per_day into maxtries from app_config where id = 1;
+  if p_day is not null and p_day <> d then
+    if gid is null or not exists (select 1 from public._catchup_days(uid, gid) x where x.day = p_day) then
+      return jsonb_build_object('ok', false, 'error', 'catchup_unavailable');
+    end if;
+    d := p_day; maxtries := 1; late := true;
+  end if;
+  f := format_of(d, gid);
+  select special into sp from formats where key = f;
+  if sp then maxtries := 1; end if;
+  select count(*) into n from attempts where user_id = uid and day = d and group_id is not distinct from gid;
+  if n >= maxtries then return jsonb_build_object('ok', false, 'error', 'no_tries_left', 'day', d); end if;
+  insert into attempts (user_id, group_id, day, try_idx, fmt, catchup) values (uid, gid, d, n, f, late) returning * into a;
+  return jsonb_build_object('ok', true, 'attempt_id', a.id, 'day', d, 'fmt', f, 'try_idx', n, 'started_at', a.started_at, 'group_id', gid, 'catchup', late);
+end $$;
+
+-- ---------- classement : boost ×1,5 sur le score, dimanche ×2 sur les boussoles ----------
+drop function if exists public._group_scores(uuid, date, date);
+create function public._group_scores(gid uuid, d1 date, d2 date)
+returns table (play_day date, user_id uuid, best int, tries int, slow boolean, at timestamptz, pos int, n int, gems int,
+               base int, bonus int, pct int, beaten int, fmt text, try_scores int[], mult int, boost boolean)
+language sql stable security definer set search_path = public as $$
+  with cfg as (select gems_per_rank, season_anchor, season_days from app_config where id = 1),
+  played as (
+    select a.day as play_day, a.user_id,
+           max(round(a.score * case when bo.user_id is not null then 1.5 else 1 end)::int) as best,
+           count(*)::int as tries, bool_or(a.slow > 1) as slow, max(a.submitted_at) as at, bool_or(a.catchup) as late,
+           array_agg(round(a.score * case when bo.user_id is not null then 1.5 else 1 end)::int order by a.try_idx) as try_scores,
+           bool_or(bo.user_id is not null) as boost
+    from attempts a
+    join group_members gm on gm.user_id = a.user_id and gm.group_id = gid
+    left join boosts bo on bo.user_id = a.user_id and bo.group_id = a.group_id and bo.day = a.day
+    where a.group_id = gid and a.submitted_at is not null and a.day between d1 and d2
+    group by a.day, a.user_id
+  ),
+  reg as (
+    select p.*, rank() over (partition by p.play_day order by p.best desc)::int as pos,
+           count(*) over (partition by p.play_day)::int as n,
+           count(*) over (partition by p.play_day order by p.best desc)::int as at_least
+    from played p where not p.late
+  ),
+  lat as (
+    select p.*,
+           (select count(*) from reg r where r.play_day = p.play_day and r.best > p.best)::int + 1 as pos,
+           (select count(*) from reg r where r.play_day = p.play_day)::int + 1 as n,
+           (select count(*) from reg r where r.play_day = p.play_day and r.best >= p.best)::int + 1 as at_least
+    from played p where p.late
+  ),
+  ranked as (select * from reg union all select * from lat),
+  calc as (
+    select r.*, case when r.n >= 2 then cfg.gems_per_rank * (r.n - r.at_least + 1) else 0 end as base,
+           case when extract(dow from r.play_day) = 0 then 2 else 1 end as mult,
+           (5 * (((r.play_day - cfg.season_anchor) % cfg.season_days + cfg.season_days) % cfg.season_days))::int as pct
+    from ranked r, cfg
+  )
+  select c.play_day, c.user_id, c.best, c.tries, c.slow, c.at, c.pos, c.n,
+         c.base * c.mult + round(c.base * c.mult * c.pct / 100.0)::int, c.base, round(c.base * c.mult * c.pct / 100.0)::int, c.pct,
+         c.n - c.at_least, public.format_of(c.play_day, gid), c.try_scores, c.mult, c.boost
+  from calc c
+$$;
+
+drop function if exists public.season_overview(date, uuid);
+create function public.season_overview(p_day date default null, p_group uuid default null)
+returns table (play_day date, player_id uuid, pseudo text, best int, tries int, pos int, n int, gems int, slow boolean, at timestamptz,
+               score_key uuid, base int, bonus int, pct int, beaten int, fmt text, try_scores int[], mult int, boost boolean)
+language sql stable security definer set search_path = public as $$
+  with gx as (select public._pick_group(p_group) as gid),
+  cfg as (select season_anchor, season_days from app_config where id = 1),
+  s as (
+    select c.season_anchor + (((coalesce(p_day, public.game_day()) - c.season_anchor) / c.season_days) * c.season_days) as d1, c.season_days
+    from cfg c
+  )
+  select g.play_day, g.user_id, pr.pseudo, g.best, g.tries, g.pos, g.n, g.gems, g.slow, g.at,
+         md5(g.play_day::text || g.user_id::text || gx.gid::text)::uuid,
+         g.base, g.bonus, g.pct, g.beaten, g.fmt, g.try_scores, g.mult, g.boost
+  from gx, s
+  cross join lateral public._group_scores(gx.gid, s.d1, s.d1 + s.season_days - 1) g
+  join profiles pr on pr.id = g.user_id
+  where gx.gid is not null
+  order by g.play_day, g.pos, pr.pseudo
+$$;
+
+-- droits
+revoke execute on function public._group_scores(uuid, date, date) from public, anon, authenticated;
+revoke execute on function public.my_boost(uuid), public.use_boost(uuid), public.start_try(uuid, date), public.season_overview(date, uuid) from public, anon;
+grant execute on function public.my_boost(uuid), public.use_boost(uuid), public.start_try(uuid, date), public.season_overview(date, uuid) to authenticated;
+
+-- ######## 20261122000000_groups_overview.sql ########
+-- =====================================================================================
+-- Écran d'accueil « Mes groupes » (comme Playus) : une seule requête rend, pour chacun de mes groupes,
+-- le nombre de membres, mon rang et mon total de boussoles dans la saison, et si j'ai déjà joué aujourd'hui.
+-- Lecture seule (aucune règle changée). À appliquer après 20261121000000_boost_sunday.sql, AVANT de publier le code.
+-- =====================================================================================
+create or replace function public.my_groups_overview()
+returns table (group_id uuid, name text, code text, members int, my_rank int, my_total int, played_today boolean, best_today int)
+language sql stable security definer set search_path = public as $$
+  with cfg as (select season_anchor, season_days from app_config where id = 1),
+  s as (
+    select c.season_anchor + (((public.game_day() - c.season_anchor) / c.season_days) * c.season_days) as d1, c.season_days from cfg c
+  ),
+  mine as (select gm.group_id as gid from group_members gm where gm.user_id = auth.uid()),
+  tot as (
+    select m.gid, sc.user_id, coalesce(sum(sc.gems), 0)::int as total
+    from mine m cross join s
+    cross join lateral public._group_scores(m.gid, s.d1, s.d1 + s.season_days - 1) sc
+    group by m.gid, sc.user_id
+  ),
+  everyone as (
+    select gm.group_id as gid, gm.user_id, coalesce(t.total, 0) as total
+    from group_members gm join mine m on m.gid = gm.group_id
+    left join tot t on t.gid = gm.group_id and t.user_id = gm.user_id
+  ),
+  ranked as (select e.*, rank() over (partition by e.gid order by e.total desc)::int as rk from everyone e),
+  today as (
+    select m.gid, sc.best from mine m
+    cross join lateral public._group_scores(m.gid, public.game_day(), public.game_day()) sc
+    where sc.user_id = auth.uid()
+  )
+  select g.id, g.name, g.code, (select count(*)::int from group_members x where x.group_id = g.id),
+         r.rk, r.total, t.best is not null, t.best
+  from groups g
+  join mine m on m.gid = g.id
+  left join ranked r on r.gid = g.id and r.user_id = auth.uid()
+  left join today t on t.gid = g.id
+  order by g.created_at
+$$;
+revoke execute on function public.my_groups_overview() from public, anon;
+grant execute on function public.my_groups_overview() to authenticated;
+
