@@ -54,7 +54,7 @@ function renderGame() {
       <div class="theme-banner" style="--c:${m.color}"><div><div class="kicker">Manche ${g.round + 1} sur 3</div><h2 class="display">${esc(m.label)}</h2></div><span class="bico">${mIcon(m, 58)}</span></div>
       ${tutoCoach(g)}
       <p class="qsub">Choisis ta difficulté pour cette manche.</p>
-      <div class="diffs">${DIFFS.map((d, i) => `<button class="diff" data-g="diff" data-v="${i}"><span class="mult num" style="--c:${d.color}">${fmtMult(CONFIG.mult[i])}</span><span><span class="lbl">${d.label}</span><br><span class="s">${esc((E().diffHint && E().diffHint[i]) || d.sub)}</span></span>${pips(i)}</button>`).join("")}</div>`;
+      <div class="diffs">${DIFFS.map((d, i) => `<button class="diff ${g.tuto && i === 1 ? "pulse" : ""}" data-g="diff" data-v="${i}"><span class="mult num" style="--c:${d.color}">${fmtMult(CONFIG.mult[i])}</span><span><span class="lbl">${d.label}</span><br><span class="s">${esc((E().diffHint && E().diffHint[i]) || d.sub)}</span></span>${pips(i)}</button>`).join("")}</div>`;
   } else if (g.phase === "q" || g.phase === "reveal") {
     body = gameTop() + roundTag() + (g.phase === "q" ? tutoCoach(g) : "") + E().view(g) + (g.phase === "reveal" ? tutoCoach(g) + revealBox() : "");
   } else if (g.phase === "end") {

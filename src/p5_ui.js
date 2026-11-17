@@ -56,6 +56,7 @@ const toi = `<span class="toi">TOI</span>`;
 const logoMark = (px = 44) => `<svg class="logomark" width="${px}" height="${px}" viewBox="0 0 512 512" aria-hidden="true" focusable="false"><rect width="512" height="512" rx="112" fill="#6B5BE2"/><circle cx="256" cy="274" r="144" fill="#4C3EBE"/><circle cx="256" cy="256" r="144" fill="#FFF6EC" stroke="#2A2333" stroke-width="16"/><g fill="none" stroke="#2A2333" stroke-width="12" stroke-linecap="round"><ellipse cx="256" cy="256" rx="64" ry="144"/><path d="M256 112V400M112 256H400"/></g><path d="M370 100l10 36 36 10-36 10-10 36-10-36-36-10 36-10z" fill="#FFC24A" stroke="#2A2333" stroke-width="10" stroke-linejoin="round"/></svg>`;
 
 function vOnboard() {
+  if (ui.onbStep === "install") return vInstallPage();
   if (ui.onbStep === "welcome") return `<div class="onb welcome">
     <div class="whero"><span class="brand">${logoMark(88)}</span><h1 class="display">Méridien</h1><p class="wtag">Une énigme par jour, la même pour tous tes amis.</p></div>
     <ol class="wsteps">
@@ -119,7 +120,7 @@ function vGroup() {
   const mt = myToday(), left = triesOf(k) - mt.used, pet = store.profile.pet, S = SPECIES[pet.species];
   let btn;
   if (ui.busyPlay) btn = `<button class="btn" disabled><span class="stack">Connexion…<small>Vérification de ton défi du jour</small></span></button>`;
-  else if (left === triesOf(k)) btn = `<button class="btn" data-act="play"><span class="stack">Jouer<small>${triesOf(k) > 1 ? triesOf(k) + " essais · le meilleur compte" : "1 seul essai · jeu spécial du dimanche"}</small></span></button>`;
+  else if (left === triesOf(k)) btn = `${firstRun() ? coach("Voici ton défi du jour. Touche « Jouer » 👇") : ""}<button class="btn ${firstRun() ? "pulse" : ""}" data-act="play"><span class="stack">Jouer<small>${triesOf(k) > 1 ? triesOf(k) + " essais · le meilleur compte" : "1 seul essai · jeu spécial du dimanche"}</small></span></button>`;
   else if (left > 0) btn = `<button class="btn" data-act="play"><span class="stack">Rejouer<small>Dernier essai · nouvelles questions · meilleur : ${fmtNum(mt.best)} pts</small></span></button>`;
   else btn = `<button class="btn" disabled><span class="stack">Défi terminé<small>Ton meilleur score : ${fmtNum(mt.best)} pts</small></span></button>`;
   const hello = mt.used ? (left > 0 ? petLine(pet.species, "mid", k) : petLine(pet.species, mt.best >= 400 ? "good" : "mid", k + "d")) : petLine(pet.species, "hello", k);
@@ -138,7 +139,7 @@ function vGroup() {
     ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
   </div>
   ${streakStrip()}
-  ${seasonBanner()}${tutoNotice()}${onlineNotice()}${recapCard()}
+  ${seasonBanner()}${tutoNotice()}${installNotice()}${onlineNotice()}${recapCard()}
   <section class="today" aria-label="Défi du jour">
     <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
@@ -319,6 +320,7 @@ function vProfile() {
 }
 
 function vSheet() {
+  if (ui.sheet === "install") return vInstallSheet();
   if (ui.sheet === "cer") return vCeremony();
   if (ui.sheet === "hall") return vHall();
   if (ui.sheet === "groups") return vGroupsSheet();
@@ -419,7 +421,10 @@ document.addEventListener("click", e => {
   switch (a) {
     case "onbtab": captureDrafts(); ui.onbTab = v; render(); break;
     case "pickpet": captureDrafts(); if (speciesOpen(v, store.profile ? progress() : null)) { ui.draftPet = v; render(); } break;
-    case "onbstart": ui.onbStep = "pet"; render(); break;
+    case "onbstart": ui.onbStep = installWanted() && !ui.installSeen ? "install" : "pet"; window.scrollTo(0, 0); render(); break;
+    case "instnext": ui.installSeen = true; ui.onbStep = "pet"; window.scrollTo(0, 0); render(); break;
+    case "installpage": ui.sheet = "install"; render(); break;
+    case "installlater": if (store.profile) { store.profile.installLater = addDays(today(), 7); save(); } render(); break;
     case "onbwelcome": ui.onbStep = "welcome"; render(); break;
     case "onbnext": ui.onbStep = "form"; render(); break;
     case "onbback": captureDrafts(); ui.onbStep = "pet"; render(); break;

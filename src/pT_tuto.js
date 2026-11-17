@@ -30,20 +30,54 @@ function tutoNotice() {
 /* ---------- écran de bienvenue ---------- */
 function vWelcome() {
   const pet = store.profile.pet;
-  const steps = [
-    ["1", "Un défi par jour", `${CONFIG.tries} essais, 3 manches : le meilleur score compte.`],
-    ["2", "Tu choisis la difficulté", "Plus c'est dur, plus les points sont multipliés."],
-    ["3", "Tu apprends en jouant", "Chaque réponse s'accompagne d'un « Le saviez-vous ? »."]
-  ];
-  return `<div class="onb welcome">
-    <div class="ohead">${petAv(pet, "xl", petName(pet))}<h1 class="display">Bienvenue, ${esc(store.profile.name)}</h1>
-      <p class="qsub">${fr(`${petName(pet)} t'accompagne. Voyons comment ça marche en une manche d'essai de 2 minutes.`)}</p></div>
-    <ol class="wsteps">${steps.map(([n, t, d]) => `<li><span class="num wn">${n}</span><span><b>${fr(t)}</b><br><span class="muted">${fr(d)}</span></span></li>`).join("")}</ol>
-    <button class="btn" data-act="tutostart">Faire la manche d'essai</button>
-    <button class="btn ghost" data-act="tutoskip">Passer, je me débrouille</button>
-    <p class="note center">Rien ne compte dans cette manche : ni ton classement, ni tes essais du jour.</p>
+  return `<div class="onb welcome tutowelcome">
+    <div class="ohead">${petAv(pet, "xl", petName(pet))}<h1 class="display">Bienvenue, ${esc(store.profile.name)} !</h1>
+      <p class="qsub">${fr(`${petName(pet)} te montre comment jouer.`)}</p></div>
+    <div class="tw3" aria-hidden="true"><span>👆<small>Tu touches</small></span><span>🧠<small>Tu apprends</small></span><span>🏆<small>Tu gagnes</small></span></div>
+    <p class="center"><b>Une petite manche d'essai : 3 questions, 2 minutes.</b><br><span class="muted">Rien ne compte : ni ton classement, ni tes essais.</span></p>
+    <button class="btn pulse" data-act="tutostart">Essayer maintenant</button>
+    <button class="linkbtn plainlink" data-act="tutoskip">Passer, je me débrouille</button>
   </div>`;
 }
+
+/* ---------- installation sur l'écran d'accueil : page d'accueil, bandeau, fenêtre des réglages ---------- */
+const isMobileDev = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+const installWanted = () => isMobileDev() && !isStandalone();
+const SHARE_ICO = `<svg class="ishare" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>`;
+function installSteps() {
+  if (isIOS()) return [[SHARE_ICO, "Touche <b>Partager</b>", "le carré avec une flèche, en bas de Safari"], ["➕", "Choisis <b>« Sur l'écran d'accueil »</b>", "fais défiler la liste si besoin"], ["✅", "Touche <b>Ajouter</b>", "l'icône Méridien apparaît sur ton écran"]];
+  return [["⋮", "Touche <b>le menu ⋮</b>", "en haut à droite de ton navigateur"], ["📲", "Choisis <b>« Installer l'application »</b>", "ou « Ajouter à l'écran d'accueil »"], ["✅", "Touche <b>Installer</b>", "l'icône Méridien apparaît sur ton écran"]];
+}
+function installBody(withSkip) {
+  const perks = [["⚡", "Un toucher et tu joues", "L'icône Méridien est sur ton écran, comme n'importe quelle appli."], ["🖥️", "Plein écran", "Sans barre de navigateur, c'est bien plus agréable à jouer."], ["📶", "Marche même sans réseau", "Elle s'ouvre toujours, même dans le métro."]];
+  const steps = installSteps();
+  const direct = deferredInstall ? `<button class="btn pulse" data-act="install">Ajouter à l'écran d'accueil</button><p class="note center">Ou suis les 3 étapes ci-dessous.</p>` : "";
+  const warn = store.profile && store.profile.srv && isIOS() ? `<p class="note">Sur iPhone, l'application installée est une nouvelle copie : relie d'abord ton e-mail (Réglages, Compte) pour retrouver tes scores, puis choisis « J'ai déjà un compte » dans l'application installée.</p>` : "";
+  return `<ul class="perks">${perks.map(([i, t, d]) => `<li><span class="wic" aria-hidden="true">${i}</span><div><b>${t}</b><span>${d}</span></div></li>`).join("")}</ul>
+    ${direct}
+    <ol class="isteps" aria-label="Comment faire">${steps.map(([ic, t, d], i) => `<li><span class="in num">${i + 1}</span><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><span>${t}</span><small>${d}</small></span></li>`).join("")}</ol>${warn}`;
+}
+function vInstallPage() { // étape de l'accueil, avant la création du compte
+  return `<div class="onb install">
+    <div class="whero"><span class="phone" aria-hidden="true"><span class="screen">${logoMark(44)}<small>Méridien</small></span></span><h1 class="display">Encore mieux sur ton écran d'accueil</h1><p class="wtag">Ajoute Méridien à ton téléphone : c'est comme une vraie application, et tu ne rates plus ton défi du jour.</p></div>
+    ${installBody()}
+    <button class="btn" data-act="instnext">${deferredInstall ? "Plus tard, je continue" : "C'est fait, je continue"}</button>
+    <button class="linkbtn plainlink" data-act="instnext">Passer cette étape</button>
+  </div>`;
+}
+function vInstallSheet() {
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Ajouter à l'écran d'accueil" data-stop>
+    <div class="sheethead"><div><h3>Encore mieux sur ton écran d'accueil</h3><div class="muted">3 gestes, 20 secondes</div></div></div>
+    ${installBody()}
+    <button class="btn ghost" data-act="closesheet">Fermer</button></div></div>`;
+}
+function installNotice() { // bandeau discret, une fois le tutoriel terminé ; « Plus tard » le masque 7 jours
+  if (!store.profile || !store.profile.pet || !tutoState().done || !installWanted()) return "";
+  const until = store.profile.installLater || ""; if (until && today() < until) return "";
+  return `<div class="tnotice" role="note"><span class="kicker">Astuce</span><b>Mets Méridien sur ton écran d'accueil</b><span>Un toucher pour jouer, en plein écran. Ça prend 20 secondes.</span><span class="btnline"><button class="smallbtn" data-act="installpage">Comment faire</button><button class="smallbtn ghost" data-act="installlater">Plus tard</button></span></div>`;
+}
+// premier lancement : aucune vraie partie jouée encore → on guide le doigt
+const firstRun = () => !!(store.profile && tutoState().done && !tutoState().legacy && progress().plays === 0);
 
 /* ---------- partie guidée ---------- */
 function startTuto() {
@@ -60,31 +94,31 @@ function coach(text) {
 }
 function tutoCoach(g) {
   if (!g.tuto) return "";
-  if (g.phase === "diff") return coach("Avant chaque manche, tu choisis ta difficulté. Plus elle est haute, plus tes points sont multipliés. Pour commencer, Moyen est un bon choix !");
-  if (g.phase === "q" && g.qi === 0) return coach("Touche la bonne réponse avant la fin de la barre de temps. Pas de pression : cette manche ne compte pas.");
+  if (g.phase === "diff") return coach("Choisis ta difficulté : plus c'est dur, plus ça rapporte. Touche « Moyen » pour commencer 👇");
+  if (g.phase === "q" && g.qi === 0) return coach("Touche la bonne réponse ! Pas de pression, ça ne compte pas.");
   if (g.phase === "reveal" && g.qi === 0) return coach(g.answer && g.answer.base > 0
-    ? "Bravo ! Tes points sont multipliés par la difficulté. Lis aussi « Le saviez-vous ? » : chaque réponse t'apprend quelque chose."
-    : "Raté, ce n'est pas grave ! Lis « Le saviez-vous ? » juste en dessous : chaque réponse t'apprend quelque chose.");
+    ? "Bravo ! Lis « Le saviez-vous ? » : tu apprends un truc à chaque réponse."
+    : "Raté, pas grave ! Lis « Le saviez-vous ? » : tu apprends un truc à chaque réponse.");
   return "";
 }
 function tutoIntro(g) {
   const pet = store.profile.pet, F = FORMATS[g.fmt];
   return `<div class="rowtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button><span class="flag">Manche d'essai · non comptée</span><span></span></div>
     <div class="hcard static">${art(g.fmt, g.k)}${labels("Manche d'essai", F.name)}</div>
-    ${coach("Voici le Quiz éclair, l'un des 35 jeux. Chaque jour, un jeu différent t'attend. Ici : 3 questions pour t'échauffer.")}
+    ${coach("Chaque jour, un jeu différent t'attend. Aujourd'hui : 3 questions pour t'échauffer !")}
     <p class="qsub">${fr(F.sub)}</p>
     <button class="btn" data-g="start" style="margin-top:auto">C'est parti</button>`;
 }
 function vEndTuto() {
   const g = game, pet = store.profile.pet, good = g.score >= 200;
   const next = [
-    ["Le défi du jour", `Un nouveau jeu chaque jour, ${CONFIG.tries} essais, 3 manches. Ton meilleur score compte.`],
-    ["Les boussoles", "Elles s'ajoutent selon ta place au classement du groupe et servent à acheter des jokers."],
-    ["Bientôt", "Les jokers arrivent le 3e jour, le carnet de voyage et les succès le 5e."]
+    ["🎯", "Un défi par jour", "Ton meilleur essai compte."],
+    ["🧭", "Des boussoles", "Plus tu devances d'amis, plus tu en gagnes."],
+    ["🔓", "À débloquer", "Jokers dès le 3e jour, carnet au 5e."]
   ];
   return `<div class="react"><span class="rtile">${petSVG(pet, { mood: good ? "joy" : null })}</span><div class="say3"><b>${esc(petName(pet))}</b><span>${fr(good ? "Bien joué ! Tu as compris le principe." : "Tu as compris le principe, et tu t'amélioreras vite !")}</span></div></div>
     <div class="endscore"><div class="v num">${fmtNum(g.score)}</div><div class="u">points (pour l'entraînement)</div></div>
-    <ul class="wsteps">${next.map(([t, d]) => `<li><span><b>${fr(t)}</b><br><span class="muted">${fr(d)}</span></span></li>`).join("")}</ul>
+    <ul class="wsteps">${next.map(([ic, t, d]) => `<li><span class="wic" aria-hidden="true">${ic}</span><span><b>${fr(t)}</b><br><span class="muted">${fr(d)}</span></span></li>`).join("")}</ul>
     ${g.learned.length ? `<details class="learned"><summary>Ce que tu as appris (${g.learned.length})</summary><ul>${g.learned.slice(0, 6).map(l => `<li><b>${fr(l.t)}</b>${l.f ? ` : ${fr(l.f)}` : ""}</li>`).join("")}</ul></details>` : ""}
-    <button class="btn" data-g="exit">Aller à mon groupe</button>`;
+    <button class="btn pulse" data-g="exit">Jouer mon premier défi</button>`;
 }

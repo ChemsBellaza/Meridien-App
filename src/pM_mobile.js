@@ -60,8 +60,7 @@ function mobileSheetBlocks() {
   let h = "";
   if (navigator.vibrate) h += `<div><div class="kicker" style="margin-bottom:6px">Vibrations</div><div class="seg light" role="group" aria-label="Vibrations">${[[true, "Oui"], [false, "Non"]].map(([v, l]) => `<button data-act="hapticpref" data-v="${v}" aria-pressed="${hapticsOn() === v}">${l}</button>`).join("")}</div></div>`;
   if (!isStandalone()) {
-    if (deferredInstall) h += `<div><div class="kicker" style="margin-bottom:6px">Application</div><button class="btn ghost" data-act="install">Ajouter à l'écran d'accueil</button><p class="note">Elle s'ouvre en plein écran, comme une vraie application, et marche aussi sans connexion.</p></div>`;
-    else if (isIOS()) h += `<div><div class="kicker" style="margin-bottom:6px">Application</div><p class="note">Pour l'ajouter à l'écran d'accueil : touche le bouton Partager de Safari (le carré avec une flèche), puis « Sur l'écran d'accueil ».</p></div>`;
+    if (deferredInstall || isMobileDev()) h += `<div><div class="kicker" style="margin-bottom:6px">Application</div><button class="btn ghost" data-act="installpage">📲 Ajouter à l'écran d'accueil</button><p class="note">Elle s'ouvre en plein écran, comme une vraie application, et marche aussi sans connexion.</p></div>`;
   }
   return h;
 }
