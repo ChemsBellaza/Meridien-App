@@ -1,6 +1,6 @@
 // mémorise la page d'origine avant d'ouvrir la saison ou le familier
 document.addEventListener("click", e => {
-  if (e.target.closest("[data-act='season'],[data-act='pet'],[data-act='carnet'],[data-act='trophees']") && !["season", "pet", "carnet", "trophees"].includes(ui.view)) ui.prevView = ui.view;
+  if (e.target.closest("[data-act='season'],[data-act='pet'],[data-act='carnet'],[data-act='trophees'],[data-act='goprofile'],[data-act='gopet']") && !["season", "pet", "profile", "carnet", "trophees"].includes(ui.view)) ui.prevView = ui.view;
 }, true);
 
 function copyCode() {

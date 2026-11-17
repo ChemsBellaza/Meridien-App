@@ -1,6 +1,8 @@
 /* ---------- état de l'interface ---------- */
 const ui = { view: store.profile ? (store.profile.srv ? "hub" : "group") : "onboard", tab: "chat", sheet: false, onbTab: "create", onbStep: "welcome", petTab: "species", dayKey: null, confirm: null, toast: "", draftPet: "renard", draftName: "", draftGroup: "Les Cartographes", draftCode: "", draftPhoto: null, prevView: "group" };
 let game = null;
+// lien d'invitation (…/?code=ABC123) : le code est prérempli (inscription) ou proposé dans « Rejoindre un groupe » (profil existant)
+try { const c = (new URLSearchParams(location.search).get("code") || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length >= 4) { ui.draftCode = c; ui.onbTab = "join"; ui.joinLink = c; history.replaceState(null, "", location.pathname); } } catch (e) {}
 
 function go(view, extra = {}) { Object.assign(ui, { view, ...extra }); window.scrollTo(0, 0); render(); }
 function captureDrafts() {
@@ -29,10 +31,12 @@ function render() {
   else if (ui.view === "history") html = vHistory();
   else if (ui.view === "season") html = vSeason();
   else if (ui.view === "day") html = vDay(ui.dayKey);
+  else if (ui.view === "profile") html = vProfile();
   else if (ui.view === "pet") html = vPet();
   else if (ui.view === "carnet") html = vCarnet();
   else if (ui.view === "trophees") html = vTrophees();
   else html = vGroup();
+  html += vTabbar();
   if (ui.sheet && store.profile && store.profile.pet) html += vSheet();
   if (ui.confirm) html += vConfirm();
   if (ui.evo) html += vEvo();
@@ -127,6 +131,7 @@ function vGroup() {
   </header>
   ${srvOn() ? `<button class="hubback" data-act="hub" aria-label="Retour à mes groupes"><span aria-hidden="true">‹</span> Mes groupes</button>` : ""}
   <div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>
+  ${srvOn() ? `<div class="gchips"><button class="chipbtn" data-act="ginfo"><span aria-hidden="true">👥</span> Membres et invitation</button></div>` : ""}
   <div class="pills">
     ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
     ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
@@ -142,7 +147,7 @@ function vGroup() {
       ${btn}
       ${vBoost()}
       ${ui.homeMsg ? `<p class="err" role="alert">${esc(ui.homeMsg)}</p>` : ""}
-      <div class="countdown">Prochain défi dans <b id="cd" class="num">--:--:--</b></div>
+      <div class="countdown">Prochain défi dans <b id="cd" class="num">--:--:--</b>${srvOn() ? ` <small>(à ${String(Math.floor(CONFIG.dayStartMin / 60)).padStart(2, "0")} h ${String(CONFIG.dayStartMin % 60).padStart(2, "0")}, heure de Barcelone)</small>` : ""}</div>
     </div>
   </section>
   ${vCatchup()}
@@ -272,13 +277,13 @@ function vPet() {
   }).join("");
   return `
   <div class="rowtop">${backBtn()}<span class="kicker">Fiche n°${String(S.num).padStart(3, "0")}</span><span></span></div>
+  ${petSwitch("pet")}
   <div class="dexcard" style="--c:${T.color}">
     <div class="stage" role="img" aria-label="${esc(petDesc(pet))}">${petSVG(pet)}</div>
     <div class="dexhead"><h1 class="display">${esc(petName(pet))}</h1><div class="dexmeta">${typeBadge(S.type)}<span class="tchip">Stade ${st}</span>${pet.shiny === "shiny" ? `<span class="tchip shiny">✦ Chromatique</span>` : ""}</div></div>
     <p class="dextext">${fr(S.dex[st - 1])}</p>
     <div class="traits">${S.traits.map(t => `<span>${t}</span>`).join("")}</div>
   </div>
-  <div class="avprev">${avatar(me, "xl")}<div class="grow"><b>${esc(store.profile.name)}</b><p class="note">${me.photo ? `Ta photo, avec ${esc(petName(pet))} en médaillon.` : `Ajoute ta photo : ${esc(petName(pet))} se posera en médaillon.`}</p><div class="btnline"><button class="smallbtn" data-act="rename">Changer de pseudo</button>${photoBtn(me.photo ? "Changer" : "Ajouter ma photo")}${me.photo ? `<button class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
   <div class="kicker pers">Personnaliser ton familier</div>
   <div class="chips" role="group" aria-label="Catégorie">${["species", "shiny", "bg"].map(c => `<button data-act="pettab" data-v="${c}" aria-pressed="${cat === c}">${ITEMS[c].label}</button>`).join("")}</div>
   <div class="items">${(cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list).map(it => {
@@ -289,6 +294,16 @@ function vPet() {
       ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
   }).join("")}</div>
   <div class="evorow"><span class="kicker">Évolutions</span><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div>
+`;
+}
+
+const petSwitch = v => `<div class="seg light petswitch" role="group" aria-label="Familier ou profil"><button data-act="gopet" aria-pressed="${v === "pet"}">Mon familier</button><button data-act="goprofile" aria-pressed="${v === "profile"}">Mon profil</button></div>`;
+function vProfile() {
+  const pet = store.profile.pet, S = SPECIES[pet.species], prog = progress(), nx = nextUnlock(prog), me = meP();
+  return `
+  <div class="rowtop">${backBtn()}<span class="kicker">Mon profil</span><span></span></div>
+  ${petSwitch("profile")}
+  <div class="avprev">${avatar(me, "xl")}<div class="grow"><b>${esc(store.profile.name)}</b><p class="note">${me.photo ? `Ta photo, avec ${esc(petName(pet))} en médaillon.` : `Ajoute ta photo : ${esc(petName(pet))} se posera en médaillon.`}</p><div class="btnline"><button class="smallbtn" data-act="rename">Changer de pseudo</button>${photoBtn(me.photo ? "Changer" : "Ajouter ma photo")}${me.photo ? `<button class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
   <div class="pills four">
     ${pill(I.compass(22), fmtNum(prog.gems), "noop", `${fmtNum(prog.gems)} boussoles gagnées`)}
     ${pill(I.fire(22), prog.streak, "noop", `Série de ${prog.streak} jours`)}
@@ -304,22 +319,26 @@ function vSheet() {
   if (ui.sheet === "groups") return vGroupsSheet();
   if (ui.sheet === "detail") return vDetailSheet();
   if (ui.sheet === "recap") return vRecapSheet();
+  if (ui.sheet === "ginfo") return vGroupInfo();
   if (ui.sheet === "rename") return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Changer de pseudo" data-stop>
     <div class="sheethead"><div><h3>Changer de pseudo</h3><div class="muted">Tes amis verront ce nouveau nom (2 à 16 caractères).</div></div></div>
     <form id="renameForm" class="plainform" novalidate><div class="field"><label for="newName">Pseudo</label><input id="newName" maxlength="16" autocomplete="nickname" value="${esc(store.profile.name)}"></div>${ui.renameMsg ? `<p class="err" role="alert">${esc(ui.renameMsg)}</p>` : ""}<div class="btnline"><button class="smallbtn" type="submit">Enregistrer</button><button class="smallbtn ghost" type="button" data-act="closesheet">Annuler</button></div></form>
   </div></div>`;
-  const me = meP();
-  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Menu" data-stop>
-    <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">${esc(store.profile.group)}</div></div></div>
-    <div class="btnline">${photoBtn(me.photo ? "Changer ma photo" : "Ajouter ma photo")}<button class="smallbtn" data-act="pet">Mon familier</button>${featureOn("carnet") ? `<button class="smallbtn" data-act="carnet">${I.book(16)}Carnet · ${progress().carnet}</button>` : ""}${featureOn("trophees") ? `<button class="smallbtn" data-act="trophees">${I.medal(16)}Succès · ${Object.keys(store.ach).length}/${ACH.length}</button>` : ""}</div>
+  const me = meP(), online = srvOn();
+  return `<div class="scrim" data-act="closesheet"><div class="sheet settings" role="dialog" aria-label="Réglages" data-stop>
+    <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">Réglages et raccourcis</div></div></div>
+    <div class="shortcuts">
+      ${online ? `<button class="shortcut" data-act="hub">${I.duel(24)}<span>Mes groupes</span></button>` : ""}
+      <button class="shortcut" data-act="gopet">${petAv(store.profile.pet, "sm", petName(store.profile.pet))}<span>Mon familier</span></button>
+      <button class="shortcut" data-act="goprofile">${I.medal(24)}<span>Mon profil</span></button>
+      <button class="shortcut" data-act="recap">${I.history}<span>Récap de la semaine</span></button>
+    </div>
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
-    ${mobileSheetBlocks()}
-    <button class="smallbtn" data-act="recap">Récap de la semaine</button>
-    ${reminderBlock()}
-    ${srvOn() ? `<button class="smallbtn" data-act="groups">Mes groupes (${SRV.groups.length || 1})</button>` : ""}
-    ${accountSheetBlock()}
-    <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
-    <button class="smallbtn" data-act="tuto">Revoir le tutoriel</button>
+    <section class="sect"><h4>Rappel quotidien</h4>${reminderBlock()}</section>
+    <section class="sect"><h4>Application</h4>${mobileSheetBlocks() || `<p class="note">Rien à régler pour l'instant.</p>`}</section>
+    <section class="sect"><h4>Compte</h4>${accountSheetBlock()}</section>
+    ${online ? "" : `<section class="sect"><h4>Code d'invitation</h4><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></section>`}
+    <section class="sect"><h4>Aide</h4><button class="smallbtn" data-act="tuto">Revoir le tutoriel</button></section>
     <button class="btn ghost" data-act="closesheet">Fermer</button>
     <p class="note center">Dictionnaire du petit bac enrichi grâce au Wiktionnaire (licence CC BY-SA).</p>
     <p class="note center">Drapeaux : Twemoji, © Twitter, Inc. et contributeurs (licence CC BY 4.0).</p>
@@ -407,6 +426,10 @@ document.addEventListener("click", e => {
     case "detail": { const [pid, dk] = String(v).split("|"); ui.detail = { pid, k: dk }; ui.sheet = "detail"; render(); break; }
     case "pseudoidea": { captureDrafts(); const A = ["Guerrier", "Capitaine", "Ninja", "Pirate", "Sorcier", "Explorateur", "Chevalier", "Dragon", "Renard", "Astronaute"], B = ["astral", "cosmique", "des étoiles", "électrique", "mystère", "turbo", "lunaire", "sauvage", "zen", "solaire"]; let s = ""; for (let i = 0; i < 20; i++) { s = A[Math.floor(Math.random() * A.length)] + " " + B[Math.floor(Math.random() * B.length)]; if (s.length <= 16) break; } ui.draftName = s.slice(0, 16); render(); break; }
     case "catchup": playCatchup(v); break;
+    case "gopet": ui.sheet = false; go("pet"); break;
+    case "goprofile": ui.sheet = false; go("profile"); break;
+    case "ginfo": ui.sheet = "ginfo"; ui.toast = ""; render(); srvRefreshGroup(); break;
+    case "gshare": inviteShare(); break;
     case "boostask": ui.confirm = { title: "Activer ton boost ?", text: `Une seule fois par saison. Ton score de ce jeu dans « ${(SRV.group && SRV.group.name) || "ce groupe"} » comptera ×1,5 dans le classement. Impossible de l'annuler, et à faire avant ton premier essai.`, yes: "Activer le boost", no: "Plus tard", run: () => srvUseBoost() }; render(); break;
     case "recap": ui.sheet = "recap"; render(); break;
     case "recapclose": if (store.profile) { store.profile.recapSeen = weekKeyOf(today()); save(); } render(); break;
@@ -443,7 +466,7 @@ document.addEventListener("click", e => {
     case "unblock": srvUnblock(v); break;
     case "react": { if (srvOn()) { const [rid, remo] = v.split("|"); srvReact(rid, remo); break; } const [id, emo] = v.split("|"), k = today(), m = store.react[k] = store.react[k] || {}; m[id] = m[id] === emo ? undefined : emo; if (!m[id]) delete m[id]; ui.reactOpen = null; save(); render(); break; }
     case "equip": { const [c, id] = v.split("|"); if (c === "species") { store.profile.pet.species = id; } else store.profile.pet[c] = id; save(); render(); break; }
-    case "back": go(["season", "pet", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : "group") : "group"); break;
+    case "back": go(["season", "pet", "profile", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : (srvOn() ? "hub" : "group")) : (srvOn() ? "hub" : "group")); break;
     case "day": go("day", { dayKey: v }); break;
     case "tab": ui.tab = v; render(); break;
     case "hapticpref": store.prefs = Object.assign({ time: 1 }, store.prefs, { haptics: v === "true" }); save(); render(); buzz(30); break;

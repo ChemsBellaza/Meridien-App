@@ -139,6 +139,7 @@ async function srvLoadHub() {
   if (changed) { savePhotos(); if (ui.view === "hub" && !game) render(); }
 }
 function vHub() {
+  if (ui.joinLink && srvOn() && !ui.sheet) { ui.sheet = "groups"; ui.gadd = { mode: "join", msg: "", value: ui.joinLink }; ui.joinLink = null; } // lien d'invitation ouvert : on propose de rejoindre
   const k = today(), prog = progress(), h = SRV.hub, groups = SRV.groups, uid = myUid();
   const loading = !groups.length && !SRV.syncedAt;
   const cards = groups.map(g => {
@@ -176,7 +177,7 @@ function vGroupsSheet() {
     const on = x.id === SRV.gid;
     return `<li class="grow2"><button class="gbtn ${on ? "on" : ""}" data-act="gswitch" data-v="${x.id}" aria-pressed="${on}"><b>${esc(x.name)}</b><small>${esc(fmtCode(x.code))} · ${on ? "groupe affiché" : "afficher"}</small></button><button class="smallbtn ghost" data-act="gleave" data-v="${x.id}" aria-label="Quitter le groupe ${esc(x.name)}">Quitter</button></li>`;
   }).join("");
-  const form = a.mode ? `<form id="groupAddForm" class="plainform" novalidate><div class="field"><label for="gaddv">${a.mode === "create" ? "Nom du nouveau groupe" : "Code du groupe"}</label><input id="gaddv" ${a.mode === "create" ? `maxlength="24"` : `maxlength="8" placeholder="Ex. : K7Q4ZP" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase"`}></div>${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<div class="btnline"><button class="smallbtn" type="submit">${a.mode === "create" ? "Créer" : "Rejoindre"}</button><button class="smallbtn ghost" type="button" data-act="gaddno">Annuler</button></div></form>`
+  const form = a.mode ? `<form id="groupAddForm" class="plainform" novalidate><div class="field"><label for="gaddv">${a.mode === "create" ? "Nom du nouveau groupe" : "Code du groupe"}</label><input id="gaddv" ${a.mode === "create" ? `maxlength="24"` : `maxlength="8" placeholder="Ex. : K7Q4ZP" autocapitalize="characters" autocomplete="off" style="text-transform:uppercase" value="${esc(a.value || "")}"`}></div>${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<div class="btnline"><button class="smallbtn" type="submit">${a.mode === "create" ? "Créer" : "Rejoindre"}</button><button class="smallbtn ghost" type="button" data-act="gaddno">Annuler</button></div></form>`
     : SRV.groups.length >= max ? `<p class="note">Tu es dans ${max} groupes, le maximum.</p>`
     : `<div class="btnline"><button class="smallbtn" data-act="gaddmode" data-v="create">+ Nouveau groupe</button><button class="smallbtn" data-act="gaddmode" data-v="join">Rejoindre un groupe</button></div>`;
   return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Mes groupes" data-stop>
@@ -194,7 +195,7 @@ async function srvAddGroup(mode, value) { // créer ou rejoindre un groupe de pl
 async function srvLeaveGroup(id) {
   const r = await srvRpc("leave_group", { p_group: id });
   if (!r || !r.ok) return srvHomeMsg(srvMsg(r && r.error));
-  if (SRV.gid === id) SRV.gid = ""; await srvLoadGroups(); srvResetGroupData(); ui.sheet = false; render(); srvSync(true);
+  if (SRV.gid === id) SRV.gid = ""; await srvLoadGroups(); srvResetGroupData(); ui.sheet = false; ui.view = "hub"; render(); srvSync(true); srvLoadHub();
 }
 async function srvRefreshGroup() {
   if (!store.profile || !store.profile.srv || srvLost()) return;
@@ -331,7 +332,7 @@ function accountSheetBlock() {
       ? `<form class="plainform" id="acctForm1" novalidate><div class="field"><label for="acctEmail">Ton e-mail (pour retrouver ton compte)</label><input id="acctEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(a.email)}"></div><p class="note">Utilisé uniquement pour retrouver ton compte. Tu recevras un code.</p>${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<button class="smallbtn" type="submit">Recevoir un code</button></form>`
       : `<form class="plainform" id="acctForm2" novalidate><div class="field"><label for="acctCode">Code reçu sur ${esc(a.email)}</label><input id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*"></div>${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<button class="smallbtn" type="submit">Valider</button> <button type="button" class="linkbtn" data-act="acctagain">Changer d'adresse</button></form>`;
   const blocked = [...SRV.blocks].map(id => { const m = (SRV.members || []).find(x => x.user_id === id); return `<li class="mrow"><span><b>${esc(m && m.profiles ? m.profiles.pseudo : "Joueur bloqué")}</b></span><button class="smallbtn ghost" data-act="unblock" data-v="${id}">Débloquer</button></li>`; }).join("");
-  return `<div><div class="kicker" style="margin-bottom:6px">Mon groupe${SRV.group ? ` · ${esc(SRV.group.name)}` : ""}</div>${list}${blocked ? `<div class="kicker" style="margin:10px 0 4px">Joueurs bloqués</div><ul class="mlist">${blocked}</ul>` : ""}</div>
+  return `${blocked ? `<div><div class="kicker" style="margin:0 0 4px">Joueurs bloqués</div><ul class="mlist">${blocked}</ul></div>` : ""}
     <div><div class="kicker" style="margin-bottom:6px">Sauvegarde du compte</div>${mail}</div>`;
 }
 
@@ -341,7 +342,7 @@ function accountSheetBlock() {
    y renvoient dès que srvOn() est vrai ; les écrans ne changent pas. Plus aucun joueur simulé pour ces profils. */
 function srvOn() { try { return !!(store.profile && store.profile.srv); } catch (e) { return false; } }
 const myUid = () => (store.profile && store.profile.srv && store.profile.srv.uid) || (SRV.sess && SRV.sess.user && SRV.sess.user.id) || "";
-const SRV_TZ = "Europe/Paris", SRV_COLORS = ["#EF6F68", "#17977F", "#F0993B", "#4A86EE", "#D9579E", "#7A9E2E", "#8D78F0", "#2BA3B8"];
+const SRV_TZ = "Europe/Madrid", SRV_COLORS = ["#EF6F68", "#17977F", "#F0993B", "#4A86EE", "#D9579E", "#7A9E2E", "#8D78F0", "#2BA3B8"];
 const colorOf = id => { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SRV_COLORS[h % SRV_COLORS.length]; };
 
 /* horloge : heure du serveur + temps écoulé mesuré par le navigateur (insensible aux changements de date du téléphone) */
@@ -351,9 +352,13 @@ function srvParts(ms) {
   const o = {}; srvFmtCache.formatToParts(new Date(ms)).forEach(p => { o[p.type] = p.value; }); return o;
 }
 const srvNowMs = () => SRV.base ? SRV.base.server + (performance.now() - SRV.base.perf) : null;
-function srvToday() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; const p = srvParts(n); return `${p.year}-${p.month}-${p.day}`; } catch (e) { return null; } }
+// jour de jeu : il change à CONFIG.dayStartMin (14 h 30, heure de Barcelone), pas à minuit
+const DAY_START = () => (typeof CONFIG !== "undefined" && CONFIG.dayStartMin != null ? CONFIG.dayStartMin : 870);
+function gameDayOfParts(p) { const mins = (+p.hour % 24) * 60 + +p.minute, d = `${p.year}-${p.month}-${p.day}`; return mins < DAY_START() ? addDays(d, -1) : d; }
+const relMin = m => (m - DAY_START() + 1440) % 1440; // minutes écoulées depuis le début du jour de jeu (pour ranger le fil dans l'ordre)
+function srvToday() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; return gameDayOfParts(srvParts(n)); } catch (e) { return null; } }
 function srvMinutes() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; const p = srvParts(n); return (+p.hour % 24) * 60 + +p.minute; } catch (e) { return null; } }
-function srvSecondsLeft() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; const p = srvParts(n); return 86400 - ((+p.hour % 24) * 3600 + +p.minute * 60 + +p.second); } catch (e) { return null; } }
+function srvSecondsLeft() { try { const n = srvNowMs(); if (n === null || !srvOn()) return null; const p = srvParts(n); const sec = (+p.hour % 24) * 3600 + +p.minute * 60 + +p.second; return 86400 - ((sec - DAY_START() * 60 + 86400) % 86400); } catch (e) { return null; } }
 function minutesOfIso(iso) { try { const p = srvParts(Date.parse(String(iso).replace(/(\.\d{3})\d+/, "$1"))); return (+p.hour % 24) * 60 + +p.minute; } catch (e) { return 0; } }
 async function srvSyncClock() {
   const t0 = performance.now(), r = await srvRpc("server_now");
@@ -457,16 +462,16 @@ function onlineDayResults(k) {
 function onlineFeed(k) {
   const res = onlineDayResults(k), pl = onlinePlayers(), uid = myUid();
   const ev = res.played.map(p => ({ id: `s-${p.sk}`, rid: p.sk, rtype: "score", type: "score", at: p.plays[0].at, p, score: p.best, best: p.pos === 1 && res.N >= 2 }));
-  ev.sort((a, b) => a.at - b.at);
+  ev.sort((a, b) => relMin(a.at) - relMin(b.at));
   if (ev.length) ev.unshift({ id: "launch", type: "launch", at: ev[0].at, p: ev[0].p });
   // messages du jour (les auteurs bloqués sont déjà filtrés par le serveur)
   const msgs = (SRV.msgs || []).filter(m => dayOfIso(m.created_at) === k && !(SRV.hidden && SRV.hidden.has(m.id))).map(m => {
     const p = m.user_id === uid ? pl[0] : (pl.find(x => x.id === m.user_id) || { id: m.user_id, name: (m.profiles && m.profiles.pseudo) || "Ancien membre", color: colorOf(m.user_id), pet: (m.profiles && m.profiles.pet) || defaultPet("renard") });
     return { id: `m-${m.id}`, rid: m.id, rtype: "message", type: "msg", at: minutesOfIso(m.created_at), p, text: m.body, mine: m.user_id === uid, mid: m.id };
   });
-  return [...ev, ...msgs].sort((a, b) => a.at - b.at || (a.type === "score" ? -1 : 1));
+  return [...ev, ...msgs].sort((a, b) => relMin(a.at) - relMin(b.at) || (a.type === "score" ? -1 : 1));
 }
-function dayOfIso(iso) { try { const p = srvParts(Date.parse(String(iso).replace(/(\.\d{3})\d+/, "$1"))); return `${p.year}-${p.month}-${p.day}`; } catch (e) { return ""; } }
+function dayOfIso(iso) { try { return gameDayOfParts(srvParts(Date.parse(String(iso).replace(/(\.\d{3})\d+/, "$1")))); } catch (e) { return ""; } }
 function onlineProgress() {
   const s = SRV.sum || { gems_total: 0, wins: 0, days: 0, wallet: 0, streak: 0 };
   return { gems: s.gems_total, wins: s.wins, streak: s.streak, plays: s.days, games: Object.values(store.stats.fmts || {}).reduce((n, v) => n + v, 0), carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };

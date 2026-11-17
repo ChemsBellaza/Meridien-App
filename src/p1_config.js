@@ -7,6 +7,7 @@ const CONFIG = {
   mult: [1, 1.25, 1.5],             // multiplicateurs Facile / Moyen / Difficile
   gemsPerRank: 16,                  // boussoles gagnées par place devancée
   seasonDays: 21,                   // durée d'une saison ; bonus de boussoles : +5 % par jour (jour 1 = 0 %, jour 21 = +100 %)
+  dayStartMin: 870,                 // le jeu du jour change à 14 h 30, heure de Barcelone (870 min) : un jour de jeu va de 14 h 30 à 14 h 30
   seasonAnchor: "2026-10-19",       // début de la saison 1 (et défi n°1)
   formatAnchor: "2026-10-25",       // ce jour-là = premier jeu de la liste
   jokerCost: 25,                    // prix d'un joker en boussoles

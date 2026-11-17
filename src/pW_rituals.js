@@ -107,3 +107,35 @@ function endRecap(g, res, me, record) {
   }
   return `<section class="recap" aria-label="Bilan de la partie"><div class="kicker">Temps forts</div><ul class="hl">${items.map(([ic, t]) => `<li><span aria-hidden="true">${ic}</span><span>${t}</span></li>`).join("")}</ul>${general}${rival}</section>`;
 }
+
+/* ---------- navigation : barre d'onglets en bas (Groupes, Familier, Profil, Réglages) ---------- */
+function vTabbar() {
+  if (!store.profile || !store.profile.pet || !srvOn() || !tutoState().done || ui.view === "recover") return "";
+  const v = ui.view; if (!["hub", "pet", "profile", "carnet", "trophees"].includes(v)) return "";
+  const cur = v === "hub" ? "hub" : v === "pet" ? "pet" : "profile";
+  const tab = (id, ic, label, act) => `<button class="tab ${cur === id ? "on" : ""}" data-act="${act}" ${cur === id ? 'aria-current="page"' : ""}>${ic}<span>${label}</span></button>`;
+  return `<nav class="tabbar" aria-label="Navigation principale">${tab("hub", I.duel(24), "Groupes", "hub")}${tab("pet", `<span class="tabpet">${petSVG(store.profile.pet, { head: true, plain: true })}</span>`, "Familier", "gopet")}${tab("profile", I.medal(24), "Profil", "goprofile")}${tab("menu", I.menu, "Réglages", "menu")}</nav>`;
+}
+
+/* ---------- fiche du groupe : code d'invitation, partage, membres, quitter ---------- */
+function vGroupInfo() {
+  const g = SRV.group, code = (g && g.code) || store.profile.code, me = SRV.sess && SRV.sess.user && SRV.sess.user.id, members = SRV.members;
+  const list = members
+    ? members.map(m => `<li class="mrow">${m.profiles ? petAv(m.profiles.pet, "sm", m.profiles.pseudo) : ""}<span><b>${esc(m.profiles ? m.profiles.pseudo : "Joueur")}</b>${m.user_id === me ? " (toi)" : ""}${m.role === "owner" ? ` <small class="muted">propriétaire</small>` : ""}</span></li>`).join("")
+    : `<li class="note">Chargement des membres…</li>`;
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Membres et invitation" data-stop>
+    <div class="sheethead"><div><h3>${esc(g ? g.name : store.profile.group)}</h3><div class="muted">Invite tes amis dans ce groupe</div></div></div>
+    <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
+    <button class="btn" data-act="gshare">Inviter des amis</button>
+    <div><div class="kicker" style="margin-bottom:6px">Membres${members ? ` (${members.length})` : ""}</div><ul class="mlist">${list}</ul></div>
+    ${g && srvOn() ? `<button class="linkbtn" data-act="gleave" data-v="${esc(g.id)}">Quitter ce groupe</button>` : ""}
+    <button class="btn ghost" data-act="closesheet">Fermer</button>
+  </div></div>`;
+}
+function inviteShare() {
+  const g = typeof SRV !== "undefined" ? SRV.group : null, code = String((g && g.code) || store.profile.code || "").toUpperCase();
+  const url = location.origin + location.pathname + "?code=" + encodeURIComponent(code);
+  const text = `Rejoins mon groupe « ${(g && g.name) || store.profile.group} » sur Méridien ! Code : ${fmtCode(code)}`;
+  const fallback = () => { try { navigator.clipboard.writeText(text + "\n" + url).then(() => { ui.toast = "copied"; render(); }); } catch (e) { copyCode(); } };
+  if (navigator.share) navigator.share({ text, url }).catch(err => { if (err && err.name !== "AbortError") fallback(); }); else fallback();
+}
