@@ -117,7 +117,7 @@ const SHINY = {
   tigre:  { main: "#ECE8F5", shade: "#C6BEDB", belly: "#FFFFFF", glow: "#7FD8FF", wispL: "#BFE9FF" },
   lion:   { main: "#A3D5F2", shade: "#73B2DE", mane: "#3E5FCB", maneS: "#2B4399", wing: "#E06AA0", wingS: "#B5477C" }
 };
-const BGS = { type: null, pine: "#2FA36B", cobalt: "#4F78E8", vermil: "#EF7262", sky: "#45B2E2", saffron: "#F2B33E", violet: "#8C79EE", night: "#33334A" };
+const BGS = { type: null, pine: "#2FA36B", cobalt: "#4F78E8", vermil: "#EF7262", sky: "#45B2E2", saffron: "#F2B33E", violet: "#8C79EE", night: "#33334A", podium: "#C0527A", gold: "#E3A72F" };
 const EVO_NEED = [null, { k: "games", v: 8 }, { k: "games", v: 30 }];
 const defaultPet = sp => ({ species: sp, stage: "1", shiny: "normal", bg: "type" });
 const stageOf = pet => Math.max(1, Math.min(3, +pet.stage || 1));
@@ -130,13 +130,15 @@ const ITEMS = {
     { id: "type", label: "Couleur du type" },
     { id: "pine", label: "Vert" }, { id: "cobalt", label: "Bleu" }, { id: "vermil", label: "Corail" }, { id: "sky", label: "Ciel" }, { id: "saffron", label: "Soleil" },
     { id: "violet", label: "Lilas", need: { k: "streak", v: 3 } },
-    { id: "night", label: "Nuit", need: { k: "gems", v: 300 } }
+    { id: "night", label: "Nuit", need: { k: "gems", v: 300 } },
+    { id: "podium", label: "Podium", need: { k: "podium", v: 1 } },
+    { id: "gold", label: "Or de champion", need: { k: "champ", v: 1 } }
   ] }
 };
 const PET_CATS = ["species", "stage", "shiny", "bg"];
 // description textuelle pour les lecteurs d'écran : espèce, type, stade, couleurs, caractère
 const petDesc = pet => { const S = SPECIES[pet.species in SPECIES ? pet.species : "renard"]; return `${petName(pet)}, familier de type ${TYPES[S.type].label}, stade ${stageOf(pet)} sur 3${pet.shiny === "shiny" ? ", aux couleurs chromatiques" : ""}.${S.traits && S.traits.length ? " Caractère : " + S.traits.join(", ") + "." : ""}`; };
-const reqText = n => n.k === "games" ? `${n.v} parties terminées` : n.k === "gems" ? `${n.v} boussoles` : n.k === "streak" ? `Série de ${n.v} jours` : n.k === "wins" ? `${n.v} victoire${n.v > 1 ? "s" : ""} du jour` : `${n.v} parties jouées`;
+const reqText = n => n.k === "games" ? `${n.v} parties terminées` : n.k === "gems" ? `${n.v} boussoles` : n.k === "streak" ? `Série de ${n.v} jours` : n.k === "wins" ? `${n.v} victoire${n.v > 1 ? "s" : ""} du jour` : n.k === "champ" ? "Gagne une saison" : n.k === "podium" ? "Monte sur un podium de saison" : `${n.v} parties jouées`;
 
 const BOTS = [
   { id: "b1", name: "Yasmine", skill: .80, color: "#EF6F68", pet: { species: "tigre",  stage: "3", shiny: "normal", bg: "type" } },

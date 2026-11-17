@@ -138,7 +138,7 @@ function vGroup() {
     ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
   </div>
   ${streakStrip()}
-  ${tutoNotice()}${onlineNotice()}${recapCard()}
+  ${seasonBanner()}${tutoNotice()}${onlineNotice()}${recapCard()}
   <section class="today" aria-label="Défi du jour">
     <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
@@ -258,8 +258,10 @@ function vSeason() {
   return `
   <div class="shead">${backBtn()}<div class="stitle">${I.laurel()}<div><h1>Saison ${st.S.n}</h1><p>${leftDays === 0 ? "dernier jour" : `encore ${leftDays} jour${leftDays > 1 ? "s" : ""}`}</p></div>${I.laurel(true)}</div><span class="roundbtn" aria-hidden="true">${I.compass(26)}</span></div>
   <div class="datepill">${shortDate(st.S.start)} – ${shortDate(st.S.end)}</div>
-  <div class="chartbox"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution des boussoles cumulées par joueur">${grid}${lines}</svg></div>
-  <div class="spanel">${st.list.map(r => {
+  ${seasonBanner()}
+  ${seasonMasked(k) ? `<div class="chartbox masked"><p class="note center">🔒 Classement masqué jusqu'à la fin de la saison. Seul ton résultat reste visible.</p></div>` : `<div class="chartbox"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution des boussoles cumulées par joueur">${grid}${lines}</svg></div>`}
+  <div class="spanel">${(seasonMasked(k) ? st.list.slice().sort((a, b) => (a.me ? -1 : b.me ? 1 : a.name.localeCompare(b.name))) : st.list).map(r => {
+    if (seasonMasked(k)) return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">${r.me ? "#" + r.rank + toi : "#?"}</div><b>${esc(r.name)}</b><span>${r.me ? `${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""}` : "classement caché"}</span></div><div class="tot">${I.compass(34)}<b class="num">${r.me ? fmtNum(r.total) : "•••"}</b></div></div>`;
     const pr = prev && prev.list.find(x => x.id === r.id);
     const mv = pr ? (pr.rank > r.rank ? `<span class="up" aria-label="monte">↑</span>` : pr.rank < r.rank ? `<span class="down" aria-label="descend">↓</span>` : "") : "";
     return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">#${r.rank} ${mv}${r.me ? toi : ""}</div><b>${esc(r.name)}</b><span>${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""} (sur ${r.played})</span></div><div class="tot">${I.compass(34)}<b class="num">${fmtNum(r.total)}</b></div></div>`;
@@ -310,12 +312,15 @@ function vProfile() {
     ${pill(I.trophy(22), prog.wins, "noop", `${prog.wins} victoires`)}
     ${pill(`<span class="pl">partie${prog.games > 1 ? "s" : ""}</span>`, prog.games, "noop", `${prog.games} parties terminées`)}
   </div>
+  ${trophyBlock()}
   <div class="homerow"><button class="hrow" data-act="trophees">${I.medal(24)}<span class="grow"><b>Succès</b></span><b class="num">${Object.keys(store.ach).length}<small>/${ACH.length}</small></b></button><button class="hrow" data-act="carnet">${I.book(24)}<span class="grow"><b>Carnet</b></span><b class="num">${prog.carnet}</b></button></div>
   ${nx ? `<div class="nextup"><span class="kicker">Prochain déblocage</span><b>${esc(nx.cat === "species" ? `${SPECIES[nx.it.id].names[0]} · nouveau familier` : nx.cat === "stage" ? `Évolution en ${S.names[+nx.it.id - 1]}` : `${nx.it.label} · ${ITEMS[nx.cat].label.toLowerCase()}`)}</b><span class="note">${reqText(nx.it.need)} : encore ${fmtNum(nx.left)}.</span><div class="bar" aria-hidden="true"><i style="width:${Math.min(100, Math.round(100 * nx.have / nx.it.need.v))}%"></i></div></div>` : `<div class="nextup"><b>Tout est débloqué. Bravo !</b></div>`}
 `;
 }
 
 function vSheet() {
+  if (ui.sheet === "cer") return vCeremony();
+  if (ui.sheet === "hall") return vHall();
   if (ui.sheet === "groups") return vGroupsSheet();
   if (ui.sheet === "detail") return vDetailSheet();
   if (ui.sheet === "recap") return vRecapSheet();
@@ -432,6 +437,12 @@ document.addEventListener("click", e => {
     case "gshare": inviteShare(); break;
     case "boostask": ui.confirm = { title: "Activer ton boost ?", text: `Une seule fois par saison. Ton score de ce jeu dans « ${(SRV.group && SRV.group.name) || "ce groupe"} » comptera ×1,5 dans le classement. Impossible de l'annuler, et à faire avant ton premier essai.`, yes: "Activer le boost", no: "Plus tard", run: () => srvUseBoost() }; render(); break;
     case "recap": ui.sheet = "recap"; render(); break;
+    case "cernext": if (ui.cer && ui.cer.step < CER_STEPS.length - 1) { ui.cer.step++; render(); } break;
+    case "cerprev": if (ui.cer && ui.cer.step > 0) { ui.cer.step--; render(); } break;
+    case "cerclose": ui.cer = null; ui.sheet = false; render(); setTimeout(srvCheckCeremony, 400); break;
+    case "ceropen": { const [cg, cs] = String(v).split("|"); cerOpen(cg, cs); break; }
+    case "cershare": cerShare(); break;
+    case "hall": ui.sheet = "hall"; ui.hallMsg = ""; render(); if (SRV.gid) srvLoadHall(SRV.gid); break;
     case "recapclose": if (store.profile) { store.profile.recapSeen = weekKeyOf(today()); save(); } render(); break;
     case "remindics": { const el2 = document.getElementById("remindTime"); remindICS(el2 ? el2.value : "08:00"); ui.remindMsg = "Fichier envoyé : ouvre-le pour l'ajouter à ton calendrier (sur iPhone, touche « Ajouter »)."; render(); break; }
     case "rename": ui.sheet = "rename"; ui.renameMsg = ""; render(); break;

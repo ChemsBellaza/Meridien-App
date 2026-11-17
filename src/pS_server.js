@@ -403,6 +403,8 @@ async function srvSync(force) {
       if (att.ok && Array.isArray(att.data)) SRV.attempts[day] = att.data;
       if (sum && sum.gems_total !== undefined) SRV.sum = sum;
       SRV.syncedAt = performance.now();
+      if (!SRV.trLoaded) { SRV.trLoaded = true; srvLoadTrophies().then(() => { if (!game && ["pet", "profile"].includes(ui.view) && !ui.sheet) render(); }); }
+      setTimeout(srvCheckCeremony, 600);
       return true;
     } catch (e) { return false; }
     finally { SRV.syncing = null; }
@@ -474,7 +476,7 @@ function onlineFeed(k) {
 function dayOfIso(iso) { try { return gameDayOfParts(srvParts(Date.parse(String(iso).replace(/(\.\d{3})\d+/, "$1")))); } catch (e) { return ""; } }
 function onlineProgress() {
   const s = SRV.sum || { gems_total: 0, wins: 0, days: 0, wallet: 0, streak: 0 };
-  return { gems: s.gems_total, wins: s.wins, streak: s.streak, plays: s.days, games: Object.values(store.stats.fmts || {}).reduce((n, v) => n + v, 0), carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };
+  return { champ: (SRV.trophies || []).filter(t => t.rank === 1).length, podium: (SRV.trophies || []).length, gems: s.gems_total, wins: s.wins, streak: s.streak, plays: s.days, games: Object.values(store.stats.fmts || {}).reduce((n, v) => n + v, 0), carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };
 }
 const onlineWallet = () => (SRV.sum ? SRV.sum.wallet : 0);
 // essais du jour (liste de { score }) : serveur en ligne, sauvegarde locale sinon ; l'essai en cours compte avec son score actuel

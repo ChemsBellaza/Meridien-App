@@ -127,6 +127,7 @@ function vGroupInfo() {
     <div class="sheethead"><div><h3>${esc(g ? g.name : store.profile.group)}</h3><div class="muted">Invite tes amis dans ce groupe</div></div></div>
     <div><div class="kicker" style="margin-bottom:6px">Code d'invitation</div><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></div>
     <button class="btn" data-act="gshare">Inviter des amis</button>
+    <button class="btn ghost" data-act="hall">🏆 Palmarès du groupe</button>
     <div><div class="kicker" style="margin-bottom:6px">Membres${members ? ` (${members.length})` : ""}</div><ul class="mlist">${list}</ul></div>
     ${g && srvOn() ? `<button class="linkbtn" data-act="gleave" data-v="${esc(g.id)}">Quitter ce groupe</button>` : ""}
     <button class="btn ghost" data-act="closesheet">Fermer</button>

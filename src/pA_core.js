@@ -266,7 +266,7 @@ function progress() {
   let streak = 0; while (d >= CONFIG.seasonAnchor && myPlays(d).length) { streak++; d = addDays(d, -1); }
   const plays = Object.values(store.plays).reduce((n, a) => n + a.length, 0);
   const games = Object.values(store.stats.fmts || {}).reduce((n, v) => n + v, 0);
-  return { gems, wins, streak, plays, games, carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };
+  return { champ: 0, podium: 0, gems, wins, streak, plays, games, carnet: Object.keys(store.carnet || {}).length, fmts: Object.keys(store.stats.fmts || {}).length };
 }
 const wallet = prog => srvOn() ? onlineWallet() : Math.max(0, (prog || progress()).gems - (store.spent || 0));
 const isUnlocked = (it, prog) => !it.need || prog[it.need.k] >= it.need.v;

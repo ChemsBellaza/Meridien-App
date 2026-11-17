@@ -212,6 +212,22 @@ Check "rattraper un jour non autorisé est refusé" ($cx.error -eq "catchup_unav
 $rm = Rpc $B "remove_member" @{ p_user = $users.Alice.id }
 Check "un simple membre ne peut pas retirer un joueur" ($rm.error -eq "not_owner") ($rm | ConvertTo-Json -Compress)
 
+"--- Fin de saison (migration 20261124) ---"
+$sr = Rpc $A "season_recap" @{ p_group = $gid; p_season = 1 }
+Check "season_recap d'une saison terminée sans parties : ok, aucun joueur" ($sr.ok -eq $true -and @($sr.players).Count -eq 0 -and $sr.season -eq 1) ($sr | ConvertTo-Json -Compress -Depth 4)
+$sr2 = Rpc $A "season_recap" @{ p_group = $gid; p_season = 999 }
+Check "season_recap d'une saison pas encore terminée est refusé (no_season)" ($sr2.error -eq "no_season") ($sr2 | ConvertTo-Json -Compress)
+$sr3 = Rpc $C "season_recap" @{ p_group = $gid; p_season = 1 }
+Check "season_recap refusé à qui n'est pas du groupe (no_group)" ($sr3.error -eq "no_group") ($sr3 | ConvertTo-Json -Compress)
+$sh = Rpc $A "season_hall" @{ p_group = $gid }
+Check "season_hall répond (liste, vide ici)" (@($sh).Count -eq 0) ($sh | ConvertTo-Json -Compress)
+$mt = Rpc $A "my_trophies"
+Check "my_trophies répond (liste, vide ici)" (@($mt).Count -eq 0) ($mt | ConvertTo-Json -Compress)
+$aw = Call $A "Get" "/rest/v1/season_awards?select=*" $null $null
+Check "season_awards n'est pas lisible directement par l'application" (@($aw).Count -eq 0 -or $aw.__http_error) ($aw | ConvertTo-Json -Compress)
+$wl = Rpc $A "my_wallet"
+Check "my_wallet reste un nombre" ($wl -is [int] -or $wl -is [long] -or $wl -is [double]) ("" + $wl)
+
 "--- Nettoyage (suppression des comptes de test) ---"
 Rpc $A "delete_my_account" | Out-Null
 $gleft = Call $B "Get" "/rest/v1/groups?select=name,owner_id" $null $null

@@ -27,6 +27,7 @@
   "pE_engines.js",
   "pN_engines.js",
   "pW_rituals.js",
+  "pZ_season.js",
   "pB_logic.js",
   "pV_evo.js",
   "pF_flags.js"
