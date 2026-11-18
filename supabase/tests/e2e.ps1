@@ -202,7 +202,8 @@ $pc = ($sb.pct); $exp = 5 * ((([datetime]$sb.play_day - [datetime]"2026-10-19").
 Check "bonus de saison = 5 % par jour (jour 1 = 0 %)" ($pc -eq $exp) "pct=$pc attendu=$exp"
 
 "--- Rattrapage (migration 20261118) ---"
-$yd = ([datetime]::UtcNow.Date.AddDays(-1)).ToString("yyyy-MM-dd")
+$madrid = [TimeZoneInfo]::ConvertTimeBySystemTimeZoneId([datetime]::UtcNow, "Romance Standard Time") # Madrid ; le jour de jeu change à 14 h 30
+$yd = ($madrid.AddMinutes(-870).Date.AddDays(-1)).ToString("yyyy-MM-dd")
 $cu = Rpc $B "my_catchup" @{ p_group = $gid }
 Check "membre arrivé le jour même du groupe : rien à rattraper" ((N $cu) -eq 0) ($cu | ConvertTo-Json -Compress)
 $cx = Rpc $B "start_try" @{ p_group = $gid; p_day = $yd }
