@@ -737,6 +737,40 @@ div.hcard.sq{cursor:default}
 .boostbtn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;width:100%;padding:8px 14px;border-radius:18px;border:2px dashed var(--yellow-line);background:var(--yellow-soft);color:var(--ink);font-weight:800;text-align:left}
 .boostbtn .stack{display:flex;flex-direction:column;gap:0}.boostbtn small{font-weight:700;font-size:12px;color:var(--ink-2)}
 .boostnote{display:flex;gap:8px;align-items:center;font-weight:800;font-size:14px;color:var(--ink)}
+/* révélation du jeu du jour (l'état de base est l'état final ; « passer » et « réduire les animations » coupent tout) */
+.scrim.reveal{z-index:45;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 20px;text-align:center;color:#fff;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 30%,#4B3CC4 0%,#251E52 45%,#0C0820 100%);cursor:pointer}
+.rvsky{position:absolute;inset:0;pointer-events:none}.rvsky i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:.2;animation:rvtwinkle 2.6s ease-in-out var(--d) infinite}
+.rvglobe{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:3}
+.rvglobe svg{opacity:0;animation:rvglobe 3s ease both;filter:drop-shadow(0 0 28px rgba(255,194,74,.6))}
+.rvglobe .spin{transform-box:fill-box;transform-origin:center;animation:rvspin 1.1s linear infinite}.rvglobe .spin.s2{animation-delay:-.55s}
+.rvq{position:absolute;top:17%;left:0;right:0;margin:0;font-family:var(--fd);font-weight:800;font-size:22px;color:#FFC24A;opacity:0;animation:rvq 2.4s ease both;z-index:3}
+.rvstage{position:relative;width:min(86vw,400px);aspect-ratio:400/240;border-radius:22px;overflow:hidden;box-shadow:0 0 0 3px #FFC24A,0 18px 60px rgba(255,194,74,.35);z-index:2}
+.rvcard{position:absolute;inset:0;animation:rvcard 1.1s ease 2.4s both}.rvcard .cover{border-radius:0}
+.rvcurt{position:absolute;top:0;bottom:0;width:51%;background:linear-gradient(180deg,#3B2F9E,#1B1546);display:grid;place-items:center;z-index:2;
+  background-image:linear-gradient(180deg,#3B2F9E,#1B1546),repeating-linear-gradient(90deg,transparent 0 26px,rgba(255,194,74,.12) 26px 28px)}
+.rvcurt span{font-family:var(--fd);font-weight:800;font-size:90px;color:#FFC24A;opacity:.9}
+.rvcurt.l{left:0;transform:translateX(-101%);animation:rvopenl .95s cubic-bezier(.7,0,.2,1) 2.4s both}.rvcurt.l span{transform:translateX(50%)}
+.rvcurt.r{right:0;transform:translateX(101%);animation:rvopenr .95s cubic-bezier(.7,0,.2,1) 2.4s both}.rvcurt.r span{transform:translateX(-50%)}
+.rvline{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#FFC24A;box-shadow:0 0 18px 4px rgba(255,194,74,.9);opacity:0;z-index:3;animation:rvline 3.4s ease both}
+.rvsparks{position:absolute;left:50%;top:50%;z-index:4;pointer-events:none}.rvsparks b{position:absolute;width:10px;height:10px;margin:-5px;border-radius:50%;background:var(--c);opacity:0;animation:rvspark 1.2s ease-out 2.5s both}
+.rvtext{display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2;animation:rvup .8s ease 3.3s both}
+.rvtext .kicker{color:#FFC24A}.rvname{font-family:var(--fd);font-weight:800;font-size:28px;line-height:1.12;color:#fff;margin:0}.rvsub{margin:0;max-width:340px;color:rgba(255,255,255,.88);font-weight:700;font-size:15px}
+.rvgo{width:min(86vw,320px);background:#FFC24A;color:#1C1C1E;z-index:2;animation:rvup .6s ease 4s both}
+.rvhint{position:absolute;bottom:max(18px,env(safe-area-inset-bottom,0px));left:0;right:0;margin:0;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);opacity:0;animation:rvhint 3.6s ease both}
+.reveal.skip *{animation:none !important}.reveal.skip .rvglobe,.reveal.skip .rvq,.reveal.skip .rvhint,.reveal.skip .rvline{display:none}
+@keyframes rvtwinkle{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:.95;transform:scale(1.6)}}
+@keyframes rvglobe{0%{opacity:0;transform:scale(.15) rotate(-200deg)}22%{opacity:1;transform:scale(1) rotate(0)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.4) translateY(-80px)}}
+@keyframes rvspin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.04)}}
+@keyframes rvq{0%{opacity:0;transform:translateY(10px)}16%,76%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes rvcard{from{transform:scale(.9);filter:brightness(.35)}to{transform:none;filter:none}}
+@keyframes rvopenl{from{transform:translateX(0)}to{transform:translateX(-101%)}}
+@keyframes rvopenr{from{transform:translateX(0)}to{transform:translateX(101%)}}
+@keyframes rvline{0%{opacity:0;transform:scaleY(0)}18%{opacity:1;transform:none}72%{opacity:1}100%{opacity:0}}
+@keyframes rvspark{from{opacity:1;transform:translate(0,0) scale(.2)}to{opacity:0;transform:translate(var(--x),var(--y)) scale(1.3)}}
+@keyframes rvup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes rvhint{0%,8%{opacity:0}16%,84%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.reveal *{animation:none !important}.rvglobe,.rvq,.rvhint,.rvline{display:none}}
 /* tuto instinctif, installation sur l'écran d'accueil */
 .pulse{animation:pulsering 1.6s ease-in-out infinite}
 @keyframes pulsering{0%,100%{box-shadow:0 0 0 0 rgba(255,194,74,.0)}50%{box-shadow:0 0 0 6px rgba(255,194,74,.55)}}

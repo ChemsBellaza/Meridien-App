@@ -20,6 +20,7 @@ function render() {
     const pp = progress(); Object.assign(store.profile.pet, { stage: String(ITEMS.stage.list.filter(it => isUnlocked(it, pp)).length), shiny: "normal", bg: "type" }); save();
   }
   if (ui.view === "hub" && store.profile && (!srvOn() || !tutoState().done)) ui.view = "group"; // l'écran « Mes groupes » : profils en ligne, une fois le tutoriel fait
+  revealCheck();
   let html = "";
   if (ui.view === "recover") html = vRecover();
   else if (ui.view === "emailcode" && store.profile) html = vEmailCode();
@@ -320,6 +321,7 @@ function vProfile() {
 }
 
 function vSheet() {
+  if (ui.sheet === "reveal") return vReveal();
   if (ui.sheet === "install") return vInstallSheet();
   if (ui.sheet === "cer") return vCeremony();
   if (ui.sheet === "hall") return vHall();
@@ -442,6 +444,8 @@ document.addEventListener("click", e => {
     case "gshare": inviteShare(); break;
     case "boostask": ui.confirm = { title: "Activer ton boost ?", text: `Une seule fois par saison. Ton score de ce jeu dans « ${(SRV.group && SRV.group.name) || "ce groupe"} » comptera ×1,5 dans le classement. Impossible de l'annuler, et à faire avant ton premier essai.`, yes: "Activer le boost", no: "Plus tard", run: () => srvUseBoost() }; render(); break;
     case "recap": ui.sheet = "recap"; render(); break;
+    case "revskip": if (ui.reveal && !ui.reveal.skip) { ui.reveal.skip = true; render(); } break;
+    case "revgo": ui.reveal = null; ui.sheet = false; render(); break;
     case "cernext": if (ui.cer && ui.cer.step < CER_STEPS.length - 1) { ui.cer.step++; render(); } break;
     case "cerprev": if (ui.cer && ui.cer.step > 0) { ui.cer.step--; render(); } break;
     case "cerclose": ui.cer = null; ui.sheet = false; render(); setTimeout(srvCheckCeremony, 400); break;
