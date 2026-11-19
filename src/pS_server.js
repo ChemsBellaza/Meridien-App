@@ -405,6 +405,7 @@ async function srvSync(force) {
       SRV.syncedAt = performance.now();
       if (!SRV.trLoaded) { SRV.trLoaded = true; srvLoadTrophies().then(() => { if (!game && ["pet", "profile"].includes(ui.view) && !ui.sheet) render(); }); }
       if (!PUSH.checked) pushStatus().then(() => { if (!game && !ui.sheet && ["group", "hub"].includes(ui.view)) render(); });
+      if (ui.pendingChat) { const pc = ui.pendingChat; ui.pendingChat = null; setTimeout(() => pushOpenChat(pc.gid, pc.msg), 200); } else
       setTimeout(srvCheckCeremony, 600);
       return true;
     } catch (e) { return false; }

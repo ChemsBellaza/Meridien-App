@@ -69,5 +69,17 @@ function bindAfterRender() {
   updateCountdown();
   const c = document.getElementById("carousel"), sel = c && c.querySelector('[aria-pressed="true"]');
   if (sel) c.scrollLeft = sel.offsetLeft - c.offsetLeft - (c.clientWidth - sel.offsetWidth) / 2;
+  if (c && !c._sw) { // un balayage sélectionne le familier arrêté au centre (s'il est débloqué)
+    c._sw = 1; let t;
+    c.addEventListener("scroll", () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const mid = c.scrollLeft + c.clientWidth / 2; let best = null, bd = 1e9;
+        c.querySelectorAll(".gtile").forEach(n => { const d = Math.abs(n.offsetLeft - c.offsetLeft + n.offsetWidth / 2 - mid); if (d < bd) { bd = d; best = n; } });
+        const k = best && best.dataset.v;
+        if (k && k !== ui.draftPet && speciesOpen(k, store.profile ? progress() : null)) { try { captureDrafts(); } catch (e) {} ui.draftPet = k; render(); }
+      }, 140);
+    }, { passive: true });
+  }
 }
 

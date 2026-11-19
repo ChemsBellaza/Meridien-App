@@ -165,7 +165,7 @@ function vFeed(k) {
   return `<div class="feed">${ev.map(e => {
     if (e.type === "launch") return `<div class="fpill">${avatar(e.p, "sm")}<span><b>Défi lancé</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></div>`;
     if (e.type === "score") return `<div class="fitem"><button class="fpill ${e.best && lead && e.p.id === lead.id ? "best" : ""}" data-act="reactopen" data-v="${e.id}" aria-label="Réagir au score de ${esc(e.p.name)}">${avatar(e.p, "sm")}<span><b>Score : ${fmtNum(e.score)} pts</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></button>${reactRow(k, e)}</div>`;
-    return `<div class="msg ${e.mine ? "me" : ""}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx ${stickerOf(e.text) ? "sticker" : ""}">${msgBody(e)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
+    return `<div class="msg ${e.mine ? "me" : ""}" data-mid="${esc(e.mid || "")}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx ${stickerOf(e.text) ? "sticker" : ""}">${msgBody(e)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
   }).join("")}</div>`;
 }
 
@@ -311,6 +311,7 @@ function vProfile() {
 }
 
 function vSheet() {
+  if (ui.sheet === "rxwho") return vRxWho();
   if (ui.sheet === "reveal") return vReveal();
   if (ui.sheet === "install") return vInstallSheet();
   if (ui.sheet === "cer") return vCeremony();
@@ -438,6 +439,7 @@ document.addEventListener("click", e => {
     case "gshare": inviteShare(); break;
     case "boostask": ui.confirm = { title: "Activer ton boost ?", text: `Une seule fois par saison. Ton score de ce jeu dans « ${(SRV.group && SRV.group.name) || "ce groupe"} » comptera ×1,5 dans le classement. Impossible de l'annuler, et à faire avant ton premier essai.`, yes: "Activer le boost", no: "Plus tard", run: () => srvUseBoost() }; render(); break;
     case "recap": ui.sheet = "recap"; render(); break;
+    case "rxwho": ui.rxEv = v; ui.sheet = "rxwho"; render(); break;
     case "revskip": if (ui.reveal && !ui.reveal.skip) { ui.reveal.skip = true; render(); } break;
     case "revgo": ui.reveal = null; ui.sheet = false; render(); break;
     case "cernext": if (ui.cer && ui.cer.step < CER_STEPS.length - 1) { ui.cer.step++; render(); } break;

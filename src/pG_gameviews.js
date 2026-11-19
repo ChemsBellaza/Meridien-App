@@ -116,28 +116,33 @@ function vEnd() {
       <div class="stile"><span class="sm">Boussoles</span><b class="big num">+${me.gems}</b><span class="sm">${I.compass(14)}gagnées</span></div>
       <div class="stile"><span class="sm">Essai</span><b class="big num">${g.catchup ? "1/1" : `${g.tryIdx + 1}/${triesOf(g.k)}`}</b><span class="sm">${g.catchup ? "rattrapage" : `meilleur : ${fmtNum(best)}`}</span></div>
     </div>` : "";
+  const fold = (title, inner) => inner ? `<details class="fold"><summary>${title}</summary><div class="foldbody">${inner}</div></details>` : "";
+  const unlocks = [
+    ...(g.newAch || []).map(a => `<div class="unlock ach"><span class="medal">${achIcon(a, 46)}</span><div><span class="mono">Succès débloqué</span><b>${esc(a.label)}</b><span class="usub">${esc(a.desc)}</span></div></div>`),
+    ...g.newUnlocks.filter(u => u.cat === "stage").map(u => `<div class="unlock evolve" style="--c:${TYPES[Sp.type].color}"><span class="evopair">${petAv({ ...pet, stage: String(+u.it.id - 1) }, "lg", "Avant")}<i aria-hidden="true">›</i>${petAv({ ...pet, stage: u.it.id }, "lg", "Après")}</span><div><span class="mono">Évolution !</span><b>${esc(Sp.names[+u.it.id - 2])} évolue en ${esc(Sp.names[+u.it.id - 1])}</b><span class="usub">Stade ${u.it.id} · ${reqText(u.it.need)}</span></div></div>`),
+    ...g.newUnlocks.filter(u => u.cat !== "stage").map(u => `<div class="unlock">${petAv(u.cat === "species" ? { ...store.profile.pet, species: u.it.id } : { ...store.profile.pet, [u.cat]: u.it.id }, "lg", u.it.label)}<div><span class="mono">${u.cat === "species" ? "Nouveau familier" : u.cat === "shiny" ? "Couleurs chromatiques" : "Nouveau fond"}</span><b>${esc(u.it.label)}</b><span class="usub">${esc(ITEMS[u.cat].label)} · ${reqText(u.it.need)}</span></div></div>`)
+  ].join("");
+  const bd = `<div class="breakdown">${g.manches.map((m, i) => `<div class="bd">${mancheChip({ ...m, label: g.mlabel[i] || m.label })}<span>${g.diffs[i] != null ? diffChip(g.diffs[i]) : ""}</span><span class="num">${fmtNum(g.roundPts[i])}</span></div>`).join("")}</div>`;
+  const stampsHtml = stamps.length ? `<div class="stamps">${stamps.slice(0, 18).map(id => `<span class="stamp" title="${esc(CBY[id] ? CBY[id].name : id)}">${CBY[id] ? flagOf(CBY[id]) : ""}</span>`).join("")}${stamps.length > 18 ? `<span class="stamp more num">+${stamps.length - 18}</span>` : ""}</div><span class="note">${Object.keys(store.carnet).length} pays tamponnés sur ${COUNTRIES.length}.</span>` : "";
+  const learnedHtml = g.learned.length ? `<ul class="learnedlist">${g.learned.slice(0, 14).map(l => `<li><b>${fr(l.t)}</b>${l.f ? ` : ${fr(l.f)}` : ""}</li>`).join("")}</ul>` : "";
+  const actions = left > 0
+    ? `<button class="btn" data-g="replay"><span class="stack">Rejouer<small>Essai ${mine.length + 1} sur ${triesOf(g.k)} · nouvelles questions</small></span></button><button class="btn ghost" data-g="exit">Voir le classement</button>`
+    : `<button class="btn" data-g="exit">${g.practice ? "Retour" : "Voir le classement"}</button>`;
   return `
-    <div class="endhead"><span class="mono muted">${esc(F.name)} · ${g.practice ? "entraînement" : "essai " + (g.tryIdx + 1)}</span>${g.practice ? `<span class="flag mono">Non compté</span>` : ""}</div>
-    <div class="react"><span class="rtile" role="img" aria-label="${esc(petName(pet))}, ${kind === "good" ? "tout content" : kind === "bad" ? "un peu triste" : "attentif"}">${petSVG(pet, { mood: kind === "good" ? "joy" : kind === "bad" ? "sad" : null })}</span><div class="say3"><b>${esc(petName(pet))}</b><span>${fr(petLine(pet.species, kind, g.k + g.tryIdx))}</span></div></div>
-    <section class="endscore" aria-label="Ton score"><div class="v num">${fmtNum(g.score)}</div><div class="u">points</div>
-      ${record ? `<span class="recordtag">${I.trophy(16)}Nouveau record du jour</span>` : ""}
-      ${!g.practice && !record && best > g.score ? `<p class="muted endnote">Ton meilleur score du jour reste ${fmtNum(best)} pts.</p>` : ""}
+    <div class="endtop"><button class="backchip" data-g="exit" aria-label="${g.practice ? "Retour" : "Retour au classement"}"><span aria-hidden="true">‹</span> ${g.practice ? "Retour" : "Classement"}</button><span class="mono muted endlab">${esc(F.name)} · ${g.practice ? "entraînement" : g.catchup ? "rattrapage" : "essai " + (g.tryIdx + 1)}</span>${g.practice ? `<span class="flag mono">Non compté</span>` : `<button class="roundbtn" data-g="share" aria-label="Partager mon score">${I.share(20)}</button>`}</div>
+    <section class="endhero" aria-label="Ton score">
+      <div class="react"><span class="rtile" role="img" aria-label="${esc(petName(pet))}, ${kind === "good" ? "tout content" : kind === "bad" ? "un peu triste" : "attentif"}">${petSVG(pet, { mood: kind === "good" ? "joy" : kind === "bad" ? "sad" : null })}</span><div class="say3"><b>${esc(petName(pet))}</b><span>${fr(petLine(pet.species, kind, g.k + g.tryIdx))}</span></div></div>
+      <div class="endscore"><div class="v num">${fmtNum(g.score)}</div><div class="u">points</div>
+        ${record ? `<span class="recordtag">${I.trophy(16)}Nouveau record du jour</span>` : ""}
+        ${!g.practice && !record && best > g.score ? `<p class="muted endnote">Ton meilleur score du jour reste ${fmtNum(best)} pts.</p>` : ""}
+      </div>
     </section>
     ${me && me.boost ? `<p class="boostnote on" role="status"><span aria-hidden="true">⚡</span> Boost ×1,5 : ton score compte ${fmtNum(Math.round(g.score * 1.5))} pts dans le classement.</p>` : ""}
     ${g.online && srvSubmitNote(g) ? `<p class="note center" role="status">${esc(srvSubmitNote(g))}</p>` : ""}
     ${tiles}
-    ${endRecap(g, res, me, record)}
+    ${unlocks}
+    <div class="endactions">${actions}</div>
     ${g.practice ? "" : `<section class="endrank" aria-label="Classement du jour"><div class="kicker">Classement · ${esc(F.name)}</div>${vRanking(g.k)}</section>`}
-    ${(g.newAch || []).map(a => `<div class="unlock ach"><span class="medal">${achIcon(a, 46)}</span><div><span class="mono">Succès débloqué</span><b>${esc(a.label)}</b><span class="usub">${esc(a.desc)}</span></div></div>`).join("")}
-    ${g.newUnlocks.filter(u => u.cat === "stage").map(u => `<div class="unlock evolve" style="--c:${TYPES[Sp.type].color}"><span class="evopair">${petAv({ ...pet, stage: String(+u.it.id - 1) }, "lg", "Avant")}<i aria-hidden="true">›</i>${petAv({ ...pet, stage: u.it.id }, "lg", "Après")}</span><div><span class="mono">Évolution !</span><b>${esc(Sp.names[+u.it.id - 2])} évolue en ${esc(Sp.names[+u.it.id - 1])}</b><span class="usub">Stade ${u.it.id} · ${reqText(u.it.need)}</span></div></div>`).join("")}
-    ${g.newUnlocks.filter(u => u.cat !== "stage").map(u => `<div class="unlock">${petAv(u.cat === "species" ? { ...store.profile.pet, species: u.it.id } : { ...store.profile.pet, [u.cat]: u.it.id }, "lg", u.it.label)}<div><span class="mono">${u.cat === "species" ? "Nouveau familier" : u.cat === "shiny" ? "Couleurs chromatiques" : "Nouveau fond"}</span><b>${esc(u.it.label)}</b><span class="usub">${esc(ITEMS[u.cat].label)} · ${reqText(u.it.need)}</span></div></div>`).join("")}
-    ${endProgress()}
-    <div class="breakdown">${g.manches.map((m, i) => `<div class="bd">${mancheChip({ ...m, label: g.mlabel[i] || m.label })}<span>${g.diffs[i] != null ? diffChip(g.diffs[i]) : ""}</span><span class="num">${fmtNum(g.roundPts[i])}</span></div>`).join("")}</div>
-    ${stamps.length ? `<div class="stampcard"><div class="mono">Carnet de voyage · +${stamps.length} pays</div><div class="stamps">${stamps.slice(0, 18).map(id => `<span class="stamp" title="${esc(CBY[id] ? CBY[id].name : id)}">${CBY[id] ? flagOf(CBY[id]) : ""}</span>`).join("")}${stamps.length > 18 ? `<span class="stamp more num">+${stamps.length - 18}</span>` : ""}</div><span class="note">${Object.keys(store.carnet).length} pays tamponnés sur ${COUNTRIES.length}.</span></div>` : ""}
-    ${g.learned.length ? `<details class="learned"><summary>Ce que tu as appris (${g.learned.length})</summary><ul>${g.learned.slice(0, 14).map(l => `<li><b>${fr(l.t)}</b>${l.f ? ` : ${fr(l.f)}` : ""}</li>`).join("")}</ul></details>` : ""}
-    ${g.practice ? "" : `<div class="sharerow one"><button class="btn ghost" data-g="share">${I.share(20)}Partager mon score</button></div>`}
-    ${g.newUnlocks.length ? `<button class="btn ghost" data-g="topet">Voir mon familier</button>` : ""}
-    ${left > 0
-      ? `<button class="btn" data-g="replay"><span class="stack">Rejouer<small>Essai ${mine.length + 1} sur ${triesOf(g.k)} · nouvelles questions</small></span></button><button class="btn ghost" data-g="exit">Voir le classement</button>`
-      : `<button class="btn" data-g="exit">${g.practice ? "Retour" : "Voir le classement"}</button>`}`;
+    <div class="folds">${fold("Temps forts et rival", endRecap(g, res, me, record))}${fold("Détail par manche", bd)}${fold(`Ce que tu as appris (${g.learned.length})`, learnedHtml)}${fold(`Carnet de voyage · +${stamps.length} pays`, stampsHtml)}${fold("Ta prochaine étape", endProgress())}</div>
+    ${g.newUnlocks.length ? `<button class="btn ghost" data-g="topet">Voir mon familier</button>` : ""}`;
 }

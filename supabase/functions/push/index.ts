@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       const { data: subs } = await sb.from("push_subs").select("endpoint, p256dh, auth").in("user_id", ids).eq("msgs", true);
       const who = pr?.pseudo ?? "Un ami", sticker = String(msg.body).startsWith("::s:");
       const text = sticker ? `${who} a envoyé un autocollant` : `${who} : ${String(msg.body).slice(0, 110)}`;
-      const r = await sendAll(subs ?? [], { title: grp?.name ?? "Méridien", body: text, tag: "msg-" + msg.group_id, url: "./" });
+      const r = await sendAll(subs ?? [], { title: grp?.name ?? "Méridien", body: text, tag: "msg-" + msg.group_id, url: `./?chat=${msg.group_id}&msg=${msg.id}` });
       return reply({ ok: true, ...r });
     }
     return reply({ ok: false, error: "bad_request" }, 400);

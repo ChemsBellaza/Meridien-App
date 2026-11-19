@@ -2,7 +2,7 @@
    Stratégie « réseau d'abord, cache en secours » : en ligne, le joueur a toujours la dernière version ;
    sans réseau, la dernière version vue s'ouvre quand même. Aucune donnée du joueur n'y transite
    (la sauvegarde reste dans localStorage). Pour forcer un vidage du cache, changer CACHE. */
-const CACHE = "meridien-v5";
+const CACHE = "meridien-v6";
 const BASE = self.registration.scope;
 const PRECACHE = ["./", "index.html", "manifest.webmanifest", "logo.svg", "icons/favicon-64.png", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "fonts/nunito-latin.woff2", "fonts/nunito-latin-ext.woff2", "fonts/unbounded-latin.woff2"];
 
@@ -41,9 +41,14 @@ self.addEventListener("push", e => {
 });
 self.addEventListener("notificationclick", e => {
   e.notification.close();
-  const url = new URL((e.notification.data && e.notification.data.url) || "./", BASE).href;
+  const d = e.notification.data || {}, tag = e.notification.tag || "";
+  let gid = "", msg = "";
+  try { const u = new URL(d.url || "./", BASE); gid = u.searchParams.get("chat") || ""; msg = u.searchParams.get("msg") || ""; } catch (err) {}
+  if (!gid && tag.indexOf("msg-") === 0) gid = tag.slice(4); // message d'un groupe : on retrouve le groupe grâce à la pastille de la notification
+  const url = new URL("./", BASE); if (gid) url.searchParams.set("chat", gid); if (msg) url.searchParams.set("msg", msg);
   e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(wins => {
-    const w = wins.find(x => x.url.startsWith(BASE)) || wins[0];
-    return w ? w.focus() : self.clients.openWindow(url);
+    const w = wins.find(x => x.url.indexOf(BASE) === 0) || wins[0];
+    if (w) { if (gid) w.postMessage({ type: "openchat", gid, msg }); return w.focus(); }
+    return self.clients.openWindow(url.href);
   }));
 });

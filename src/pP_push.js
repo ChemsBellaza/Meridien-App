@@ -74,3 +74,24 @@ function pushNotice() {
   const until = store.profile.pushLater || ""; if (until && today() < until) return "";
   return `<div class="tnotice" role="note"><span class="kicker">Notifications</span><b>Ne rate plus le nouveau jeu</b><span>Une notification à 14 h 30 quand il arrive, et quand un ami écrit dans ton groupe.</span><span class="btnline"><button class="smallbtn" data-act="pushon">Activer</button><button class="smallbtn ghost" data-act="pushlater">Plus tard</button></span></div>`;
 }
+
+/* ---------- un toucher sur une notification de message ouvre le groupe, la discussion et le message ---------- */
+async function pushOpenChat(gid, mid) {
+  if (!srvOn() || srvLost() || game) return;
+  ui.sheet = false; ui.reveal = null; ui.view = "group"; ui.tab = "chat"; ui.focusMsg = mid || "";
+  if (gid && gid !== SRV.gid && SRV.groups.some(g => g.id === gid)) await srvSwitchGroup(gid); else { render(); await srvSync(true); }
+  try { await srvLoadChat(); } catch (e) {}
+  render(); pushFocusMsg();
+}
+function pushFocusMsg() {
+  setTimeout(() => {
+    let el = null; try { el = ui.focusMsg ? document.querySelector(`.msg[data-mid="${CSS.escape(ui.focusMsg)}"]`) : null; } catch (e) {}
+    if (!el) { const all = document.querySelectorAll(".msg:not(.me)"); el = all[all.length - 1] || null; } // message précis introuvable : le dernier d'un ami
+    if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 2800); }
+    ui.focusMsg = "";
+  }, 300);
+}
+(function () { // ouverture depuis une notification : application déjà ouverte (message du service worker) ou fermée (adresse ?chat=…&msg=…)
+  try { if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => { if (e.data && e.data.type === "openchat") pushOpenChat(e.data.gid, e.data.msg); }); } catch (e) {}
+  try { const q = new URLSearchParams(location.search); if (q.get("chat")) { ui.pendingChat = { gid: q.get("chat"), msg: q.get("msg") || "" }; history.replaceState(null, "", location.pathname); } } catch (e) {}
+})();

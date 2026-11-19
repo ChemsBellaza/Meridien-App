@@ -96,7 +96,7 @@ function reactionsOf(k, ev) {
 function reactRow(k, ev) {
   const { counts, mine } = reactionsOf(k, ev), keys = Object.keys(counts);
   const open = ui.reactOpen === ev.id;
-  return `${keys.length ? `<span class="reacts">${keys.map(e => `<button class="rx ${mine === e ? "me" : ""}" data-act="react" data-v="${ev.id}|${e}" aria-label="${e} ${counts[e]}">${e}<b class="num">${counts[e]}</b></button>`).join("")}</span>` : ""}
+  return `${keys.length ? `<span class="reacts">${keys.map(e => `<button class="rx ${mine === e ? "me" : ""}" data-act="react" data-v="${ev.id}|${e}" aria-label="${e} ${counts[e]}">${e}<b class="num">${counts[e]}</b></button>`).join("")}${srvOn() ? `<button class="rxwho" data-act="rxwho" data-v="${ev.id}" aria-label="Voir qui a réagi">👥</button>` : ""}</span>` : ""}
     ${open ? `<span class="rxpick" role="group" aria-label="Réagir">${REACTS.map(e => `<button data-act="react" data-v="${ev.id}|${e}" aria-pressed="${mine === e}">${e}</button>`).join("")}</span>${srvOn() ? msgActions(ev) : ""}` : ""}`;
 }
 
@@ -121,4 +121,20 @@ function vTrophees() {
     <div class="carnethead"><div class="big num">${got}<small>/${ACH.length}</small></div><div><b>succès débloqués</b><span class="note">Ils récompensent ta régularité, ta curiosité et tes exploits.</span></div></div>
     <div class="achlist">${ACH.map(a => `<div class="achrow ${store.ach[a.id] ? "on" : ""}">${achIcon(a, 48)}<div class="grow"><b>${esc(a.label)}</b><span>${esc(a.desc)}</span></div>${store.ach[a.id] ? `<span class="tag num">${shortDate(store.ach[a.id])}</span>` : I.lock}</div>`).join("")}</div>
     <p class="note center">${st.plays} partie${st.plays > 1 ? "s" : ""} · ${st.fmts} jeu${st.fmts > 1 ? "x" : ""} différent${st.fmts > 1 ? "s" : ""} · ${st.perfect} manche${st.perfect > 1 ? "s" : ""} parfaite${st.perfect > 1 ? "s" : ""}</p>`;
+}
+
+/* ---------- qui a réagi à un message ou à un score (en ligne) ---------- */
+function vRxWho() {
+  const ev = rxTarget(ui.rxEv), by = {};
+  (SRV.reacts || []).forEach(r => { if (ev && r.target_id === ev.rid) (by[r.emoji] = by[r.emoji] || []).push(r.user_id); });
+  const who = id => {
+    const m = (SRV.members || []).find(x => x.user_id === id), me = id === myUid();
+    return { id, name: me ? store.profile.name : (m && m.profiles ? m.profiles.pseudo : "Joueur"), pet: me ? store.profile.pet : ((m && m.profiles && m.profiles.pet) || defaultPet("renard")), photo: me ? store.profile.photo : (SRV.photos[id] || {}).d, color: colorOf(id) };
+  };
+  const rows = Object.entries(by).map(([emo, ids]) => `<li class="rwrow"><span class="remo" aria-hidden="true">${emo}</span><span class="rwho">${ids.map(id => { const p = who(id); return `<span class="rwp">${avatar(p, "sm")}<b>${esc(p.name)}${id === myUid() ? toi : ""}</b></span>`; }).join("")}</span></li>`).join("");
+  const about = ev ? (ev.type === "score" ? `Score de ${esc(ev.p ? ev.p.name : "?")}` : esc(String(ev.text || "").slice(0, 60))) : "";
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Qui a réagi" data-stop>
+    <div class="sheethead"><div><h3>Qui a réagi ?</h3><div class="muted">${about}</div></div></div>
+    ${rows ? `<ul class="rwlist">${rows}</ul>` : `<p class="note">Personne n'a encore réagi.</p>`}
+    <button class="btn ghost" data-act="closesheet">Fermer</button></div></div>`;
 }

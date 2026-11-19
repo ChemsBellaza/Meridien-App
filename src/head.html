@@ -737,6 +737,21 @@ div.hcard.sq{cursor:default}
 .boostbtn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:52px;width:100%;padding:8px 14px;border-radius:18px;border:2px dashed var(--yellow-line);background:var(--yellow-soft);color:var(--ink);font-weight:800;text-align:left}
 .boostbtn .stack{display:flex;flex-direction:column;gap:0}.boostbtn small{font-weight:700;font-size:12px;color:var(--ink-2)}
 .boostnote{display:flex;gap:8px;align-items:center;font-weight:800;font-size:14px;color:var(--ink)}
+/* fin de partie : plus clair */
+.endtop{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;margin:0 0 4px;background:var(--paper)}
+.backchip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px 0 12px;border-radius:999px;background:var(--card);font-weight:900;font-size:15px;cursor:pointer}.backchip span{font-size:24px;line-height:1;margin-top:-2px}
+.endlab{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.endhero{display:flex;flex-direction:column;gap:6px}.endactions,.folds{display:flex;flex-direction:column;gap:8px}
+.fold{background:var(--card);border-radius:18px;overflow:hidden}
+.fold summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:48px;padding:0 16px;font-weight:900}
+.fold summary::-webkit-details-marker{display:none}.fold summary::after{content:"›";transform:rotate(90deg);font-size:24px;color:var(--ink-2);transition:transform .2s}.fold[open] summary::after{transform:rotate(-90deg)}
+.foldbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}.foldbody .recap{background:transparent;box-shadow:none;padding:0}
+.learnedlist{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+/* chat : message ciblé par une notification, qui a réagi */
+.msg.flash .bubble{animation:msgflash 2.6s ease}@keyframes msgflash{0%,65%{box-shadow:0 0 0 4px #FFC24A}100%{box-shadow:0 0 0 0 transparent}}
+.rxwho{min-width:44px;min-height:32px;border-radius:999px;background:var(--card-2);font-size:14px;cursor:pointer;padding:0 10px}
+.rwlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}.rwrow{display:flex;gap:12px;align-items:flex-start}.rwrow .remo{font-size:30px;line-height:1.1;width:38px;text-align:center}
+.rwho{display:flex;flex-wrap:wrap;gap:8px}.rwp{display:inline-flex;align-items:center;gap:6px;background:var(--card);border-radius:999px;padding:4px 12px 4px 4px;font-weight:800}
 /* graphique de saison */
 .chartbox .cline{stroke-dasharray:1;animation:cdraw 1.4s ease both}.chartbox .carea{animation:cfade 1.4s ease both}.chartbox .cpulse{animation:cping 1.8s ease-out infinite;transform-box:fill-box;transform-origin:center}
 @keyframes cdraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes cfade{from{opacity:0}to{opacity:1}}@keyframes cping{0%{opacity:.9;transform:scale(.7)}100%{opacity:0;transform:scale(1.9)}}
