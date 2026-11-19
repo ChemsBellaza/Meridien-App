@@ -12,7 +12,7 @@ async function pushKey() { // clé publique : lue dans la base, sinon demandée 
   const k = await srvRpc("push_public_key"); if (typeof k === "string" && k) return k;
   try {
     const c = new AbortController(), t = setTimeout(() => c.abort(), 12000);
-    const r = await fetch(SRV_URL + "/functions/v1/push", { signal: c.signal }); clearTimeout(t);
+    const r = await fetch(SRV_URL + "/functions/v1/dynamic-handler", { signal: c.signal }); clearTimeout(t);
     const j = r.ok ? await r.json() : null; return j && j.publicKey ? j.publicKey : "";
   } catch (e) { return ""; }
 }

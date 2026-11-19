@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 # Test de bout en bout du multijoueur (lot 3) : 3 joueurs anonymes, groupe, essais, scores, triches, chat, nettoyage.
 # Utilise uniquement l'URL du projet et la clé PUBLIQUE (publishable/anon). Ne jamais y mettre la clé service_role.
 # À lancer sur un projet DE TEST :
@@ -238,7 +238,7 @@ Check "abonnement push enregistré" ($ps.ok -eq $true) ($ps | ConvertTo-Json -Co
 $pm = Rpc $A "my_push_sub" @{ p_endpoint = $ep }
 Check "my_push_sub renvoie les choix (messages oui, quotidien non)" ($pm.msgs -eq $true -and $pm.daily -eq $false) ($pm | ConvertTo-Json -Compress)
 $pc = Rpc $B "my_push_sub" @{ p_endpoint = $ep }
-Check "un autre joueur ne voit pas cet abonnement" ($null -eq $pc) ($pc | ConvertTo-Json -Compress)
+Check "un autre joueur ne voit pas cet abonnement" (-not $pc) ($pc | ConvertTo-Json -Compress)
 $pd = Call $A "Get" "/rest/v1/push_subs?select=*" $null $null
 Check "push_subs n'est pas lisible directement" (@($pd).Count -eq 0 -or $pd.__http_error) ($pd | ConvertTo-Json -Compress)
 $pk = Call $A "Get" "/rest/v1/push_keys?select=*" $null $null

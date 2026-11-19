@@ -53,7 +53,7 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 - `fromPool` : ordre fixe par réserve, avance d'un bloc à chaque passage du jeu ; ne pas y remettre la date.
 
 ## Notifications push (v36)
-- Client : `src/pP_push.js` (état `PUSH`, `pushEnable/Disable/Pref`, bloc Réglages `pushBlock()`, carte `pushNotice()`), service worker `public/sw.js` (`push`, `notificationclick`). Serveur : migration `20261126000000_push.sql` + fonction Edge `supabase/functions/push/index.ts` (à déployer dans Supabase > Edge Functions avec « Verify JWT » désactivé ; elle crée elle-même les clés VAPID dans `push_keys` : aucune clé à copier). `app_config.push_url` = adresse de la fonction (propre au projet : à changer sur un autre projet).
+- Client : `src/pP_push.js` (état `PUSH`, `pushEnable/Disable/Pref`, bloc Réglages `pushBlock()`, carte `pushNotice()`), service worker `public/sw.js` (`push`, `notificationclick`). Serveur : migration `20261126000000_push.sql` + fonction Edge `supabase/functions/push/index.ts` (déployée sous le slug `dynamic-handler`, nom affiché « push notification » ; à déployer dans Supabase > Edge Functions avec « Verify JWT » désactivé ; elle crée elle-même les clés VAPID dans `push_keys` : aucune clé à copier). `app_config.push_url` = adresse de la fonction (propre au projet : à changer sur un autre projet).
 - Chaque notification doit s'afficher (obligatoire sur iPhone) : ne jamais supprimer la notification dans le service worker. Les envois sont idempotents (`push_log`).
 - Les erreurs d'envoi ne doivent jamais empêcher d'écrire un message (déclencheur sous `exception when others`).
 

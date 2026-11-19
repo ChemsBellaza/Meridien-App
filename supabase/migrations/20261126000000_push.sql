@@ -9,7 +9,7 @@
 create extension if not exists pg_net;
 
 alter table public.app_config add column if not exists push_url text;
-update public.app_config set push_url = 'https://objfbehephvvaogmblhj.supabase.co/functions/v1/push' where id = 1 and push_url is null;
+update public.app_config set push_url = 'https://objfbehephvvaogmblhj.supabase.co/functions/v1/dynamic-handler' where id = 1 and push_url is null;
 
 -- clés VAPID (une seule ligne, écrite par la fonction Edge avec la clé de service ; aucun droit pour l'application)
 create table if not exists public.push_keys (

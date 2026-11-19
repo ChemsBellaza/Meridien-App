@@ -7,7 +7,14 @@
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
-const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+// clé de service fournie par Supabase à la fonction (ancien nom, sinon les nouvelles clés « secret »)
+function serviceKey(): string {
+  const old = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (old) return old;
+  try { const k = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}"); const v = k.default ?? Object.values(k)[0]; if (typeof v === "string") return v; } catch (_) { /* ignoré */ }
+  return Deno.env.get("SUPABASE_SECRET_KEY") ?? "";
+}
+const sb = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey(), { auth: { persistSession: false } });
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "content-type, authorization, apikey, x-client-info", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" };
 const reply = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 const SITE = "https://chemsbellaza.github.io/Meridien-App/";
