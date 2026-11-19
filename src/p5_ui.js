@@ -423,7 +423,7 @@ document.addEventListener("click", e => {
     case "onbback": captureDrafts(); ui.onbStep = "pet"; render(); break;
     case "pickpet-ok": store.profile.pet = defaultPet(ui.draftPet); store.profile.seen = unlockedIds(progress()); save(); go("group"); break;
     case "photo-rm": captureDrafts(); if (store.profile) { delete store.profile.photo; save(); srvPushPhoto(); } else ui.draftPhoto = null; render(); break;
-    case "evoclose": ui.evo = null; game ? renderGame() : render(); break;
+    case "evoclose": evoNext(); game ? renderGame() : render(); break;
     case "evoreplay": { const pet = store.profile.pet, st = stageOf(pet); if (st > 1) { openEvo(pet, st - 1, st); render(); } break; }
     case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); pushStatus().then(() => { if (ui.sheet === true && !game) render(); }); break;
     case "pushon": pushEnable(); break;

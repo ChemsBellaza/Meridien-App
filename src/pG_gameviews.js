@@ -61,8 +61,7 @@ function renderGame() {
     body = vEnd();
   }
   $app.className = "";
-  const ev = g.phase === "end" && !g.evoShown && g.newUnlocks && g.newUnlocks.find(u => u.cat === "stage"); // le familier vient d'évoluer : animation (une seule fois)
-  if (ev) { g.evoShown = true; openEvo(store.profile.pet, +ev.it.id - 1, +ev.it.id); }
+  if (g.phase === "end" && !g.evoShown && g.newUnlocks && g.newUnlocks.some(u => ["stage", "species", "shiny"].includes(u.cat))) { g.evoShown = true; openUnlockFx(g); } // évolution, nouveau familier, nouvelles couleurs : animation(s), une seule fois
   setAppHTML(`<div class="game"><div class="gwrap">${body}</div></div>${ui.confirm ? vConfirm() : ""}${ui.evo ? vEvo() : ""}${ui.toast && ui.toast !== "copied" ? `<div class="toast" role="status">${esc(ui.toast)}</div>` : ""}`);
   afterGameRender();
   syncBack();
