@@ -19,6 +19,8 @@
 | GIF | Giphy, clé dans `src/pK_stickers.js` (`GIPHY_KEY`), clé gratuite d'environ 100 recherches par heure | Actif |
 | Notifications push | `public/sw.js` (service worker v6), `src/pP_push.js`, table `push_subs`, clés VAPID créées par la fonction Edge dans `push_keys` | En ligne ; **premier test réel sur téléphone à confirmer** |
 
+| Sauvegarde automatique du projet | Tâche Windows `Meridien-Sauvegarde-3-jours` (tous les 3 jours, 20 h) → `Documents\Meridien App\Sauvegardes` | Active depuis le 19 nov. 2026 |
+
 ## 2. Réglages côté serveur (table `app_config`, une seule ligne `id = 1`)
 `season_anchor = 2026-10-19`, `season_days = 21`, `timezone = Europe/Madrid`, `day_start_min = 870` (14 h 30), `catchup_days = 3`, `rot_from = 2026-11-20` et `rot_old_n = 35` (bascule à 41 jeux), `gems_per_rank = 16`, `joker_cost = 25`, `push_url = …/functions/v1/dynamic-handler`.
 

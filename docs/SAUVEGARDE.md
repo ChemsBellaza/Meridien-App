@@ -11,7 +11,7 @@ Trois choses à protéger : **le code**, **les données des joueurs** (Supabase)
 | **Archive locale datée** | `powershell -ExecutionPolicy Bypass -File scripts\backup-projet.ps1` → `Documents\Meridien App\Sauvegardes\meridien-AAAA-MM-JJ_HHMM.zip` (contient aussi l'historique git, garde les 15 dernières ; une ligne est ajoutée au `journal-sauvegardes.txt`) | **tous les 3 jours**, et avant un gros changement |
 | **Copie hors du PC** | copier le dernier .zip sur OneDrive, une clé USB ou un autre disque (`-Dest "D:\Sauvegardes"` pour choisir le dossier) | chaque mois |
 
-Une sauvegarde a déjà été créée le 19 novembre 2026 (8,5 Mo).
+**Automatique** : une tâche Windows `Meridien-Sauvegarde-3-jours` (Planificateur de tâches, compte de Chems) lance cette archive **tous les 3 jours à 20 h** (et au prochain démarrage si le PC était éteint). Créée et testée le 19 novembre 2026. Pour la voir ou la supprimer : Planificateur de tâches, ou `Unregister-ScheduledTask -TaskName Meridien-Sauvegarde-3-jours`. Elle ne remplace pas l'export des données ni le Push origin, qui restent manuels.
 
 ## 2. Les données des joueurs (Supabase)
 L'offre gratuite **n'a pas de sauvegarde automatique**. Si le projet est supprimé ou corrompu, les comptes, scores et messages sont perdus.

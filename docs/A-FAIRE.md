@@ -7,7 +7,7 @@
 - [ ] **Tester la notification** sur un téléphone : Réglages > Notifications > Activer ; vérifier une ligne dans `push_subs` ; envoyer un message depuis un autre compte.
 - [ ] **Confirmer l'envoi d'e-mails** : service SMTP Brevo configuré et test de « J'ai déjà un compte » jusqu'au code à 6 chiffres.
 - [ ] **Tests sur de vrais téléphones** (un iPhone, un Android) avec 2 ou 3 amis : installation, clavier, notifications, rattrapage d'un nouvel arrivant.
-- [ ] **Sauvegardes tous les 3 jours** (décision du 19 nov.) : archive du projet (`scripts\backup-projet.ps1`) + export des données (`supabase\export_all.sql`) + Push origin (voir `SAUVEGARDE.md`). Dernière archive : 19 nov. 2026 ; premier export des données : à faire.
+- [ ] **Sauvegardes tous les 3 jours** (décision du 19 nov.) : archive du projet (`scripts\backup-projet.ps1`) + export des données (`supabase\export_all.sql`) + Push origin (voir `SAUVEGARDE.md`). Archive du projet : automatique (tâche Windows, tous les 3 jours à 20 h) ; reste à faire à la main : export des données et Push origin.
 - [ ] **Page de confidentialité** publique (RGPD) avant d'inviter beaucoup de monde.
 - [ ] **Nom définitif** de l'application et vérification INPI.
 - [ ] Publication sur les stores (comptes développeur : Google Play 25 € une fois, Apple 99 €/an) : plus tard.
