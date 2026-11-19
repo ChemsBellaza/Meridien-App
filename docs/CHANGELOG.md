@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v45 (19 nov. 2026)** — **« Les indispensables » + « Quoi de neuf ? » réécrits** (`src/pU_news.js`) : la fenêtre s'ouvre sur 5 indispensables numérotés (relier son e-mail, installer l'appli, activer les notifications, jouer avant 14 h 30, recharger si l'appli n'est pas à jour), puis 5 nouveautés d'un paragraphe chacune. Textes courts, concrets, sans emoji décoratif ni points d'exclamation, avec apostrophes courbes et espaces insécables. Aucune migration.
+
 - **v44 (19 nov. 2026)** — **« Quoi de neuf ? »** (`src/pU_news.js`) : une carte sur l'accueil « Mes groupes » et dans le groupe, avec un point « Nouveau » tant que la dernière entrée n'est pas ouverte ; la fenêtre liste les nouveautés (7 entrées) et 7 bonnes pratiques. **Notification d'un GIF** : le service worker (v7) transforme « Prénom : ::g:… » en « Prénom a envoyé un GIF » (idem pour un autocollant) sans attendre le redéploiement de la fonction Edge. Sauvegarde : journal des archives et rythme de 3 jours. Aucune migration.
 
 - **Mémoire du projet (19 nov. 2026)** — Quatre documents : `HISTORIQUE.md` (journal complet, décisions, incidents), `ETAT-DES-LIEUX.md` (ce qui est en ligne et configuré), `A-FAIRE.md` (feuille de route vivante), `SAUVEGARDE.md` (code, données, reconstruction) ; `supabase/export_all.sql` (export de toutes les données en JSON) et `scripts/backup-projet.ps1` (archive .zip datée, testée). Règle de mise à jour dans `CLAUDE.md`. Aucune modification de l'application.
