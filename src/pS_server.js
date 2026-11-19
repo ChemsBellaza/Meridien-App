@@ -153,7 +153,7 @@ function vHub() {
       <span class="gbadges"><i class="num">${prog.streak} ${I.fire(14)}</i>${r && r.my_rank ? `<i class="num">#${r.my_rank} ${I.trophy(14)}</i>` : ""}</span></span></button>`;
   }).join("");
   return `<header class="top hubhead"><span class="hubbrand">${logoMark(34)}<b>Méridien</b></span><span class="hubicons"><button class="plain" data-act="history" aria-label="Mes jeux joués">${I.history}</button><button class="plain" data-act="menu" aria-label="Menu">${I.menu}</button></span></header>
-  ${vNewsCard()}${installNotice()}${pushNotice()}${onlineNotice()}${recapCard()}
+  ${vMust()}${vNewsCard()}${onlineNotice()}${recapCard()}
   <h1 class="sr">Mes groupes</h1>${firstRun() && groups.length ? coach("Touche ton groupe pour voir le défi du jour 👇") : ""}
   ${loading ? `<p class="note center">Chargement de tes groupes…</p>` : cards || `<p class="note center">Tu n'es dans aucun groupe pour l'instant. Crée-en un ou rejoins celui d'un ami avec son code.</p>`}
   ${groups.length < 5 ? `<button class="btn gold" data-act="hubnew">+ Nouveau groupe</button><button class="linkbtn plainlink" data-act="hubjoin">Rejoindre un groupe</button>` : `<p class="note center">Tu es dans 5 groupes, le maximum.</p>`}`;

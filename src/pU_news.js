@@ -43,3 +43,18 @@ function openNews() {
   ui.newsBefore = store.profile.newsSeen || ""; // pour garder le repère « nouveau » le temps de la lecture
   store.profile.newsSeen = NEWS[0].id; save(); ui.sheet = "news"; render();
 }
+
+/* ---------- « Les indispensables » sur l'accueil : les 3 réglages qui comptent, cochés quand c'est fait ---------- */
+function mustState() { // [{ ok, title, small, act }] : seulement ce qui s'applique à cet appareil
+  const rows = [];
+  if (srvOn()) rows.push({ ok: !!(SRV.sess && SRV.sess.user && SRV.sess.user.email), title: "Relie ton e-mail", small: "Sans ça, un téléphone perdu, c’est un profil perdu.", act: "menu" });
+  if (typeof installWanted === "function" && isMobileDev()) rows.push({ ok: isStandalone(), title: "Installe l’appli", small: "Sur l’écran d’accueil, en plein écran.", act: "installpage" });
+  if (srvOn() && typeof pushSupported === "function" && PUSH.checked && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, title: "Active les notifications", small: "Jeu à 14\u00a0h\u00a030, messages du groupe.", act: pushNeedsInstall() ? "installpage" : "pushon" });
+  return rows;
+}
+function vMust() {
+  if (!store.profile || !store.profile.pet || !tutoState().done) return "";
+  const rows = mustState(), todo = rows.filter(r => !r.ok);
+  if (!todo.length) return `<button class="newscard mustok" data-act="news" aria-label="Les indispensables : tout est en ordre"><span class="ntx"><b>Les indispensables</b><small>Tout est en ordre.</small></span><span class="nchev" aria-hidden="true">›</span></button>`;
+  return `<section class="must" aria-label="Les indispensables"><div class="musttop"><b>Les indispensables</b><button class="linkbtn" data-act="news">Tout voir</button></div>${rows.map(r => `<button class="mrow ${r.ok ? "ok" : ""}" data-act="${r.act}"><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.title)}</b><small>${esc(r.small)}</small></span>${r.ok ? "" : `<span class="nchev" aria-hidden="true">›</span>`}</button>`).join("")}</section>`;
+}
