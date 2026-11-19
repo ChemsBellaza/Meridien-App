@@ -246,22 +246,12 @@ function vDay(d) {
 function vSeason() {
   const k = today(), st = standings(k), prev = diffDays(st.S.start, k) > 0 ? standings(addDays(k, -1)) : null;
   const leftDays = diffDays(k, st.S.end);
-  const n = st.days.length, W = 360, H = 260, L = 6, Rr = 44, T = 14, B = 10;
-  const maxV = Math.max(100, ...st.list.map(r => r.total));
-  const step = maxV > 1500 ? 500 : maxV > 600 ? 250 : 100, top = Math.ceil(maxV / step) * step;
-  const X = i => L + (W - L - Rr) * (i / Math.max(1, n)), Y = v => T + (H - T - B) * (1 - v / top);
-  let grid = "";
-  for (let v = 0; v <= top; v += step) grid += `<line x1="${L}" x2="${W - Rr}" y1="${f1(Y(v))}" y2="${f1(Y(v))}" stroke="var(--grid)" stroke-width="1.4" stroke-dasharray="5 5"/><text x="${W - Rr + 8}" y="${f1(Y(v) + 4.5)}" font-size="12.5" font-weight="700" font-family="Nunito, sans-serif" fill="var(--ink-2)">${fmtNum(v)}</text>`;
-  for (let i = 0; i <= 3; i++) { const x = X(i * n / 3); grid += `<line x1="${f1(x)}" x2="${f1(x)}" y1="${T}" y2="${H - B}" stroke="var(--grid)" stroke-width="1.4" stroke-dasharray="5 5"/>`; }
-  const lines = st.list.slice().reverse().map(r => {
-    const pts = r.series.map((v, i) => [X(i), Y(v)]);
-    return `<polyline points="${pts.map(p => p.map(f1).join(",")).join(" ")}" fill="none" stroke="${r.color}" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p => `<circle cx="${f1(p[0])}" cy="${f1(p[1])}" r="3.6" fill="${r.color}"/>`).join("")}`;
-  }).join("");
+  const chart = seasonChart(st);
   return `
   <div class="shead">${backBtn()}<div class="stitle">${I.laurel()}<div><h1>Saison ${st.S.n}</h1><p>${leftDays === 0 ? "dernier jour" : `encore ${leftDays} jour${leftDays > 1 ? "s" : ""}`}</p></div>${I.laurel(true)}</div><span class="roundbtn" aria-hidden="true">${I.compass(26)}</span></div>
   <div class="datepill">${shortDate(st.S.start)} – ${shortDate(st.S.end)}</div>
   ${seasonBanner()}
-  ${seasonMasked(k) ? `<div class="chartbox masked"><p class="note center">🔒 Classement masqué jusqu'à la fin de la saison. Seul ton résultat reste visible.</p></div>` : `<div class="chartbox"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution des boussoles cumulées par joueur">${grid}${lines}</svg></div>`}
+  ${seasonMasked(k) ? `<div class="chartbox masked"><p class="note center">🔒 Classement masqué jusqu'à la fin de la saison. Seul ton résultat reste visible.</p></div>` : `<div class="chartbox">${chart}</div>`}
   <div class="spanel">${(seasonMasked(k) ? st.list.slice().sort((a, b) => (a.me ? -1 : b.me ? 1 : a.name.localeCompare(b.name))) : st.list).map(r => {
     if (seasonMasked(k)) return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">${r.me ? "#" + r.rank + toi : "#?"}</div><b>${esc(r.name)}</b><span>${r.me ? `${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""}` : "classement caché"}</span></div><div class="tot">${I.compass(34)}<b class="num">${r.me ? fmtNum(r.total) : "•••"}</b></div></div>`;
     const pr = prev && prev.list.find(x => x.id === r.id);

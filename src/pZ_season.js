@@ -218,3 +218,33 @@ async function cerShare() {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
   ui.toast = "saved"; render();
 }
+
+/* ---------- graphique de la saison : part de la gauche, courbes lisses, avatars au bout des lignes ---------- */
+function seasonChart(st) {
+  const W = 360, H = 290, L = 36, Rr = 34, T = 18, B = 30, list = st.list;
+  let first = Infinity; list.forEach(r => { const j = r.series.findIndex(v => v > 0); if (j >= 0) first = Math.min(first, j); });
+  const start = isFinite(first) ? Math.max(0, first - 1) : 0; // on commence la veille du premier jour joué : les jours vides ne tassent plus les courbes à droite
+  const ser = r => { const s = r.series.slice(start); return s.length < 2 ? [0, ...s] : s; };
+  const m = Math.max(1, ...list.map(r => ser(r).length - 1));
+  const maxV = Math.max(100, ...list.map(r => r.total)), step = maxV > 1500 ? 500 : maxV > 600 ? 250 : maxV > 300 ? 100 : 50, top = Math.ceil(maxV / step) * step;
+  const X = i => L + (W - L - Rr) * (i / m), Y = v => T + (H - T - B) * (1 - v / top), yb = H - B;
+  let grid = "";
+  for (let v = 0; v <= top; v += step) grid += `<line x1="${L}" x2="${W - Rr}" y1="${f1(Y(v))}" y2="${f1(Y(v))}" stroke="var(--grid)" stroke-width="1.2" opacity="${v === 0 ? 1 : .55}"/><text x="${L - 7}" y="${f1(Y(v) + 4)}" text-anchor="end" font-size="11.5" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${fmtNum(v)}</text>`;
+  const ticks = [...new Set([1, Math.round(m / 2), m])].filter(i => i >= 1 && i <= m);
+  ticks.forEach((i, ti) => { const d = st.days[start + i - 1]; if (!d) return; grid += `<text x="${f1(X(i))}" y="${H - 8}" text-anchor="${ti === 0 && ticks.length > 1 ? "start" : i === m ? "end" : "middle"}" font-size="11.5" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${shortDate(d)}</text>`; });
+  const smooth = pts => pts.reduce((s, p, i) => (i === 0 ? `M${f1(p[0])} ${f1(p[1])}` : `${s} C${f1((pts[i - 1][0] + p[0]) / 2)} ${f1(pts[i - 1][1])} ${f1((pts[i - 1][0] + p[0]) / 2)} ${f1(p[1])} ${f1(p[0])} ${f1(p[1])}`), "");
+  const order = list.slice().sort((a, b) => (a.me ? 1 : b.me ? 1 : 0) - (b.me ? 1 : a.me ? 1 : 0) || a.total - b.total);
+  let defs = "", lines = "", ends = [];
+  order.forEach(r => {
+    const pts = ser(r).map((v, i) => [X(i), Y(v)]), d = smooth(pts), last = pts[pts.length - 1];
+    if (r.me) { defs += `<linearGradient id="gme" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${r.color}" stop-opacity=".42"/><stop offset="1" stop-color="${r.color}" stop-opacity="0"/></linearGradient>`; lines += `<path class="carea" d="${d} L${f1(last[0])} ${yb} L${f1(pts[0][0])} ${yb} Z" fill="url(#gme)"/>`; }
+    lines += `<path class="cline" pathLength="1" d="${d}" fill="none" stroke="${r.color}" stroke-width="${r.me ? 4.6 : 2.6}" stroke-linecap="round" stroke-linejoin="round" opacity="${r.me ? 1 : .82}" style="filter:drop-shadow(0 0 ${r.me ? 5 : 3}px ${r.color})"/>`;
+    ends.push({ r, x: last[0], y: last[1], ly: last[1] });
+  });
+  ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 19) ends[i].ly = ends[i - 1].ly + 19; // les pastilles ne se chevauchent pas
+  const over = ends.length ? ends[ends.length - 1].ly - (yb - 8) : 0; if (over > 0) ends.forEach(e => { e.ly -= over; });
+  const marks = ends.map(e => { const cx = W - Rr + 16, c = e.r.color, ini = esc(((e.r.name || "?").trim()[0] || "?").toUpperCase());
+    return `<line x1="${f1(e.x)}" y1="${f1(e.y)}" x2="${cx - 10}" y2="${f1(e.ly)}" stroke="${c}" stroke-width="1.6" opacity=".7"/><circle cx="${f1(e.x)}" cy="${f1(e.y)}" r="${e.r.me ? 5.5 : 4}" fill="${c}" stroke="var(--paper)" stroke-width="2"/>${e.r.me ? `<circle class="cpulse" cx="${f1(e.x)}" cy="${f1(e.y)}" r="9" fill="none" stroke="${c}" stroke-width="2"/>` : ""}<circle cx="${cx}" cy="${f1(e.ly)}" r="11" fill="${c}" stroke="${e.r.me ? "#FFC24A" : "var(--paper)"}" stroke-width="2.4"/><text x="${cx}" y="${f1(e.ly + 4.3)}" text-anchor="middle" font-size="12" font-weight="900" font-family="Nunito, sans-serif" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width=".6" paint-order="stroke">${ini}</text>`; }).join("");
+  const lead = list[0], aria = `Évolution des boussoles cumulées par joueur. ${lead ? `${lead.name} est premier avec ${fmtNum(lead.total)} boussoles.` : ""}`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(aria)}"><defs>${defs}</defs>${grid}${lines}${marks}</svg>`;
+}
