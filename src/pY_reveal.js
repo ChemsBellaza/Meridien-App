@@ -40,7 +40,7 @@ function vReveal() {
   const R = ui.reveal; if (!R) return "";
   const F = FORMATS[R.f], sunday = isSunday(R.k);
   const globe = `<svg viewBox="0 0 512 512" width="150" height="150" aria-hidden="true"><circle cx="256" cy="256" r="150" fill="#251E52" stroke="#FFC24A" stroke-width="10"/><g fill="none" stroke="#FFC24A" stroke-width="9" stroke-linecap="round"><ellipse class="spin" cx="256" cy="256" rx="64" ry="150"/><ellipse class="spin s2" cx="256" cy="256" rx="64" ry="150"/><path d="M256 106V406M106 256H406"/></g><path d="M392 84l12 40 40 12-40 12-12 40-12-40-40-12 40-12z" fill="#fff"/></svg>`;
-  return `<div class="scrim reveal ${R.skip ? "skip" : ""}" role="dialog" aria-modal="true" aria-label="Nouveau jeu du jour" data-act="revskip">
+  return `<div class="scrim rvroot ${R.skip ? "skip" : ""}" role="dialog" aria-modal="true" aria-label="Nouveau jeu du jour" data-act="revskip">
     <div class="rvsky" aria-hidden="true">${revStars()}</div>
     <p class="sr" role="status">${sunday ? "Jeu spécial du dimanche" : "Nouveau jeu du jour"} : ${esc(F.name)}. ${esc(fr(F.sub))}</p>
     <div class="rvglobe" aria-hidden="true">${globe}</div>

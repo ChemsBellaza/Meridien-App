@@ -52,6 +52,11 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 - 4 jeux QCM dans `src/pQ_more.js` (données `NEWQ[format][catégorie][niveau]`, 8 questions par case, bonne réponse en premier) ; ajouter un jeu = entrée `FORMATS` + `formatOrder.push` + illustration `ART2` + ligne dans `formats` côté serveur (migration) + `python scripts/gen-supabase-seed.py`. Les pas de rotation des groupes doivent rester premiers avec le nombre de jeux (impairs tant que 32).
 - `fromPool` : ordre fixe par réserve, avance d'un bloc à chaque passage du jeu ; ne pas y remettre la date.
 
+## Notifications push (v36)
+- Client : `src/pP_push.js` (état `PUSH`, `pushEnable/Disable/Pref`, bloc Réglages `pushBlock()`, carte `pushNotice()`), service worker `public/sw.js` (`push`, `notificationclick`). Serveur : migration `20261126000000_push.sql` + fonction Edge `supabase/functions/push/index.ts` (à déployer dans Supabase > Edge Functions avec « Verify JWT » désactivé ; elle crée elle-même les clés VAPID dans `push_keys` : aucune clé à copier). `app_config.push_url` = adresse de la fonction (propre au projet : à changer sur un autre projet).
+- Chaque notification doit s'afficher (obligatoire sur iPhone) : ne jamais supprimer la notification dans le service worker. Les envois sont idempotents (`push_log`).
+- Les erreurs d'envoi ne doivent jamais empêcher d'écrire un message (déclencheur sous `exception when others`).
+
 ## Reconstruire la base
 - `supabase/apply_all.sql` (généré par `scripts/gen-apply-all.ps1` : toutes les migrations dans l'ordre + réglages) recrée une base VIDE ; à régénérer après chaque nouvelle migration. Jamais sur une base qui contient des données. Non testé sur un projet neuf à ce jour. Pas de sauvegarde automatique sur l'offre gratuite : exporter régulièrement.
 

@@ -229,6 +229,23 @@ Check "season_awards n'est pas lisible directement par l'application" (@($aw).Co
 $wl = Rpc $A "my_wallet"
 Check "my_wallet reste un nombre" ($wl -is [int] -or $wl -is [long] -or $wl -is [double]) ("" + $wl)
 
+"--- Notifications push (migration 20261126) ---"
+$ep = "https://push.example.test/e2e/" + [guid]::NewGuid().ToString("N")
+$pb = Rpc $A "save_push_sub" @{ p_endpoint = "http://pas-https"; p_p256dh = "x"; p_auth = "y" }
+Check "abonnement push non https refusé" ($pb.error -eq "bad_subscription") ($pb | ConvertTo-Json -Compress)
+$ps = Rpc $A "save_push_sub" @{ p_endpoint = $ep; p_p256dh = "BPtest"; p_auth = "authtest"; p_msgs = $true; p_daily = $false }
+Check "abonnement push enregistré" ($ps.ok -eq $true) ($ps | ConvertTo-Json -Compress)
+$pm = Rpc $A "my_push_sub" @{ p_endpoint = $ep }
+Check "my_push_sub renvoie les choix (messages oui, quotidien non)" ($pm.msgs -eq $true -and $pm.daily -eq $false) ($pm | ConvertTo-Json -Compress)
+$pc = Rpc $B "my_push_sub" @{ p_endpoint = $ep }
+Check "un autre joueur ne voit pas cet abonnement" ($null -eq $pc) ($pc | ConvertTo-Json -Compress)
+$pd = Call $A "Get" "/rest/v1/push_subs?select=*" $null $null
+Check "push_subs n'est pas lisible directement" (@($pd).Count -eq 0 -or $pd.__http_error) ($pd | ConvertTo-Json -Compress)
+$pk = Call $A "Get" "/rest/v1/push_keys?select=*" $null $null
+Check "push_keys (clé privée) n'est pas lisible par l'application" (@($pk).Count -eq 0 -or $pk.__http_error) "clé privée protégée"
+$pr = Rpc $A "drop_push_sub" @{ p_endpoint = $ep }
+Check "abonnement push supprimé" ($pr.ok -eq $true -and $pr.removed -eq 1) ($pr | ConvertTo-Json -Compress)
+
 "--- Nettoyage (suppression des comptes de test) ---"
 Rpc $A "delete_my_account" | Out-Null
 $gleft = Call $B "Get" "/rest/v1/groups?select=name,owner_id" $null $null

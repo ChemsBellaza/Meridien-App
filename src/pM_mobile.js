@@ -16,7 +16,7 @@
     if (kb === last) return; last = kb;
     document.documentElement.style.setProperty("--kb", kb + "px");
     document.documentElement.classList.toggle("kbopen", kb > 0);
-    if (kb > 0) setTimeout(() => { const a = document.activeElement; if (a && a.matches && a.matches("input,textarea")) a.scrollIntoView({ block: "center", behavior: "auto" }); }, 80);
+    if (kb > 0) setTimeout(() => { const a = document.activeElement; if (a && a.matches && a.matches("input,textarea")) a.scrollIntoView({ block: "nearest", behavior: "auto" }); }, 80);
   };
   vv.addEventListener("resize", update); vv.addEventListener("scroll", update); update();
 })();
@@ -57,7 +57,7 @@ function installNow() { if (!deferredInstall) return; const d = deferredInstall;
 
 /* blocs du menu : vibrations et installation */
 function mobileSheetBlocks() {
-  let h = "";
+  let h = pushBlock();
   if (navigator.vibrate) h += `<div><div class="kicker" style="margin-bottom:6px">Vibrations</div><div class="seg light" role="group" aria-label="Vibrations">${[[true, "Oui"], [false, "Non"]].map(([v, l]) => `<button data-act="hapticpref" data-v="${v}" aria-pressed="${hapticsOn() === v}">${l}</button>`).join("")}</div></div>`;
   if (!isStandalone()) {
     if (deferredInstall || isMobileDev()) h += `<div><div class="kicker" style="margin-bottom:6px">Application</div><button class="btn ghost" data-act="installpage">📲 Ajouter à l'écran d'accueil</button><p class="note">Elle s'ouvre en plein écran, comme une vraie application, et marche aussi sans connexion.</p></div>`;

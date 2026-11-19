@@ -287,7 +287,7 @@ function capNext(g) {
   const n = document.getElementById("capname"); if (n) n.textContent = LeN(c);
   const f = document.getElementById("capflag"); if (f) f.textContent = flagOf(c);
   const k = document.getElementById("capcount"); if (k) k.innerHTML = `${st.found.length}<small> ✓</small>`;
-  const inp = document.getElementById("typein"); if (inp) { inp.value = ""; inp.focus(); }
+  const inp = document.getElementById("typein"); if (inp) { inp.value = ""; inp.focus({ preventScroll: true }); }
 }
 function capEnd() {
   const g = game; if (!g || g.phase !== "q") return;

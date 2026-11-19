@@ -38,13 +38,13 @@ document.addEventListener("submit", e => {
   e.preventDefault();
   const inp = document.getElementById("typein"); if (!inp || game.phase !== "q") return;
   const val = inp.value; if (!val.trim()) return;
-  if (E().type && E().type(game, val, true)) { const t = document.getElementById("typein"); if (t) { t.value = ""; t.focus(); } }
+  if (E().type && E().type(game, val, true)) { const t = document.getElementById("typein"); if (t) { t.value = ""; t.focus({ preventScroll: true }); } }
 });
 // petit bac : Entrée passe au champ suivant
 document.addEventListener("keydown", e => {
   if (!game || e.key !== "Enter" || !e.target.dataset || !e.target.dataset.cat) return;
   e.preventDefault();
-  const next = document.getElementById("pb" + (+e.target.id.slice(2) + 1)); if (next) next.focus(); else e.target.blur();
+  const next = document.getElementById("pb" + (+e.target.id.slice(2) + 1)); if (next) next.focus({ preventScroll: true }); else e.target.blur();
 });
 
 function useJoker() {

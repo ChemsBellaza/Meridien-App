@@ -742,7 +742,7 @@ div.hcard.sq{cursor:default}
 @keyframes cdraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes cfade{from{opacity:0}to{opacity:1}}@keyframes cping{0%{opacity:.9;transform:scale(.7)}100%{opacity:0;transform:scale(1.9)}}
 @media (prefers-reduced-motion:reduce){.chartbox .cline,.chartbox .carea,.chartbox .cpulse{animation:none}}
 /* révélation du jeu du jour (l'état de base est l'état final ; « passer » et « réduire les animations » coupent tout) */
-.scrim.reveal{z-index:45;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 20px;text-align:center;color:#fff;overflow:hidden;
+.scrim.rvroot{z-index:45;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px 20px;text-align:center;color:#fff;overflow:hidden;
   background:radial-gradient(120% 90% at 50% 30%,#4B3CC4 0%,#251E52 45%,#0C0820 100%);cursor:pointer}
 .rvsky{position:absolute;inset:0;pointer-events:none}.rvsky i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:.2;animation:rvtwinkle 2.6s ease-in-out var(--d) infinite}
 .rvglobe{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:3}
@@ -762,7 +762,7 @@ div.hcard.sq{cursor:default}
 .rvtext .kicker{color:#FFC24A}.rvname{font-family:var(--fd);font-weight:800;font-size:28px;line-height:1.12;color:#fff;margin:0}.rvsub{margin:0;max-width:340px;color:rgba(255,255,255,.88);font-weight:700;font-size:15px}
 .rvgo{width:min(86vw,320px);background:#FFC24A;color:#1C1C1E;z-index:2;animation:rvup .6s ease 4s both}
 .rvhint{position:absolute;bottom:max(18px,env(safe-area-inset-bottom,0px));left:0;right:0;margin:0;font-size:13px;font-weight:700;color:rgba(255,255,255,.7);opacity:0;animation:rvhint 3.6s ease both}
-.reveal.skip *{animation:none !important}.reveal.skip .rvglobe,.reveal.skip .rvq,.reveal.skip .rvhint,.reveal.skip .rvline{display:none}
+.rvroot.skip *{animation:none !important}.rvroot.skip .rvglobe,.rvroot.skip .rvq,.rvroot.skip .rvhint,.rvroot.skip .rvline{display:none}
 @keyframes rvtwinkle{0%,100%{opacity:.15;transform:scale(1)}50%{opacity:.95;transform:scale(1.6)}}
 @keyframes rvglobe{0%{opacity:0;transform:scale(.15) rotate(-200deg)}22%{opacity:1;transform:scale(1) rotate(0)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.4) translateY(-80px)}}
 @keyframes rvspin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.04)}}
@@ -774,7 +774,7 @@ div.hcard.sq{cursor:default}
 @keyframes rvspark{from{opacity:1;transform:translate(0,0) scale(.2)}to{opacity:0;transform:translate(var(--x),var(--y)) scale(1.3)}}
 @keyframes rvup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes rvhint{0%,8%{opacity:0}16%,84%{opacity:1}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.reveal *{animation:none !important}.rvglobe,.rvq,.rvhint,.rvline{display:none}}
+@media (prefers-reduced-motion:reduce){.rvroot *{animation:none !important}.rvglobe,.rvq,.rvhint,.rvline{display:none}}
 /* tuto instinctif, installation sur l'écran d'accueil */
 .pulse{animation:pulsering 1.6s ease-in-out infinite}
 @keyframes pulsering{0%,100%{box-shadow:0 0 0 0 rgba(255,194,74,.0)}50%{box-shadow:0 0 0 6px rgba(255,194,74,.55)}}

@@ -354,7 +354,7 @@ ENG.chaine = {
     chRefresh(g);
     return true;
   },
-  act(g, a) { if (a === "chskip" && g.phase === "q") { chRestart(g, false); chRefresh(g); const t = document.getElementById("typein"); if (t) { t.value = ""; t.focus(); } return true; } },
+  act(g, a) { if (a === "chskip" && g.phase === "q") { chRestart(g, false); chRefresh(g); const t = document.getElementById("typein"); if (t) { t.value = ""; t.focus({ preventScroll: true }); } return true; } },
   joker: { label: "+15 s", help: "Ajoute 15 secondes au chrono.", use() { addTime(15); } }
 };
 // mot affiché : l'alias tapé s'il correspond exactement, sinon le nom principal
@@ -443,7 +443,7 @@ function anNext(g) {
   const st = g.st, q = g.qs[0]; st.i++;
   if (st.i >= q.items.length) { later(anEnd, 350); return; }
   g._keepScroll = true; renderGame(); g._keepScroll = false;
-  const t = document.getElementById("typein"); if (t) t.focus();
+  const t = document.getElementById("typein"); if (t) t.focus({ preventScroll: true });
 }
 function anEnd() {
   const g = game; if (!g || g.phase !== "q") return;

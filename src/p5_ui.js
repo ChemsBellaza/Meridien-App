@@ -140,7 +140,7 @@ function vGroup() {
     ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
   </div>
   ${streakStrip()}
-  ${seasonBanner()}${tutoNotice()}${installNotice()}${onlineNotice()}${recapCard()}
+  ${seasonBanner()}${tutoNotice()}${installNotice()}${pushNotice()}${onlineNotice()}${recapCard()}
   <section class="today" aria-label="Défi du jour">
     <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
@@ -424,7 +424,11 @@ document.addEventListener("click", e => {
     case "photo-rm": captureDrafts(); if (store.profile) { delete store.profile.photo; save(); srvPushPhoto(); } else ui.draftPhoto = null; render(); break;
     case "evoclose": ui.evo = null; game ? renderGame() : render(); break;
     case "evoreplay": { const pet = store.profile.pet, st = stageOf(pet); if (st > 1) { openEvo(pet, st - 1, st); render(); } break; }
-    case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); break;
+    case "menu": ui.sheet = true; ui.toast = ""; render(); srvRefreshGroup(); pushStatus().then(() => { if (ui.sheet === true && !game) render(); }); break;
+    case "pushon": pushEnable(); break;
+    case "pushoff": pushDisable(); break;
+    case "pushpref": { const [pk, pv] = String(v).split("|"); pushPref(pk, pv === "true"); break; }
+    case "pushlater": if (store.profile) { store.profile.pushLater = addDays(today(), 7); save(); } render(); break;
     case "detail": { const [pid, dk] = String(v).split("|"); ui.detail = { pid, k: dk }; ui.sheet = "detail"; render(); break; }
     case "pseudoidea": { captureDrafts(); const A = ["Guerrier", "Capitaine", "Ninja", "Pirate", "Sorcier", "Explorateur", "Chevalier", "Dragon", "Renard", "Astronaute"], B = ["astral", "cosmique", "des étoiles", "électrique", "mystère", "turbo", "lunaire", "sauvage", "zen", "solaire"]; let s = ""; for (let i = 0; i < 20; i++) { s = A[Math.floor(Math.random() * A.length)] + " " + B[Math.floor(Math.random() * B.length)]; if (s.length <= 16) break; } ui.draftName = s.slice(0, 16); render(); break; }
     case "catchup": playCatchup(v); break;
