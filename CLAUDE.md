@@ -3,6 +3,9 @@
 Méridien est un jeu communautaire quotidien de culture générale (inspiré de Playus) : **un jeu par jour** en rotation parmi 32 formats, 3 manches avec choix de difficulté (×1 / ×1,25 / ×1,5), 2 essais par jour, pseudo + code de groupe, classement de saison, carnet de voyage, jokers (boussoles), succès et familiers collectionnables à évoluer.
 Le propriétaire (Chems) parle **français** : toute l'interface, les messages, les commits et les échanges sont en français. Fuseau Europe/Madrid.
 
+## Mémoire du projet (à tenir à jour, c'est une règle)
+Quatre documents dans `docs/` gardent TOUT en mémoire : `HISTORIQUE.md` (journal, décisions du propriétaire, incidents), `ETAT-DES-LIEUX.md` (ce qui est en ligne et configuré), `A-FAIRE.md` (ce qui reste), `SAUVEGARDE.md` (sauvegardes et reconstruction), en plus de `CHANGELOG.md` (détail technique). **À la fin de chaque lot** : ligne dans `CHANGELOG.md`, entrée dans `HISTORIQUE.md` si étape marquante, `ETAT-DES-LIEUX.md` si l'infrastructure change, `A-FAIRE.md` (cocher / ajouter). **Au début d'une session** : lire `A-FAIRE.md` et `ETAT-DES-LIEUX.md`. Ne jamais y mettre de clé secrète.
+
 ## Commandes
 - **Construire** (aucune installation requise) : `build.cmd` (double-clic) ou `powershell -ExecutionPolicy Bypass -File scripts\build.ps1` ou `python scripts/build.py` ; avec Node : `npm run build`. Les quatre donnent le même `dist/meridien.html` (~1,2 Mo, un seul fichier HTML autonome).
 - Fichiers assemblés : liste ordonnée dans `scripts/order.json` ; tout nouveau `src/*.js` doit y être ajouté (sinon le build échoue volontairement).
