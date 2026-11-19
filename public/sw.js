@@ -2,7 +2,7 @@
    Stratégie « réseau d'abord, cache en secours » : en ligne, le joueur a toujours la dernière version ;
    sans réseau, la dernière version vue s'ouvre quand même. Aucune donnée du joueur n'y transite
    (la sauvegarde reste dans localStorage). Pour forcer un vidage du cache, changer CACHE. */
-const CACHE = "meridien-v6";
+const CACHE = "meridien-v7";
 const BASE = self.registration.scope;
 const PRECACHE = ["./", "index.html", "manifest.webmanifest", "logo.svg", "icons/favicon-64.png", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "fonts/nunito-latin.woff2", "fonts/nunito-latin-ext.woff2", "fonts/unbounded-latin.woff2"];
 
@@ -31,10 +31,14 @@ self.addEventListener("fetch", e => {
 
 /* Notifications push (v36) : « Nouveau jeu du jour » à 14 h 30 et messages du groupe. Chaque envoi affiche une notification
    (obligatoire sur iPhone) ; un toucher ouvre ou ramène l'application au premier plan. */
+// un GIF ou un autocollant s'affiche en clair (même si le serveur envoie encore le code brut « ::g:… » / « ::s:… »)
+function cleanBody(b) {
+  return String(b).replace(/^(.*?) : ::g:[A-Za-z0-9]+\s*$/, "$1 a envoyé un GIF").replace(/^(.*?) : ::s:[a-z0-9]+\s*$/, "$1 a envoyé un autocollant").replace(/::g:[A-Za-z0-9]+/g, "un GIF").replace(/::s:[a-z0-9]+/g, "un autocollant");
+}
 self.addEventListener("push", e => {
   let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err) {}
   e.waitUntil(self.registration.showNotification(d.title || "Méridien", {
-    body: d.body || "", tag: d.tag || undefined, renotify: false,
+    body: cleanBody(d.body || ""), tag: d.tag || undefined, renotify: false,
     icon: new URL("icons/icon-192.png", BASE).href, badge: new URL("icons/favicon-64.png", BASE).href,
     data: { url: d.url || "./" }
   }));

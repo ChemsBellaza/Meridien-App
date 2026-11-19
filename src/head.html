@@ -790,6 +790,13 @@ div.hcard.sq{cursor:default}
 @keyframes rvup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes rvhint{0%,8%{opacity:0}16%,84%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.rvroot *{animation:none !important}.rvglobe,.rvq,.rvhint,.rvline{display:none}}
+/* quoi de neuf */
+.newscard{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;margin:4px 0;border-radius:18px;background:var(--card);border:2px solid var(--line);text-align:left;cursor:pointer}
+.newscard.fresh{border-color:var(--yellow-line);background:var(--yellow-soft)}.newscard .nico{font-size:24px}.newscard .ntx{flex:1;min-width:0;display:flex;flex-direction:column}.newscard b{font-family:var(--fd);font-size:15px}.newscard small{color:var(--ink-2);font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.newscard .ndot{font-style:normal;background:#FFC24A;color:#1C1C1E;border-radius:999px;padding:3px 10px;font-weight:900;font-size:12px}.newscard .nchev{font-size:24px;color:var(--ink-2)}
+.nlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}.nentry{background:var(--card);border-radius:18px;padding:12px 14px}.nentry.new{outline:2px solid var(--yellow-line)}
+.nentry .nh{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:4px}.nentry .nh b{font-family:var(--fd);font-size:15px}.nentry .nh span{color:var(--ink-2);font-weight:800;font-size:12.5px;white-space:nowrap}.nentry .nh em{font-style:normal;color:var(--gold-t)}
+.nentry ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14.5px;line-height:1.4}
 /* histoire des familiers */
 .story{display:flex;flex-direction:column;gap:8px;margin-top:6px}.chaps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .chap{background:var(--card);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}.chap b{font-family:var(--fd);font-size:14px}.chap p{margin:0;font-weight:600;font-size:14.5px;line-height:1.4}

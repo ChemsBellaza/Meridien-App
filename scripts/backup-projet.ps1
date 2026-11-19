@@ -13,4 +13,6 @@ robocopy $root $tmp /E /XD dist node_modules "tests\out" /XF *.log /NFL /NDL /NJ
 Compress-Archive -Path (Join-Path $tmp "*") -DestinationPath $zip -Force
 Remove-Item $tmp -Recurse -Force
 Get-ChildItem $Dest -Filter "meridien-*.zip" | Sort-Object LastWriteTime -Descending | Select-Object -Skip 15 | Remove-Item -Force
-"Sauvegarde créée : $zip (" + [math]::Round((Get-Item $zip).Length / 1MB, 1) + " Mo)"
+$msg = "Sauvegarde créée : $zip (" + [math]::Round((Get-Item $zip).Length / 1MB, 1) + " Mo)"
+Add-Content -Path (Join-Path $Dest "journal-sauvegardes.txt") -Value ((Get-Date -Format "yyyy-MM-dd HH:mm") + "  archive du projet  " + (Split-Path $zip -Leaf)) -Encoding UTF8
+$msg

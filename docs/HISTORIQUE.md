@@ -63,6 +63,7 @@ PWA (manifeste, service worker « réseau d'abord », icônes), polices embarqu�
 - **v39** : 6 nouveaux jeux (41 au total, rotation sur un nombre premier) ; **jeu de la veille** rattrapable ; GIF activés.
 - **v40** : animations de déblocage (nouveau familier, nouvelles couleurs, petit effet pour le fond).
 - **v41** : GIF plus accessibles (bouton direct, idées de recherche) ; graphique épuré (toi + le top 3).
+- **v44** : section « Quoi de neuf ? » (nouveautés + bonnes pratiques) sur l'accueil et dans le groupe ; notification d'un GIF ou d'un autocollant en clair (corrigé dans le service worker, sans redéployer la fonction Edge).
 - **v42–v43** : **9 nouveaux familiers** (19 en tout), refontes du Panda (kung-fu) et du Lion (type Or), **histoire en 3 chapitres** par familier ; mythe commun « les Veilleurs du Méridien ».
 
 ## 3. Décisions du propriétaire (à ne pas remettre en cause sans lui demander)
@@ -77,6 +78,7 @@ PWA (manifeste, service worker « réseau d'abord », icônes), polices embarqu�
 - Le temps de réflexion réglable est **annulé** ; chaque jeu a son chrono.
 - Nom « Méridien » **provisoire** ; publication sur les stores plus tard.
 - Familiers : créations originales (pas de nom ni de créature protégés) ; refontes validées : Panda kung-fu, Lion Or, tortue ninja renforcée ; 9 nouveaux validés le 19 nov.
+- **Sauvegardes tous les 3 jours** (archive du projet + export des données) ; **« Quoi de neuf ? »** sur l'accueil pour expliquer les changements et les bonnes pratiques ; la notification d'un GIF doit dire « a envoyé un GIF ».
 - Préférences de travail : explications simples, choix à 2–4 options quand c'est au propriétaire de décider, **jamais** de compte créé ni d'identifiants saisis à sa place, migration SQL **avant** le code qui en dépend.
 
 ## 4. Incidents et leçons

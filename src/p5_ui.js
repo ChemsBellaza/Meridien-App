@@ -141,7 +141,7 @@ function vGroup() {
     ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
   </div>
   ${streakStrip()}
-  ${seasonBanner()}${tutoNotice()}${installNotice()}${pushNotice()}${onlineNotice()}${recapCard()}
+  ${seasonBanner()}${vNewsCard()}${tutoNotice()}${installNotice()}${pushNotice()}${onlineNotice()}${recapCard()}
   <section class="today" aria-label="Défi du jour">
     <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
@@ -313,6 +313,7 @@ function vProfile() {
 }
 
 function vSheet() {
+  if (ui.sheet === "news") return vNewsSheet();
   if (ui.sheet === "rxwho") return vRxWho();
   if (ui.sheet === "reveal") return vReveal();
   if (ui.sheet === "install") return vInstallSheet();
@@ -441,6 +442,7 @@ document.addEventListener("click", e => {
     case "gshare": inviteShare(); break;
     case "boostask": ui.confirm = { title: "Activer ton boost ?", text: `Une seule fois par saison. Ton score de ce jeu dans « ${(SRV.group && SRV.group.name) || "ce groupe"} » comptera ×1,5 dans le classement. Impossible de l'annuler, et à faire avant ton premier essai.`, yes: "Activer le boost", no: "Plus tard", run: () => srvUseBoost() }; render(); break;
     case "recap": ui.sheet = "recap"; render(); break;
+    case "news": openNews(); break;
     case "rxwho": ui.rxEv = v; ui.sheet = "rxwho"; render(); break;
     case "revskip": if (ui.reveal && !ui.reveal.skip) { ui.reveal.skip = true; render(); } break;
     case "revgo": ui.reveal = null; ui.sheet = false; render(); break;

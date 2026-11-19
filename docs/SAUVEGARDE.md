@@ -1,12 +1,14 @@
 # Sauvegarde : ne rien perdre
 
+> **Rythme décidé par le propriétaire : une sauvegarde tous les 3 jours** (archive du projet + export des données). Claude vérifie la date de la dernière sauvegarde en début de session (`Documents\Meridien App\Sauvegardes\journal-sauvegardes.txt`) et la rappelle dès que 3 jours sont passés.
+
 Trois choses à protéger : **le code**, **les données des joueurs** (Supabase) et **la mémoire du projet** (documents).
 
 ## 1. Le code et les documents
 | Copie | Comment | Quand |
 |---|---|---|
 | **GitHub** (référence) | « Push origin » dans GitHub Desktop | à chaque lot ; le dépôt contient le code, les migrations SQL, les documents |
-| **Archive locale datée** | `powershell -ExecutionPolicy Bypass -File scripts\backup-projet.ps1` → `Documents\Meridien App\Sauvegardes\meridien-AAAA-MM-JJ_HHMM.zip` (contient aussi l'historique git, garde les 15 dernières) | chaque semaine, et avant un gros changement |
+| **Archive locale datée** | `powershell -ExecutionPolicy Bypass -File scripts\backup-projet.ps1` → `Documents\Meridien App\Sauvegardes\meridien-AAAA-MM-JJ_HHMM.zip` (contient aussi l'historique git, garde les 15 dernières ; une ligne est ajoutée au `journal-sauvegardes.txt`) | **tous les 3 jours**, et avant un gros changement |
 | **Copie hors du PC** | copier le dernier .zip sur OneDrive, une clé USB ou un autre disque (`-Dest "D:\Sauvegardes"` pour choisir le dossier) | chaque mois |
 
 Une sauvegarde a déjà été créée le 19 novembre 2026 (8,5 Mo).
@@ -21,7 +23,7 @@ L'offre gratuite **n'a pas de sauvegarde automatique**. Si le projet est supprim
 
 **Export table par table (si le document est trop gros pour la cellule)** : Table Editor > ouvrir la table > menu **⋯** > **Export** (CSV) pour `profiles`, `groups`, `group_members`, `attempts`, `gem_ledger`, `gem_spend`, `boosts`, `season_awards`, `messages`.
 
-**À faire chaque semaine.** Avant la fin de la saison (récompenses distribuées) et avant tout changement du schéma, faire un export de plus.
+**À faire tous les 3 jours.** Avant la fin de la saison (récompenses distribuées) et avant tout changement du schéma, faire un export de plus.
 
 ## 3. Reconstruire en cas de perte
 1. **Nouveau projet Supabase** : activer la connexion anonyme (Authentication > Providers), puis coller `supabase/apply_all.sql` dans le SQL Editor (reconstruit une base VIDE).
