@@ -165,7 +165,7 @@ function vFeed(k) {
   return `<div class="feed">${ev.map(e => {
     if (e.type === "launch") return `<div class="fpill">${avatar(e.p, "sm")}<span><b>Défi lancé</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></div>`;
     if (e.type === "score") return `<div class="fitem"><button class="fpill ${e.best && lead && e.p.id === lead.id ? "best" : ""}" data-act="reactopen" data-v="${e.id}" aria-label="Réagir au score de ${esc(e.p.name)}">${avatar(e.p, "sm")}<span><b>Score : ${fmtNum(e.score)} pts</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></button>${reactRow(k, e)}</div>`;
-    return `<div class="msg ${e.mine ? "me" : ""}" data-mid="${esc(e.mid || "")}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx ${stickerOf(e.text) ? "sticker" : ""}">${msgBody(e)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
+    return `<div class="msg ${e.mine ? "me" : ""}" data-mid="${esc(e.mid || "")}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx ${msgKind(e.text)}">${msgBody(e)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
   }).join("")}</div>`;
 }
 
@@ -462,6 +462,8 @@ document.addEventListener("click", e => {
     case "goonline": ui.sheet = false; go("online"); break;
     case "emailskip": go("welcome"); break;
     case "stkopen": ui.stickers = !ui.stickers; render(); break;
+    case "stkcat": ui.stkCat = v; render(); break;
+    case "gifsend": sendGif(v); break;
     case "stksend": sendSticker(v); break;
     case "recover": ui.sheet = false; ui.rec = { step: 0, email: "", msg: "" }; go("recover"); break;
     case "recoverback": ui.rec = null; ui.view = store.profile ? "group" : "onboard"; go(ui.view); break;
