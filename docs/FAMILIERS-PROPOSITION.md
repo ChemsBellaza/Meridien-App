@@ -1,7 +1,7 @@
-# Familiers de Méridien : propositions à valider (version 2)
+# Familiers de Méridien : propositions à valider (version 3)
 
-Mise à jour après tes retours : Fennec (Désert), Tortue ninja, Paon (Soleil), Aigle des vents (Air), Chouette (Nocturne).
-**Les dessins existent maintenant** : ouvre `docs/familiers-galerie.html` (les 18 familiers, 3 stades chacun + variante chromatique). Rien n'est encore dans le jeu : les nouveaux familiers n'apparaissent que dans cette galerie.
+Mise à jour après tes retours : **Singe Wukong** créé, **tortue ninja** plus ninja, **Panda façon kung-fu** (refonte), **Lion de type Or** (refonte, crinière garnie d'or), colibri validé.
+**Les dessins existent** : ouvre `docs/familiers-galerie.html` (les familiers actuels, les 9 nouveaux et les 2 refontes, 3 stades chacun + variante chromatique). Rien n'est encore dans le jeu : les nouveaux familiers et les refontes n'apparaissent que dans cette galerie.
 
 ## 1. Le mythe commun : les Veilleurs du Méridien
 
@@ -18,9 +18,10 @@ Chaque familier incarne **une façon d'apprendre** (sa « vertu ») :
 | Ours | Roche | Tenir bon |
 | Tortue | Glace | Patience et mémoire |
 | Aigle (Altaïr) | Vol | Prendre de la hauteur |
-| Panda | Combat | Maîtrise de soi |
+| Panda (**refonte kung-fu**) | Combat | Maîtrise de soi |
 | Tigre | Ténèbres | Se dépasser |
-| Lion | Dragon | Guider |
+| Lion (**refonte**) | **Or** | Guider, en donnant |
+| **Singe Wukong** | **Mythe** | **Oser, puis rester humble** |
 | **Fennec** | **Désert** | **Écouter** |
 | **Tortue ninja** | **Ninja** | **La discipline discrète** |
 | **Paon** | **Soleil** | **Rayonner pour les autres** |
@@ -54,14 +55,14 @@ Style commun : celui des familiers actuels (formes rondes, grands yeux brillants
   3. *Saharaja guide les voyageurs perdus jusqu'au puits. Elle ne leur dit pas où aller : elle leur apprend à tendre l'oreille.*
   - **Le sens** : apprendre, c'est d'abord écouter, et savoir quoi écouter.
 
-### 🥷 NINJA : la tortue ninja
+### 🥷 NINJA : la tortue ninja (plus ninja)
 - **Stades** : Carapin → Shinotortue → Kagetortue · **Type** : Ninja (nouveau, nuit indigo `#4A5A9A`)
 - **Caractère** : Disciplinée, Silencieuse · **Devise** : « On gagne en silence. »
-- **Design** : tortue gris-vert à la **carapace indigo** ornée d'un cercle d'encre (ensō), bandeau de ninja rouge à plaque métallique.
-  - Stade 1 : bandeau rouge.
-  - Stade 2 : **écharpe rouge** qui flotte, étoile de ninja sur la carapace.
-  - Stade 3 : **sabre dans le dos**, écharpe en traînée, fumée.
-  - Chromatique : carapace dorée, peau blanche, écharpe cyan (le fantôme).
+- **Design** (voir la galerie) : vraie **tortue ninja** : peau verte, **masque rouge sur les yeux** avec deux longs pans qui flottent, **poings bandés**, carapace brune à écailles, **ceinture à boucle en étoile**.
+  - Stade 1 : masque, poings bandés, ceinture.
+  - Stade 2 : **deux katanas croisés dans le dos**, pan de ceinture, fumée au sol.
+  - Stade 3 : **capuche noire** derrière la tête, étoile de ninja au front, longs pans de masque au vent, aura de fumée.
+  - Chromatique : tortue blanche, carapace dorée, masque cyan (le fantôme).
 - **Déblocage** : 10 victoires du jour.
 - **Histoire**
   1. *Carapin est la plus lente de l'école de l'ombre. Elle répète le même geste mille fois, la nuit, sans témoin, jusqu'à ce qu'il soit parfait.*
@@ -69,6 +70,20 @@ Style commun : celui des familiers actuels (formes rondes, grands yeux brillants
   3. *Kagetortue est l'ombre du groupe : jamais devant, toujours là. Chaque bonne réponse de ses amis contient un peu de ses nuits d'entraînement.*
   - **Le sens** : la discipline quotidienne, sans public, fait les maîtres.
 
+### 🐒 MYTHE : le singe Wukong (nouveau)
+- **Stades** : Ouki → Sunwu → Wukong · **Type** : Mythe (nouveau, rouge impérial `#C8372D`)
+- **Caractère** : Espiègle, Intrépide · **Devise** : « Le Ciel n'est qu'un toit à escalader. »
+- **Design** (voir la galerie) : singe brun au **masque clair**, **diadème d'or** orné d'une gemme rouge, **plumes de faisan** qui se dressent, longue queue, inspiré du Roi-Singe de la légende (le conte du « Voyage vers l'Ouest »).
+  - Stade 1 : diadème d'or, deux petites plumes rouges.
+  - Stade 2 : **armure rouge et or**, **bâton rouge aux embouts d'or** qui grandit, **nuage porteur** sous les pieds.
+  - Stade 3 : grandes plumes, épaulettes d'or, plus grand bâton, grand nuage et aura de lumière.
+  - Chromatique : singe blanc, armure turquoise (le Singe de jade).
+- **Déblocage** : série de 21 jours (une saison entière, un familier rare).
+- **Histoire**
+  1. *Ouki est né d'un œuf de pierre. Il n'a ni maître, ni famille : il veut juste voir ce qu'il y a derrière la montagne, puis derrière la suivante.*
+  2. *Sunwu apprend tous les tours de magie, les soixante-douze transformations, et défie même le Ciel. Il se croit invincible jusqu'à ce qu'on l'enferme sous une montagne, cinq cents ans, pour qu'il apprenne à attendre.*
+  3. *Wukong sort de sa montagne autre qu'il n'y est entré : toujours malicieux, mais protecteur. Il sait désormais que le plus malin apprend vraiment quand il accepte de ne pas tout savoir.*
+  - **Le sens** : l'audace ouvre toutes les portes, l'humilité les garde ouvertes.
 ### ☀️ SOLEIL : le paon
 - **Stades** : Paonnet → Solipaon → Héliopaon · **Type** : Soleil (nouveau, or `#FFB627`)
 - **Caractère** : Optimiste, Rayonnant · **Devise** : « Briller, c'est éclairer les autres. »
@@ -144,8 +159,8 @@ Style commun : celui des familiers actuels (formes rondes, grands yeux brillants
   3. *Perlodragon sait presque tout, mais ne donne jamais de réponse : il pose des questions. Celui qui trouve seul sa réponse ne l'oublie plus.*
   - **Le sens** : la sagesse n'est pas de savoir, c'est de savoir poser la bonne question.
 
-### 🐦 VOL : le colibri (proposition de remplacement, à valider)
-Comme la chouette devient Nocturne et que l'aigle devient Air, il ne restait plus de familier de type **Vol** : je propose un colibri.
+### 🐦 VOL : le colibri (validé)
+Comme la chouette devient Nocturne et que l'aigle devient Air, le colibri tient le type **Vol**.
 - **Stades** : Colibrin → Colibrillant → Vibracolibri · **Type** : Vol (existant)
 - **Caractère** : Curieux, Attentif · **Devise** : « Je ne me pose jamais, mais je ne perds rien. »
 - **Design** : colibri vert-turquoise, **gorge rose**, long bec fin, **ailes très rapides**, petite fleur au bout du bec.
@@ -208,30 +223,30 @@ Mêmes règles : 3 chapitres liés aux 3 évolutions, et un sens.
 3. *Altaïgle fait le tour d'un continent d'un battement d'ailes. Il connaît chaque frontière, et sait que ce ne sont que des lignes tracées par les gens.*
 - **Le sens** : prendre de la hauteur, puis redescendre aux détails.
 
-**🐼 Pandoux · Pandojo · Grandmaîtrao (Panda, Combat)**
-1. *Il s'entraîne au karaté entre deux siestes. Il est pourtant le plus fort et refuse de se battre.*
-2. *Pandojo a gagné sa ceinture noire en méditant plus longtemps que tout le monde : la vraie force, c'est respirer avant de répondre.*
-3. *Grandmaîtrao brise une planche d'un seul regard et préfère la manger. Sa maîtrise est de ne pas s'en servir.*
-- **Le sens** : la force tranquille.
-
+**🐼 Pandoux · Pandojo · Grandmaîtrao (Panda, Combat) : refonte kung-fu**
+- **Design** : panda **rondouillard** en tenue de kung-fu : gilet doré à bordure sombre, **ceinture** (rouge puis noire), **poings bandés** levés en garde, sourcils déterminés, pantalon sombre. Stade 3 : **emblème d'or** en spirale sur la poitrine, bâton de bambou, halo doré (le Guerrier du Dragon d'or).
+1. *Il apprend le kung-fu entre deux siestes et trois bambous. On rit de sa silhouette ronde, jusqu'à ce qu'il esquive tout en dansant.*
+2. *Pandojo a gagné sa ceinture noire en tombant mille fois et en riant à chaque fois : la vraie force, c'est de se relever, et de respirer avant de répondre.*
+3. *Grandmaîtrao porte l'emblème d'or du Guerrier du Dragon. Il brise une planche d'un seul regard et préfère la manger : sa maîtrise est de ne pas s'en servir.*
+- **Le sens** : la force tranquille, et la joie de tomber pour mieux se relever.
 **🐯 Ombrigre · Noctigre · Éclipsigre (Tigre, Ténèbres)**
 1. *Il se cache dans l'ombre des classements, car il a peur d'être deuxième.*
 2. *Noctigre comprend que ses rivaux le font progresser : sans eux, pas de bond.*
 3. *Éclipsigre rugit et la lune se voile. Il vise la première place, mais le record qu'il veut battre est le sien.*
 - **Le sens** : ton vrai rival, c'est toi d'hier.
 
-**🦁 Draconceau · Dragolion · Rugidragon (Lion, Dragon)**
-1. *Ses petites cornes le démangent : il rêve de voler, de partir loin. Mais la troupe a besoin de lui.*
-2. *Dragolion voit ses ailes pousser d'un coup, un matin de victoire : ses succès élèvent aussi les autres.*
-3. *Rugidragon est moitié lion, moitié dragon, entièrement roi. Le trône ne se prête pas : il se mérite en portant les autres.*
-- **Le sens** : guider, c'est porter les autres.
-
+**🦁 Orceau · Dorlion · Rugior (Lion, type Or) : refonte (remplace Draconceau · Dragolion · Rugidragon)**
+- **Design** : le lion reste un lion, mais **sa crinière se garnit d'or** : mèche d'or au stade 1, **crinière dorée et diadème** au stade 2, **double crinière d'or, couronne à gemmes et épaulettes d'or** au stade 3, pièces d'or en guise d'étincelles. Plus de cornes ni d'ailes : c'est le dragon-perle qui porte le type Dragon.
+1. *Une mèche d'or est apparue dans la crinière d'Orceau le jour où il a partagé son repas. Il ne sait pas encore pourquoi.*
+2. *Dorlion comprend : chaque bonne action ajoute une mèche d'or. Il brille de plus en plus, mais ne s'en vante jamais.*
+3. *Rugior porte une couronne et une crinière de lingots, pourtant il n'a jamais rien gardé pour lui. Le trône ne se prête pas : il se mérite en donnant.*
+- **Le sens** : l'or ne vaut que ce qu'on donne ; guider, c'est donner.
 ---
 
 ## 4. Ce que je ferai une fois validé
 
-1. **Intégrer** les 8 familiers au jeu (choix du familier, déblocages, phrases, animations de déblocage déjà prêtes) et les types Air, Terre, Soleil, Désert, Ninja, Nocturne.
-2. **Ajouter** l'onglet « Histoire » (3 chapitres qui se débloquent aux évolutions) pour les 18 familiers.
+1. **Intégrer** les 9 nouveaux familiers au jeu (choix du familier, déblocages, phrases, animations de déblocage déjà prêtes), les 2 refontes (Panda kung-fu, Lion Or) et les types Air, Terre, Soleil, Désert, Ninja, Nocturne, Mythe, Or.
+2. **Ajouter** l'onglet « Histoire » (3 chapitres qui se débloquent aux évolutions) pour les 19 familiers.
 3. Retoucher les dessins selon tes remarques.
 
 ## 5. Points à trancher

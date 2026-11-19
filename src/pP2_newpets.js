@@ -9,7 +9,7 @@ const bloom = (x, y, s, c, c2, n = 5) => Array.from({ length: n }, (_, i) => { c
 if (NEWPETS_ON) {
   Object.assign(TYPES, {
     air: { label: "Air", color: "#7BD3EA" }, terre: { label: "Terre", color: "#C99A5B" }, soleil: { label: "Soleil", color: "#FFB627" },
-    desert: { label: "Désert", color: "#E0A458" }, ninja: { label: "Ninja", color: "#4A5A9A" }, nocturne: { label: "Nocturne", color: "#4B3F8F" }
+    desert: { label: "Désert", color: "#E0A458" }, ninja: { label: "Ninja", color: "#4A5A9A" }, nocturne: { label: "Nocturne", color: "#4B3F8F" }, mythe: { label: "Mythe", color: "#C8372D" }, or: { label: "Or", color: "#E3A72F" }
   });
   Object.assign(TYPE_ICO, {
     air: `<path d="M3 8h10a3 3 0 1 0-3-3h2a1 1 0 1 1 1 1H3zM3 13h14a3 3 0 1 1-3 3h2a1 1 0 1 0 1-1H3zM3 18h7v2H3z"/>`,
@@ -17,11 +17,13 @@ if (NEWPETS_ON) {
     soleil: `<circle cx="12" cy="12" r="5"/><path d="M11 1h2v4h-2zM11 19h2v4h-2zM1 11h4v2H1zM19 11h4v2h-4z"/>`,
     desert: `<path d="M10 22V8a2 2 0 0 1 4 0v14zM6 12h3v5H6zM15 10h3v5h-3z"/>`,
     ninja: `<path d="M12 2l2.2 6.6L21 7l-4.5 5L21 17l-6.8-1.6L12 22l-2.2-6.6L3 17l4.5-5L3 7l6.8 1.6z"/>`,
-    nocturne: `<path d="M15 3a9 9 0 1 0 6 13A7 7 0 0 1 15 3z"/>`
+    nocturne: `<path d="M15 3a9 9 0 1 0 6 13A7 7 0 0 1 15 3z"/>`,
+    mythe: `<path d="M6 19a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.4A4.5 4.5 0 0 1 17 19z"/>`,
+    or: `<path d="M3 19V8l5 4 4-7 4 7 5-4v11z"/>`
   });
   Object.assign(EVO_PAL, {
     air: ["#FFFFFF", "#CFF3FF", "#7BD3EA"], terre: ["#FFE0EC", "#FF8FB4", "#5CC24A"], soleil: ["#FFF3B0", "#FFC93C", "#FF8A2A"],
-    desert: ["#FFF0C8", "#EBC27A", "#C9964A"], ninja: ["#FFC9C9", "#E5393B", "#4A5A9A"], nocturne: ["#E9E2F7", "#9A86C9", "#3A2E7A"]
+    desert: ["#FFF0C8", "#EBC27A", "#C9964A"], ninja: ["#FFC9C9", "#E5393B", "#4A5A9A"], nocturne: ["#E9E2F7", "#9A86C9", "#3A2E7A"], mythe: ["#FFE9A8", "#FFC93C", "#D93A2B"], or: ["#FFF6C8", "#FFD24A", "#C9921A"]
   });
   // éléments propres aux nouveaux types (appelés par evoFX)
   window.EVO_EXTRA = {
@@ -30,11 +32,16 @@ if (NEWPETS_ON) {
     soleil: (C, big, bx, cy) => ({ back: "", front: [[24, 40, 4.6], [98, 44, 4.2], [28, 86, 3.8], [95, 84, 4.4]].slice(0, big ? 4 : 2).map(([x, y, s]) => star4(x, y, s, C[1])).join("") }),
     desert: (C, big, bx, cy) => ({ back: [-1, 1].map(sd => lin(`M${pt(60 + sd * (bx + 6), cy + 22)}Q${pt(60 + sd * (bx + 24), cy + 6)} ${pt(60 + sd * (bx + 16), cy - 10)}`, big ? 3 : 2.2, C[1])).join(""), front: [[24, 44, 2.2], [98, 52, 2], [30, 86, 2.4], [94, 82, 2]].slice(0, big ? 4 : 3).map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${C[1]}" stroke="${DL}" stroke-width="1"/>`).join("") }),
     ninja: (C, big, bx, cy) => ({ back: [[-1, 14], [1, 18]].map(([sd, y]) => `<circle cx="${f1(60 + sd * (bx + 12))}" cy="${f1(cy + y)}" r="${big ? 7 : 5}" fill="#fff" fill-opacity=".5" stroke="${DL}" stroke-width="1.2"/>`).join(""), front: [[24, 40, 4.4], [98, 46, 4], [28, 86, 3.4], [95, 84, 3.8]].slice(0, big ? 4 : 2).map(([x, y, s]) => star4(x, y, s, C[1])).join("") }),
+    mythe: (C, big, bx, cy) => ({ back: [-1, 1].map(sd => `<circle cx="${f1(60 + sd * (bx + 14))}" cy="${f1(cy + 16)}" r="${big ? 8 : 6}" fill="#fff" fill-opacity=".8" stroke="${DL}" stroke-width="1.2"/>`).join(""), front: [[24, 40, 4.4], [98, 46, 4], [28, 86, 3.4], [95, 84, 3.8]].slice(0, big ? 4 : 2).map(([x, y, s]) => star4(x, y, s, C[1])).join("") }),
+    or: (C, big, bx, cy) => ({ back: "", front: [[24, 42, 3.4], [98, 50, 3.2], [28, 86, 3.6], [95, 84, 3]].slice(0, big ? 4 : 2).map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r + 1.4}" fill="${C[1]}" stroke="${DL}" stroke-width="1.1"/><circle cx="${x - 1}" cy="${y - 1}" r="${r * .35}" fill="#fff"/>`).join("") + [[20, 20, 3.4], [100, 26, 3]].map(([x, y, s]) => star4(x, y, s, "#fff")).join("") }),
     nocturne: (C, big, bx, cy) => ({ back: "", front: pth(`M${pt(98, 22)}A9 9 0 1 0 ${pt(98, 39)}A7 7 0 1 1 ${pt(98, 22)}Z`, C[0]) + [[22, 40, 3.4], [100, 62, 3], [26, 84, 3]].slice(0, big ? 3 : 2).map(([x, y, s]) => star4(x, y, s, C[0])).join("") })
   };
 
   PAL.fennec = { main: "#F4D6A0", shade: "#D9AE6E", belly: "#FFF3DC", dark: "#5A3A1E", inner: "#F6B9A5", cloth: "#E8704A", clothS: "#B5482A", gold: "#FFC93C", gem: "#E5393B", cheek: "#FF9F8A" };
-  PAL.tortueninja = { main: "#6FA8A0", shade: "#4E8A83", belly: "#E8F3EA", dark: "#1E2A3A", shell: "#2D3E66", shellS: "#1F2C4D", shellL: "#6F86C8", scarf: "#E5393B", scarfS: "#B12428", metal: "#D9DEE8", cheek: "#FFB3A8" };
+  PAL.tortueninja = { main: "#6BBF59", shade: "#4C9A3E", belly: "#F2E9B8", dark: "#1E2A3A", shell: "#7B5B35", shellS: "#5A3F22", shellL: "#A9824E", scarf: "#E5393B", scarfS: "#B12428", metal: "#D9DEE8", gold: "#FFC93C", wrap: "#F3E3C0", cheek: "#FFB3A8" };
+  PAL.singe = { main: "#B8793A", shade: "#8F5A24", belly: "#F6D9A8", face: "#F9DDB5", dark: "#3B2312", gold: "#FFC93C", goldS: "#D9961A", red: "#D93A2B", redS: "#A5261B", feather: "#E8401C", cheek: "#FF9F7A" };
+  PAL.pandapo = { main: "#FFFFFF", shade: "#D9DAE3", belly: "#FFFFFF", dark: "#2A2A36", vest: "#E8A317", trim: "#3A2A16", beltR: "#D93A2B", beltB: "#2A2A36", wrap: "#F3E3C0", gold: "#FFD45C", bamboo: "#6CBF4A", cheek: "#FFB3C0" };
+  PAL.lionor = { main: "#F4BC4F", shade: "#D79A2B", belly: "#FFEBB8", dark: "#4E2C14", mane: "#F2C230", maneS: "#C9921A", maneL: "#FFE27A", gold: "#FFD24A", jewel: "#E5393B", turq: "#2BC4B0", cheek: "#FF9F7A" };
   PAL.paon = { main: "#FFC94D", shade: "#E89A22", belly: "#FFF0C2", dark: "#5A2E0E", tail: "#FF9F1C", tailB: "#FFB93D", ocR: "#FFE066", ocM: "#E8401C", ocC: "#5A2E0E", ray: "#FFD93D", gold: "#FFE066", beak: "#E8701C", cheek: "#FF9F7A" };
   PAL.aigleair = { main: "#EEF6FB", shade: "#C5D8E6", belly: "#FFFFFF", dark: "#2D4A63", beak: "#FFC857", beakS: "#D99A1E", wing: "#9ADCF2", wingS: "#5BB8DE", gust: "#CFF3FF", gustS: "#7BD3EA", cap: "#5BB8DE", cheek: "#FFB3A0" };
   PAL.chouette = { main: "#7B6BB8", shade: "#5B4C96", belly: "#E9E2F7", face: "#FFF3DA", dark: "#1E1740", wing: "#5B4C96", wingL: "#8E7DD0", star: "#FFE27A", beak: "#F29A3A", gold: "#FFD45C", cheek: "#E9A0C0" };
@@ -43,7 +50,10 @@ if (NEWPETS_ON) {
   PAL.colibri = { main: "#3DD1A8", shade: "#1E9E80", belly: "#FFF3E0", dark: "#173A33", wing: "#7BE0C9", wingS: "#3DB89A", gorget: "#FF5FA8", crest: "#FF7AB6", crestS: "#D94A8C", bloom: "#FF7AB6", bloomC: "#FFD84A", cheek: "#FFB0C8" };
   Object.assign(SHINY, {
     fennec: { main: "#F6B2A0", shade: "#DB8A78", cloth: "#7B6BE0", clothS: "#4E3FB0", gold: "#9BE8FF" },
-    tortueninja: { main: "#F1EDE2", shade: "#CFC8B4", shell: "#C9A24A", shellS: "#8F6F22", shellL: "#F4DC8E", scarf: "#2BB6D9", scarfS: "#1B84A3" },
+    tortueninja: { main: "#F1EDE2", shade: "#CFC8B4", belly: "#FFFFFF", shell: "#C9A24A", shellS: "#8F6F22", shellL: "#F4DC8E", scarf: "#2BB6D9", scarfS: "#1B84A3" },
+    singe: { main: "#F2F0EA", shade: "#CFCAC0", face: "#FFFFFF", red: "#2BB6D9", redS: "#1B84A3", feather: "#2BB6D9" },
+    pandapo: { main: "#F6E6CF", shade: "#DCC6A6", dark: "#7A4426", vest: "#2E7DE0", beltR: "#1D5AB0" },
+    lionor: { main: "#E4ECF7", shade: "#B8C6DB", belly: "#FFFFFF", mane: "#DDE4EE", maneS: "#A9B6C8", maneL: "#F4F8FF", gold: "#E8EEF8" },
     paon: { main: "#C9D6F2", shade: "#9FB2DB", tail: "#7C8FD6", tailB: "#97A8E6", ocR: "#E8EEFF", ocM: "#FF9F1C", ray: "#E8EEFF", gold: "#E8EEFF" },
     aigleair: { main: "#FBE7C2", shade: "#E4C690", wing: "#F7B38A", wingS: "#D98756", cap: "#E05A5A", gust: "#FFE3CF", gustS: "#F7B38A" },
     chouette: { main: "#F2F0F8", shade: "#CFCAE0", wing: "#BDB6DA", wingL: "#E4E0F2", belly: "#FFFFFF", star: "#FFC93C" },
@@ -67,20 +77,80 @@ if (NEWPETS_ON) {
       };
     },
     tortueninja(P, R, st) {
-      const { hr, hy, bx, by, bcy } = R, W = bx + 11, top = bcy - by * .95, base = bcy + by * .8;
+      const { hr, hy, bx, by, bcy } = R, W = bx + 11, top = bcy - by * .95, base = bcy + by * .8, ex = hr * .42, ey = hy + hr * .1, er = hr * (st === 0 ? .23 : .21);
       let back = "";
-      if (st === 2) back += `<g transform="rotate(-32 60 ${f1(bcy)})">${lin(`M${pt(60, bcy - 4)}L${pt(60, bcy - 56)}`, 5.6)}${lin(`M${pt(60, bcy - 4)}L${pt(60, bcy - 56)}`, 3, P.metal)}${pth(`M${pt(57.4, bcy - 54)}h5.2v-9h-5.2Z`, P.scarfS)}${lin(`M${pt(54, bcy - 54)}h12`, 2.4)}</g>`;
+      // deux katanas croisés dans le dos (les poignées dépassent au-dessus des épaules)
+      if (st >= 1) back += [-1, 1].map(sd => `<g transform="rotate(${sd * (26 + st * 3)} 60 ${f1(bcy)})">${lin(`M${pt(60, bcy + 6)}L${pt(60, bcy - 54 - st * 4)}`, 6.4)}${lin(`M${pt(60, bcy + 6)}L${pt(60, bcy - 54 - st * 4)}`, 3.6, P.metal)}${pth(`M${pt(56.6, bcy - 52 - st * 4)}h6.8v-12h-6.8Z`, P.scarfS)}${lin(`M${pt(52, bcy - 52 - st * 4)}h16`, 3, P.gold)}</g>`).join("");
+      // carapace brune à écailles, ceinture à boucle
       back += pth(`M${pt(60 - W, base)}C${pt(60 - W - 2, top + 4)} ${pt(60 - W * .55, top - 6)} ${pt(60, top - 6)}C${pt(60 + W * .55, top - 6)} ${pt(60 + W + 2, top + 4)} ${pt(60 + W, base)}Z`, P.shell)
         + pth(`M${pt(60 - W - 1, base - 1)}Q${pt(60, base + 6)} ${pt(60 + W + 1, base - 1)}L${pt(60 + W - 1, base + 4)}Q${pt(60, base + 11)} ${pt(60 - W + 1, base + 4)}Z`, P.shellS)
-        + `<path d="M${pt(60 - W * .55, bcy - by * .15)}A${f1(W * .58)} ${f1(by * .55)} 0 1 1 ${pt(60 + W * .5, bcy - by * .32)}" fill="none" stroke="${P.shellL}" stroke-width="2.4" stroke-linecap="round"/>`
-        + (st ? star4(60, top + 14, 5.5 + st, P.metal) : "");
-      const scarf = st ? pth(`M${pt(60 - bx * .92, bcy - by * .66)}Q${pt(60, bcy - by * .32)} ${pt(60 + bx * .92, bcy - by * .66)}L${pt(60 + bx * .86, bcy - by * .42)}Q${pt(60, bcy - by * .08)} ${pt(60 - bx * .86, bcy - by * .42)}Z`, P.scarf) + pth(`M${pt(60 + bx * .7, bcy - by * .5)}L${pt(60 + bx * (1.35 + st * .3), bcy - by * (.1 + st * .05))}L${pt(60 + bx * (1.15 + st * .25), bcy + by * .12)}L${pt(60 + bx * .55, bcy - by * .25)}Z`, P.scarfS) : "";
-      const band = pth(`M${pt(60 - hr * .97, hy - hr * .18)}Q${pt(60, hy - hr * .58)} ${pt(60 + hr * .97, hy - hr * .18)}L${pt(60 + hr * .94, hy + hr * .04)}Q${pt(60, hy - hr * .36)} ${pt(60 - hr * .94, hy + hr * .04)}Z`, P.scarf)
-        + pth(`M${pt(60 - hr * .24, hy - hr * .5)}h${f1(hr * .48)}v${f1(hr * .24)}h${f1(-hr * .48)}Z`, P.metal) + lin(`M${pt(60 - hr * .1, hy - hr * .4)}l${f1(hr * .1)} ${f1(-hr * .06)} ${f1(hr * .1)} ${f1(hr * .06)}`, 1.4)
-        + pth(`M${pt(60 + hr * .9, hy - hr * .1)}L${pt(60 + hr * 1.45, hy - hr * .35)}L${pt(60 + hr * 1.3, hy - hr * .05)}Z`, P.scarf) + pth(`M${pt(60 + hr * .9, hy - hr * .05)}L${pt(60 + hr * 1.4, hy + hr * .25)}L${pt(60 + hr * 1.1, hy + hr * .25)}Z`, P.scarfS);
-      return { back, bodyStyle: "plastron", bodyFront: scarf, headTop: band, headDeco: ell(60, hy + hr * .3, 2, 1.4, P.dark, 0, false) + ell(60 - hr * .12, hy + hr * .3, 1.2, 1, P.dark, 0, false) };
+        + lin(`M${pt(60, top - 4)}V${f1(base - 2)}M${pt(60 - W * .62, top + 8)}Q${pt(60 - W * .55, bcy)} ${pt(60 - W * .8, base - 4)}M${pt(60 + W * .62, top + 8)}Q${pt(60 + W * .55, bcy)} ${pt(60 + W * .8, base - 4)}M${pt(60 - W * .95, bcy - by * .1)}H${f1(60 + W * .95)}`, 1.7, P.shellL);
+      const belt = pth(`M${pt(60 - bx * .98, bcy + by * .28)}Q${pt(60, bcy + by * .5)} ${pt(60 + bx * .98, bcy + by * .28)}L${pt(60 + bx * .96, bcy + by * .52)}Q${pt(60, bcy + by * .74)} ${pt(60 - bx * .96, bcy + by * .52)}Z`, P.scarfS) + star4(60, bcy + by * .52, 4.6, P.metal)
+        + (st >= 1 ? pth(`M${pt(60 + bx * .5, bcy + by * .55)}l5 9 3-6 4 7 1-11Z`, P.scarf) : "");
+      const wraps = [-1, 1].map(sd => ell(60 + sd * bx * .9, bcy - by * .12, 4.4, 7.8, P.main, sd * -28) + ell(60 + sd * bx * .97, bcy + by * .12, 5.4, 3, P.wrap, sd * -28) + (st ? ell(60 + sd * bx * .86, bcy - by * .38, 4.4, 2.8, P.wrap, sd * -28) : "")).join("");
+      // masque de ninja sur les yeux, avec deux longs pans qui flottent
+      const mask = pth(`M${pt(60 - hr * 1.0, hy - hr * .14)}Q${pt(60, hy - hr * .46)} ${pt(60 + hr * 1.0, hy - hr * .14)}L${pt(60 + hr * .97, hy + hr * .34)}Q${pt(60, hy + hr * .1)} ${pt(60 - hr * .97, hy + hr * .34)}Z`, P.scarf)
+        + [-1, 1].map(sd => ell(60 + sd * ex, ey, er * 1.55, er * 1.3, "#FFFFFF", sd * 8, false)).join("");
+      const tails = pth(`M${pt(60 + hr * .92, hy - hr * .02)}L${pt(60 + hr * (1.5 + st * .18), hy - hr * .42)}L${pt(60 + hr * (1.34 + st * .14), hy - hr * .08)}Z`, P.scarf) + pth(`M${pt(60 + hr * .92, hy + hr * .1)}L${pt(60 + hr * (1.46 + st * .18), hy + hr * .32)}L${pt(60 + hr * (1.16 + st * .1), hy + hr * .3)}Z`, P.scarfS);
+      return {
+        back, bodyStyle: "plastron", bodyFront: belt, arms: wraps,
+        headBack: st === 2 ? pth(`M${pt(60 - hr * 1.05, hy + hr * .1)}Q${pt(60, hy - hr * 1.2)} ${pt(60 + hr * 1.05, hy + hr * .1)}Q${pt(60, hy - hr * .2)} ${pt(60 - hr * 1.05, hy + hr * .1)}Z`, P.dark) : "",
+        headDeco: mask, headTop: tails + (st === 2 ? star4(60, hy - hr * .78, 4.2, P.metal) : "")
+      };
     },
-    paon(P, R, st) {
+    singe(P, R, st) {
+      const { hr, hy, bx, by, bcy } = R, tx = 97 + st * 2, ty = bcy - by * (.15 + st * .22), td = `M${pt(66, bcy + by * .62)}C${pt(98, bcy + by * .95)} ${pt(82, bcy - by * 1.1)} ${pt(tx, ty)}`;
+      const ear = sd => ell(60 + sd * hr * .98, hy - hr * .02, hr * .3, hr * .32, P.main) + ell(60 + sd * hr * .98, hy, hr * .17, hr * .19, P.face, 0, false);
+      let back = lin(td, 9.6) + lin(td, 5.6, P.main) + ell(tx, ty, 3.6, 3.6, P.goldS) ;
+      if (st >= 1) back += `<g transform="translate(${[0, 30, 32][st]} 6) rotate(${[0, -8, -10][st]} 60 ${f1(bcy)})">${lin(`M${pt(60, bcy + 60)}V${f1(bcy - 60)}`, 7.6)}${lin(`M${pt(60, bcy + 60)}V${f1(bcy - 60)}`, 4.6, P.red)}${pth(`M${pt(56.2, bcy - 60)}h7.6v8h-7.6Z`, P.gold)}${pth(`M${pt(56.2, bcy + 52)}h7.6v8h-7.6Z`, P.gold)}</g>`;
+      // nuage porteur sous les pieds
+      if (st >= 1) back += [[34, 110, 8], [48, 108, 9], [62, 111, 9.5], [76, 108, 9], [88, 110, 8]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" fill-opacity=".92"/>`).join("") + lin(`M${pt(40, 108)}q4 -4 8 0M${pt(70, 109)}q4 -4 8 0`, 1.6, "#BCD4EC");
+      const armor = st >= 1 ? pth(`M${pt(60 - bx * .88, bcy - by * .6)}Q${pt(60, bcy - by * .22)} ${pt(60 + bx * .88, bcy - by * .6)}L${pt(60 + bx * .78, bcy + by * .45)}Q${pt(60, bcy + by * .72)} ${pt(60 - bx * .78, bcy + by * .45)}Z`, P.red) + lin(`M${pt(60 - bx * .78, bcy + by * .28)}Q${pt(60, bcy + by * .55)} ${pt(60 + bx * .78, bcy + by * .28)}`, 3, P.gold) + [-1, 0, 1].map(i => ell(60 + i * bx * .3, bcy - by * .02, 2.2, 2.2, P.gold)).join("") + lin(`M${pt(60 - bx * .5, bcy - by * .5)}Q${pt(60, bcy - by * .25)} ${pt(60 + bx * .5, bcy - by * .5)}`, 2.4, P.gold) : "";
+      const fl = (sd, len, rot) => feather(60 + sd * hr * .46, hy - hr * .66, len, 4.6, sd * rot, P.feather, P.redS);
+      const crown = lin(`M${pt(60 - hr * .88, hy - hr * .26)}Q${pt(60, hy - hr * .8)} ${pt(60 + hr * .88, hy - hr * .26)}`, 6.2) + lin(`M${pt(60 - hr * .88, hy - hr * .26)}Q${pt(60, hy - hr * .8)} ${pt(60 + hr * .88, hy - hr * .26)}`, 4, P.gold) + ell(60, hy - hr * .6, 3, 3.2, P.red)
+        + fl(-1, 10 + st * 8, 18 + st * 6) + fl(1, 10 + st * 8, 18 + st * 6);
+      return {
+        back, bodyFront: armor,
+        arms: st === 2 ? [-1, 1].map(sd => ell(60 + sd * bx * .88, bcy - by * .12, 4.2, 7.5, P.main, sd * -28) + ell(60 + sd * bx * .9, bcy - by * .5, 6.4, 5, P.gold, sd * -20)).join("") : null,
+        headBack: ear(-1) + ear(1),
+        headDeco: ell(60 - hr * .3, hy + hr * .08, hr * .36, hr * .38, P.face, 0, false) + ell(60 + hr * .3, hy + hr * .08, hr * .36, hr * .38, P.face, 0, false) + ell(60, hy + hr * .42, hr * .5, hr * .36, P.face, 0, false) + ell(60, hy + hr * .3, 3, 2.2, P.dark, 0, false),
+        headTop: crown
+      };
+    },
+    pandapo(P, R, st) {
+      const { hr, hy, bx, by, bcy } = R, ex = hr * .42, ey = hy + hr * .12;
+      const fist = sd => ell(60 + sd * bx * 1.12, bcy - by * (.55 + st * .12), 6.6 + st * .6, 6.6 + st * .6, P.dark) + ell(60 + sd * bx * 1.12, bcy - by * (.55 + st * .12), 6.6 + st * .6, 2.4, P.wrap, 0, false);
+      const vest = pth(`M${pt(60 - bx * .96, bcy - by * .5)}Q${pt(60 - bx * .3, bcy - by * .42)} ${pt(60 - 4, bcy - by * .2)}L${pt(60 - bx * .5, bcy + by * .62)}Q${pt(60 - bx * .96, bcy + by * .5)} ${pt(60 - bx * 1.02, bcy)}Z`, P.vest) + pth(`M${pt(60 + bx * .96, bcy - by * .5)}Q${pt(60 + bx * .3, bcy - by * .42)} ${pt(60 + 4, bcy - by * .2)}L${pt(60 + bx * .5, bcy + by * .62)}Q${pt(60 + bx * .96, bcy + by * .5)} ${pt(60 + bx * 1.02, bcy)}Z`, P.vest)
+        + lin(`M${pt(60 - 4, bcy - by * .2)}L${pt(60 - bx * .5, bcy + by * .62)}M${pt(60 + 4, bcy - by * .2)}L${pt(60 + bx * .5, bcy + by * .62)}`, 2.6, P.trim)
+        + (st >= 1 ? pth(`M${pt(60 - bx * .5, bcy + by * .62)}L${pt(60 + bx * .5, bcy + by * .62)}L${pt(60 + bx * .46, bcy + by * .9)}Q${pt(60, bcy + by * 1.02)} ${pt(60 - bx * .46, bcy + by * .9)}Z`, P.dark) : "");
+      const belt = pth(`M${pt(60 - bx * .78, bcy + by * .48)}Q${pt(60, bcy + by * .74)} ${pt(60 + bx * .78, bcy + by * .48)}L${pt(60 + bx * .76, bcy + by * .66)}Q${pt(60, bcy + by * .92)} ${pt(60 - bx * .76, bcy + by * .66)}Z`, st >= 1 ? P.beltB : P.beltR)
+        + pth(`M${pt(60 + 2, bcy + by * .7)}l-3 11 5-3 3 9 2-10Z`, st >= 1 ? P.beltB : P.beltR);
+      const emblem = st === 2 ? lin(`M${pt(60, bcy - by * .02)}m-5 0a5 5 0 1 1 5 5a2.6 2.6 0 1 1 -2.6 -2.6`, 2.2, P.gold) + ell(60 + 5, bcy - by * .02 + 5, 1.4, 1.4, P.gold, 0, false) : "";
+      const brows = [-1, 1].map(sd => lin(`M${pt(60 + sd * ex - sd * hr * .26, hy - hr * .16)}L${pt(60 + sd * ex + sd * hr * .24, hy - hr * .27)}`, 3, P.dark)).join("");
+      return {
+        back: st === 2 ? `<g transform="rotate(32 60 ${bcy})">${lin(`M${pt(56.5, bcy - 52)}h7v102h-7Z`, 2)}${pth(`M${pt(56.5, bcy - 52)}h7v102h-7Z`, P.bamboo)}${[-38, -12, 14, 40].map(d => lin(`M${pt(56.5, bcy + d)}h7`, 2)).join("")}</g>` : "",
+        limb: P.dark,
+        bodyFront: vest + belt + emblem,
+        arms: [-1, 1].map(fist).join(""),
+        headBack: [-1, 1].map(sd => ell(60 + sd * hr * .76, hy - hr * .7, hr * .27, hr * .27, P.dark)).join(""),
+        headDeco: [-1, 1].map(sd => ell(60 + sd * ex, ey, hr * .27, hr * .33, P.dark, sd * -25, false)).join("") + ell(60, hy + hr * .32, 3.2, 2.3, P.dark, 0, false),
+        headTop: brows + (st === 2 ? lin(`M${pt(60 - hr * .5, hy - hr * .92)}Q${pt(60, hy - hr * 1.12)} ${pt(60 + hr * .5, hy - hr * .92)}`, 2.6, P.gold) : "")
+      };
+    },
+    lionor(P, R, st) {
+      const { hr, hy, bx, by, bcy } = R;
+      const tail = lin(`M${pt(66, bcy + by * .72)}Q${pt(90, bcy + by * .9)} ${pt(94, bcy - by * .1)}`, 6.5) + lin(`M${pt(66, bcy + by * .72)}Q${pt(90, bcy + by * .9)} ${pt(94, bcy - by * .1)}`, 3.6, P.main) + ell(94, bcy - by * .2, 4.8, 6, P.mane);
+      const mane = st === 0 ? spikes(60, hy - hr * .55, hr * .36, hr * .66, 6, P.mane, Math.PI) : spikes(60, hy + hr * .05, hr * (1.05 + st * .05), hr * (1.32 + st * .12), 11 + st * 2, P.mane, .1) + (st === 2 ? spikes(60, hy + hr * .05, hr * 1.0, hr * 1.2, 13, P.maneL, .35) : "");
+      const gems = st >= 1 ? [0, 1, 2, 3, 4, 5].map(i => { const a = -Math.PI * .08 + i * Math.PI / 5.2 + Math.PI * .95; return `<circle cx="${f1(60 + hr * (1.18 + st * .06) * Math.cos(a))}" cy="${f1(hy + hr * .05 + hr * (1.18 + st * .06) * Math.sin(a))}" r="${f1(1.6 + st * .5)}" fill="${i % 2 ? P.jewel : P.turq}" stroke="${DL}" stroke-width="1"/>`; }).join("") : "";
+      const crown = st === 0 ? ell(60 + hr * .55, hy - hr * .72, 2.6, 2.6, P.mane) : pth(`M${pt(60 - hr * .52, hy - hr * .62)}L${pt(60 - hr * .6, hy - hr * (1.0 + st * .12))}L${pt(60 - hr * .26, hy - hr * .82)}L${pt(60, hy - hr * (1.18 + st * .16))}L${pt(60 + hr * .26, hy - hr * .82)}L${pt(60 + hr * .6, hy - hr * (1.0 + st * .12))}L${pt(60 + hr * .52, hy - hr * .62)}Q${pt(60, hy - hr * .5)} ${pt(60 - hr * .52, hy - hr * .62)}Z`, P.gold) + ell(60, hy - hr * .74, 2.6, 2.6, P.jewel);
+      return {
+        back: tail,
+        bodyFront: st === 2 ? [-1, 1].map(sd => ell(60 + sd * bx * .86, bcy - by * .58, 6.5, 4.6, P.gold, sd * -25)).join("") + lin(`M${pt(60 - 7, bcy - by * .22)}q7 5 14 0`, 1.6, P.shade) : (st === 1 ? lin(`M${pt(60 - 7, bcy - by * .22)}q7 5 14 0`, 1.6, P.shade) : ""),
+        headBack: mane + [-1, 1].map(sd => ell(60 + sd * hr * .78, hy - hr * .62, hr * .2, hr * .2, P.main)).join("") + gems,
+        headDeco: ell(60, hy + hr * .44, hr * .42, hr * .3, P.belly, 0, false) + pth(`M${pt(57, hy + hr * .26)}L${pt(63, hy + hr * .26)}L${pt(60, hy + hr * .38)}Z`, P.dark, false),
+        headTop: crown
+      };
+    },    paon(P, R, st) {
       const { hr, hy, bx, by, bcy } = R, n = [5, 9, 13][st], span = [112, 156, 200][st], len = [40, 44, 48][st], cyb = bcy - by * .15, w = 7 + st;
       let fan = "";
       for (let i = 0; i < n; i++) { const a = -span / 2 + i * span / (n - 1), col = i % 2 ? P.tailB : P.tail;
@@ -184,9 +254,19 @@ if (NEWPETS_ON) {
       { eye: "round", iris: "#8A4B1F", lid: [0, 0], mouth: "smile" },
       { hello: ["Chut… j'entends le défi arriver.", "Le désert est calme. Parfait pour réfléchir."], good: ["J'avais tout entendu d'avance.", "Un vrai mirage… de réussite !"], mid: ["Je tends l'oreille : on peut mieux faire.", "Une goutte de plus et c'est l'oasis."], bad: ["Même le désert a ses tempêtes.", "J'écouterai mieux demain."] }, { k: "streak", v: 10 }),
     tortueninja: NP(["Carapin", "Shinotortue", "Kagetortue"], "ninja", 12, "night", ["Disciplinée", "Silencieuse"], "On gagne en silence.",
-      ["Elle s'entraîne la nuit, sans témoin, à répéter le même geste mille fois. Lentement. Sans jamais le rater.", "Son écharpe rouge ne fait aucun bruit. Sa carapace, elle, a déjà vu mille entraînements.", "Ombre du groupe, jamais devant, toujours là. Elle n'a pas besoin qu'on la félicite."],
-      { eye: "round", iris: "#2D3E66", lid: [.3, .3], mouth: "calm" },
+      ["Un masque rouge, deux poings bandés et une carapace qui a déjà tout vu. Elle s'entraîne la nuit, mille fois le même geste.", "Deux katanas croisés dans le dos, une ceinture à étoile : elle disparaît dans un nuage de fumée avant la fin de ta phrase.", "Capuche noire, longs pans de masque au vent. On ne l'entend jamais arriver, mais on retrouve toujours la bonne réponse."],
+      { eye: "round", iris: "#1E2A3A", lid: [.3, .3], mouth: "calm" },
       { hello: ["…Chut. Le défi est là.", "Je me suis entraînée toute la nuit."], good: ["Tu m'as entendue ? Non. Parfait.", "Un geste. Un seul. Sans bruit."], mid: ["Un geste de plus et c'était parfait.", "Je recommence. Doucement."], bad: ["Personne ne m'a vue rater. Personne.", "La discipline se répare avec la discipline."] }, { k: "wins", v: 10 }),
+    singe: NP(["Ouki", "Sunwu", "Wukong"], "mythe", 19, "vermil", ["Espiègle", "Intrépide"], "Le Ciel n'est qu'un toit à escalader.",
+      ["Il est né d'un œuf de pierre. Il a déjà escaladé trois montagnes pour voir ce qu'il y avait derrière.", "Son bâton grandit ou rétrécit selon son humeur. Son humeur, elle, grandit plus vite que lui.", "Grand Sage égal au Ciel, il rit de tout, sauf de ceux qui trichent."],
+      { eye: "round", iris: "#F2B035", lid: [.22, .22], brow: [-8, -8], mouth: "smirk" },
+      { hello: ["Haha ! Le Ciel m'attend, mais ce défi d'abord !", "Un nuage, un bâton, un défi : parfait."], good: ["Soixante-douze tours de magie, un seul gagnant !", "Même le Ciel m'applaudit !"], mid: ["J'ai encore un tour dans ma manche.", "Pas mal pour un singe de pierre."], bad: ["Même le Roi-Singe tombe de son nuage.", "Aïe… j'aurais dû lire la question avant de bondir."] }, { k: "streak", v: 21 }),
+    pandapo: Object.assign(NP(["Pandoux", "Pandojo", "Grandmaîtrao"], "combat", 8, "violet", ["Zen", "Gourmand"], SPECIES.panda.quote,
+      ["Il apprend le kung-fu entre deux siestes et trois bambous. Ses poings bandés sont plus doux qu'ils n'en ont l'air.", "Sa ceinture noire, il l'a gagnée en tombant mille fois et en riant à chaque fois.", "Guerrier du Dragon d'or : il esquive tout, même les compliments. Il préfère les nouilles."],
+      { eye: "ringed", lid: [.12, .12], mouth: "smile" }, SPECIES.panda.lines, SPECIES.panda.need), { refonte: "panda" }),
+    lionor: Object.assign(NP(["Orceau", "Dorlion", "Rugior"], "or", 10, "vermil", ["Fier", "Généreux"], "L'or ne vaut que ce qu'on donne.",
+      ["Une mèche d'or est née dans sa crinière le jour où il a partagé son repas. Il ne sait pas encore pourquoi.", "Sa crinière se couvre d'or, une mèche par bonne action. Il brille, mais ne s'en vante pas.", "Couronne d'or, crinière de lingots : le trône ne se prête pas, il se mérite en donnant."],
+      { eye: "round", iris: "#C2410C", lid: [.32, .32], mouth: "smug" }, SPECIES.lion.lines, SPECIES.lion.need), { refonte: "lion" }),
     paon: NP(["Paonnet", "Solipaon", "Héliopaon"], "soleil", 13, "saffron", ["Optimiste", "Rayonnant"], "Briller, c'est éclairer les autres.",
       ["Sa queue ne s'ouvre pas encore : il est timide. Mais chaque plume cache déjà un petit soleil.", "Sa roue de rayons s'ouvre quand quelqu'un doute. Il ne la montre jamais pour être admiré.", "Un soleil entier sur le dos. Il éclaire les nuits des joueurs qui veulent abandonner."],
       { eye: "round", iris: "#E8701C", lid: [0, 0], mouth: "none" },
@@ -216,14 +296,15 @@ if (NEWPETS_ON) {
 
 /* ---------- galerie : tous les familiers, trois stades et la variante chromatique (adresse ?galerie) ---------- */
 function vGalerie() {
-  const keys = Object.keys(SPECIES), css = `<style>.gal{max-width:980px;margin:0 auto;padding:18px 14px 60px;color:var(--ink);font-family:inherit}.gal h1{font-family:var(--fd);font-size:26px;margin:0 0 4px}.gal .sub{color:var(--ink-2);font-weight:700;margin:0 0 18px}
-    .gcardx{background:var(--card);border-radius:22px;padding:14px;margin-bottom:16px;box-shadow:0 4px 0 var(--lip)}.gcardx.new{outline:3px solid #FFC24A}.gh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}.gh b{font-family:var(--fd);font-size:18px}
+  const raw = Object.keys(SPECIES), keys = []; raw.filter(k => !SPECIES[k].refonte).forEach(k => { keys.push(k); raw.filter(x => SPECIES[x].refonte === k).forEach(x => keys.push(x)); });
+  const css = `<style>.gal{max-width:980px;margin:0 auto;padding:18px 14px 60px;color:var(--ink);font-family:inherit}.gal h1{font-family:var(--fd);font-size:26px;margin:0 0 4px}.gal .sub{color:var(--ink-2);font-weight:700;margin:0 0 18px}
+    .gcardx{background:var(--card);border-radius:22px;padding:14px;margin-bottom:16px;box-shadow:0 4px 0 var(--lip)}.gcardx.new{outline:3px solid #FFC24A}.gcardx.ref{outline:3px solid #7BD3EA}.gh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}.gh b{font-family:var(--fd);font-size:18px}
     .gtiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.gt{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800;font-size:12px;text-align:center}.gt .tile{width:100%;aspect-ratio:1;border-radius:18px;overflow:hidden}.gt svg{display:block;width:100%;height:100%}
     .gq{font-style:italic;color:var(--ink-2);font-weight:700;margin:8px 0 2px}.gs{margin:6px 0 0;padding-left:18px;font-size:13.5px;font-weight:600;display:flex;flex-direction:column;gap:3px}.newtag{background:#FFC24A;color:#1C1C1E;border-radius:999px;padding:2px 10px;font-weight:900;font-size:12px}@media(max-width:560px){.gtiles{grid-template-columns:repeat(2,1fr)}}</style>`;
-  const isNew = k => (SPECIES[k].num || 0) > 10;
+  const isNew = k => (SPECIES[k].num || 0) > 10 && !SPECIES[k].refonte;
   const card = k => { const S = SPECIES[k], tile = (st, shiny, lab) => `<div class="gt"><span class="tile">${petSVG({ species: k, stage: String(st), shiny: shiny ? "shiny" : "normal", bg: "type" })}</span>${esc(lab)}</div>`;
-    return `<section class="gcardx ${isNew(k) ? "new" : ""}"><div class="gh"><b>${esc(S.names.join(" → "))}</b>${typeBadge(S.type, 13)}${isNew(k) ? `<span class="newtag">Nouveau</span>` : ""}<span class="muted">${(S.traits || []).map(esc).join(" · ")}</span></div>
+    return `<section class="gcardx ${isNew(k) ? "new" : ""} ${S.refonte ? "ref" : ""}"><div class="gh"><b>${esc(S.names.join(" → "))}</b>${typeBadge(S.type, 13)}${isNew(k) ? `<span class="newtag">Nouveau</span>` : ""}${S.refonte ? `<span class="newtag" style="background:#7BD3EA">Refonte proposée de ${esc(SPECIES[S.refonte].names[0])}</span>` : ""}<span class="muted">${(S.traits || []).map(esc).join(" · ")}</span></div>
       <div class="gtiles">${tile(1, false, S.names[0] + " · stade 1")}${tile(2, false, S.names[1] + " · stade 2")}${tile(3, false, S.names[2] + " · stade 3")}${tile(3, true, "Chromatique · stade 3")}</div>
       <p class="gq">« ${esc(S.quote)} »</p><ul class="gs">${S.dex.map(d => `<li>${esc(d)}</li>`).join("")}</ul></section>`; };
-  return css + `<div class="gal"><h1>Galerie des familiers</h1><p class="sub">${keys.length} familiers, 3 stades chacun et une variante chromatique. Les familiers marqués « Nouveau » sont des propositions à valider.</p>${keys.map(card).join("")}</div>`;
+  return css + `<div class="gal"><h1>Galerie des familiers</h1><p class="sub">${keys.length} familiers, 3 stades chacun et une variante chromatique. Cadre doré : nouveaux familiers ; cadre bleu : refonte proposée d'un familier existant (juste après l'original). Tout est à valider.</p>${keys.map(card).join("")}</div>`;
 }
