@@ -19,7 +19,7 @@ def text(name):
 order = re.search(r"formatOrder:\s*\[(.*?)\]", cfg, re.S)
 keys = re.findall(r'"([a-z0-9]+)"', order.group(1))
 more = ""
-for fn in ("pQ_more.js", "pQ_pop.js"):   # jeux ajoutés après coup (v26, v27)
+for fn in ("pQ_more.js", "pQ_pop.js", "pQ_g3reg.js"):   # jeux ajoutés après coup (v26, v27)
     part = open(os.path.join(ROOT, "src", fn), encoding="utf-8").read(); more += "\n" + part
     for push in re.finditer(r"formatOrder\.push\((.*?)\)", part, re.S): keys += re.findall(r'"([a-z0-9]+)"', push.group(1))
 cfg += "\n" + more

@@ -49,7 +49,7 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 - Les anciennes signatures sans `p_group` sont conservées en comportement (plus ancien groupe) : migration appliquée avant le code, comme toujours.
 
 ## Jeux ajoutés (v26)
-- 4 jeux QCM dans `src/pQ_more.js` (données `NEWQ[format][catégorie][niveau]`, 8 questions par case, bonne réponse en premier) ; ajouter un jeu = entrée `FORMATS` + `formatOrder.push` + illustration `ART2` + ligne dans `formats` côté serveur (migration) + `python scripts/gen-supabase-seed.py`. Les pas de rotation des groupes doivent rester premiers avec le nombre de jeux (impairs tant que 32).
+- 4 jeux QCM dans `src/pQ_more.js` (données `NEWQ[format][catégorie][niveau]`, 8 questions par case, bonne réponse en premier) ; ajouter un jeu = entrée `FORMATS` + `formatOrder.push` + illustration `ART2` + ligne dans `formats` côté serveur (migration) + `python scripts/gen-supabase-seed.py`. Les pas de rotation des groupes (1, 3, 5, 9, 11…) doivent rester premiers avec le nombre de jeux : 41 (premier) convient à tous ; avec 35, les pas 5, 15 et 25 bouclaient sur 7 jeux. Si le nombre de jeux change, le vérifier. `format_of` rend d'abord le jeu réellement joué ce jour-là (table attempts), donc ajouter un jeu ne change pas l'historique.
 - `fromPool` : ordre fixe par réserve, avance d'un bloc à chaque passage du jeu ; ne pas y remettre la date.
 
 ## Notifications push (v36)

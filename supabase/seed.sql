@@ -40,5 +40,11 @@ insert into public.formats (position, key, max_points) values
   (31, 'corps', 300),
   (32, 'popculture', 300),
   (33, 'chanson', 300),
-  (34, 'mythes', 300)
+  (34, 'mythes', 300),
+  (35, 'histoirefr', 300),
+  (36, 'histoiremonde', 300),
+  (37, 'sports', 300),
+  (38, 'gastronomie', 300),
+  (39, 'nature', 300),
+  (40, 'langues', 300)
 on conflict (position) do update set key = excluded.key, max_points = excluded.max_points;

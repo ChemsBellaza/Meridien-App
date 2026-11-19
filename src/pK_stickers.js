@@ -5,7 +5,7 @@
    2) GIF (Giphy) : onglet « GIF » avec recherche, actif seulement si GIPHY_KEY est renseignée (clé publique par conception, comme
       celle de Supabase, à créer sur developers.giphy.com). Un GIF est un message « ::g:<identifiant Giphy> » ; les images viennent de
       media.giphy.com. Seuls les profils en ligne l'utilisent. Seuls les GIF classés « pg » sont proposés. */
-const GIPHY_KEY = ""; // à renseigner avec la clé Giphy du propriétaire ; vide = pas d'onglet GIF
+const GIPHY_KEY = "H9BpKyAedVHMXt3CqpZS60KsdpXFKvus"; // clé Giphy du propriétaire (publique par conception) ; vide = pas d'onglet GIF
 const STK_CATS = [["joie", "Joie", "🎉"], ["rire", "Rire", "😂"], ["surprise", "Idées", "😮"], ["humeur", "Humeur", "😢"], ["amour", "Amour", "❤️"], ["salut", "Salut", "👋"], ["jeu", "Jeu", "🧭"], ["vie", "Vie", "☕"]];
 const STICKERS = [
   // joie
