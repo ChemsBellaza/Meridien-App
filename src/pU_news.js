@@ -1,6 +1,6 @@
 /* ============ « QUOI DE NEUF ? » et « LES INDISPENSABLES » (v44, réécrit en v45) ============
-   Une carte sur l'accueil et dans le groupe ouvre une fenêtre : d'abord « Les indispensables » (ce qu'il faut pour que le jeu se passe bien),
-   puis « Quoi de neuf ? ». Un point « Nouveau » reste affiché tant que la dernière entrée n'a pas été ouverte (profile.newsSeen).
+   Sur l'accueil, deux blocs séparés : « Les indispensables » (ce qu'il faut pour que le jeu se passe bien) ouvre sa propre fenêtre,
+   « Quoi de neuf ? » ouvre la sienne. Un point « Nouveau » reste affiché tant que la dernière entrée n'a pas été ouverte (profile.newsSeen).
    À CHAQUE LOT VISIBLE PAR LES JOUEURS : ajouter une entrée EN TÊTE de NEWS (id unique, jamais réutilisé).
    Ton : tutoiement, phrases courtes et concrètes, pas d'emoji décoratif, pas de point d'exclamation, pas de liste de trois mots creux.
    Typographie : apostrophe courbe ’, guillemets « … » avec espaces insécables ( ).
@@ -26,19 +26,22 @@ function vNewsCard() {
   const n = NEWS[0], fresh = newsFresh();
   return `<button class="newscard ${fresh ? "fresh" : ""}" data-act="news" aria-label="Quoi de neuf ? ${esc(n.title)}${fresh ? ", nouveau" : ""}"><span class="ntx"><b>Quoi de neuf ?</b><small>${esc(n.title)}</small></span>${fresh ? `<i class="ndot">Nouveau</i>` : `<span class="nchev" aria-hidden="true">›</span>`}</button>`;
 }
-function vNewsSheet() {
+function vNewsSheet() { // « Quoi de neuf ? » : uniquement les nouveautés
   const seen = (ui.newsBefore !== undefined ? ui.newsBefore : (store.profile && store.profile.newsSeen)) || "";
   const idx = NEWS.findIndex(n => n.id === seen), unseen = idx < 0 ? NEWS.length : idx; // les entrées au-dessus de la dernière vue sont « nouvelles »
-  const must = MUST.map(([t, d], i) => `<li><span class="in num">${i + 1}</span><span class="tx"><span><b>${esc(t)}</b></span><small>${esc(d)}</small></span></li>`).join("");
   const entries = NEWS.map((n, i) => `<li class="nentry ${i < unseen ? "new" : ""}"><div class="nh"><b>${esc(n.title)}</b><span>${esc(n.date)}${i < unseen ? ` · <em>nouveau</em>` : ""}</span></div><p>${esc(n.text)}</p></li>`).join("");
-  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Les indispensables et les nouveautés" data-stop>
-    <div class="sheethead"><div><h3>Les indispensables</h3><div class="muted">Pour que le jeu se passe bien.</div></div></div>
-    <ol class="isteps">${must}</ol>
-    <div class="sheethead"><div><h3>Quoi de neuf ?</h3></div></div>
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Quoi de neuf\u00a0?" data-stop>
+    <div class="sheethead"><div><h3>Quoi de neuf\u00a0?</h3></div></div>
     <ul class="nlist">${entries}</ul>
     <button class="btn ghost" data-act="closesheet">Fermer</button></div></div>`;
 }
-function openNews() {
+function vMustSheet() { // « Les indispensables » : uniquement ce qu'il faut pour que le jeu se passe bien
+  const must = MUST.map(([t, d], i) => `<li><span class="in num">${i + 1}</span><span class="tx"><span><b>${esc(t)}</b></span><small>${esc(d)}</small></span></li>`).join("");
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Les indispensables" data-stop>
+    <div class="sheethead"><div><h3>Les indispensables</h3><div class="muted">Pour que le jeu se passe bien.</div></div></div>
+    <ol class="isteps">${must}</ol>
+    <button class="btn ghost" data-act="closesheet">Fermer</button></div></div>`;
+}function openNews() {
   if (!store.profile) return;
   ui.newsBefore = store.profile.newsSeen || ""; // pour garder le repère « nouveau » le temps de la lecture
   store.profile.newsSeen = NEWS[0].id; save(); ui.sheet = "news"; render();
@@ -55,6 +58,6 @@ function mustState() { // [{ ok, title, small, act }] : seulement ce qui s'appli
 function vMust() {
   if (!store.profile || !store.profile.pet || !tutoState().done) return "";
   const rows = mustState(), todo = rows.filter(r => !r.ok);
-  if (!todo.length) return `<button class="newscard mustok" data-act="news" aria-label="Les indispensables : tout est en ordre"><span class="ntx"><b>Les indispensables</b><small>Tout est en ordre.</small></span><span class="nchev" aria-hidden="true">›</span></button>`;
-  return `<section class="must" aria-label="Les indispensables"><div class="musttop"><b>Les indispensables</b><button class="linkbtn" data-act="news">Tout voir</button></div>${rows.map(r => `<button class="mrow ${r.ok ? "ok" : ""}" data-act="${r.act}"><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.title)}</b><small>${esc(r.small)}</small></span>${r.ok ? "" : `<span class="nchev" aria-hidden="true">›</span>`}</button>`).join("")}</section>`;
+  if (!todo.length) return `<button class="newscard mustok" data-act="must" aria-label="Les indispensables : tout est en ordre"><span class="ntx"><b>Les indispensables</b><small>Tout est en ordre.</small></span><span class="nchev" aria-hidden="true">›</span></button>`;
+  return `<section class="must" aria-label="Les indispensables"><div class="musttop"><b>Les indispensables</b><button class="linkbtn" data-act="must">Tout voir</button></div>${rows.map(r => `<button class="mrow ${r.ok ? "ok" : ""}" data-act="${r.act}"><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.title)}</b><small>${esc(r.small)}</small></span>${r.ok ? "" : `<span class="nchev" aria-hidden="true">›</span>`}</button>`).join("")}</section>`;
 }

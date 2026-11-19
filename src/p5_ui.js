@@ -314,6 +314,7 @@ function vProfile() {
 
 function vSheet() {
   if (ui.sheet === "news") return vNewsSheet();
+  if (ui.sheet === "must") return vMustSheet();
   if (ui.sheet === "rxwho") return vRxWho();
   if (ui.sheet === "reveal") return vReveal();
   if (ui.sheet === "install") return vInstallSheet();
@@ -443,6 +444,7 @@ document.addEventListener("click", e => {
     case "boostask": ui.confirm = { title: "Activer ton boost ?", text: `Une seule fois par saison. Ton score de ce jeu dans « ${(SRV.group && SRV.group.name) || "ce groupe"} » comptera ×1,5 dans le classement. Impossible de l'annuler, et à faire avant ton premier essai.`, yes: "Activer le boost", no: "Plus tard", run: () => srvUseBoost() }; render(); break;
     case "recap": ui.sheet = "recap"; render(); break;
     case "news": openNews(); break;
+    case "must": ui.sheet = "must"; render(); break;
     case "rxwho": ui.rxEv = v; ui.sheet = "rxwho"; render(); break;
     case "revskip": if (ui.reveal && !ui.reveal.skip) { ui.reveal.skip = true; render(); } break;
     case "revgo": ui.reveal = null; ui.sheet = false; render(); break;
