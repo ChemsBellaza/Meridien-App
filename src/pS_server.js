@@ -152,9 +152,9 @@ function vHub() {
       <span class="gbody"><span class="gtxt"><b>${esc(g.name)}</b><small>${esc(F ? F.name : "")}${mem.length ? ` · ${mem.length} joueur${mem.length > 1 ? "s" : ""}` : ""}</small></span>
       <span class="gbadges"><i class="num">${prog.streak} ${I.fire(14)}</i>${r && r.my_rank ? `<i class="num">#${r.my_rank} ${I.trophy(14)}</i>` : ""}</span></span></button>`;
   }).join("");
-  return `<header class="top hubhead"><span class="hubbrand">${logoMark(34)}<b>Méridien</b></span><span class="hubicons"><button class="plain" data-act="history" aria-label="Mes jeux joués">${I.history}</button><button class="plain" data-act="menu" aria-label="Menu">${I.menu}</button></span></header>
+  return `<header class="top hubhead"><span class="hubbrand">${logoMark(34)}<b>Méridien</b></span><span class="hubicons"><button class="plain hist" data-act="history" aria-label="Historique de mes jeux">${I.history}<small>Historique</small></button><button class="plain" data-act="menu" aria-label="Menu">${I.menu}</button></span></header>
   ${vMust()}${vNewsCard()}${onlineNotice()}${recapCard()}
-  <h1 class="sr">Mes groupes</h1>${firstRun() && groups.length ? coach("Touche ton groupe pour voir le défi du jour 👇") : ""}
+  <h1 class="sr">Mes groupes</h1>${firstRun() && groups.length ? coach("Touche ton groupe pour voir le jeu du jour 👇") : ""}
   ${loading ? `<p class="note center">Chargement de tes groupes…</p>` : cards || `<p class="note center">Tu n'es dans aucun groupe pour l'instant. Crée-en un ou rejoins celui d'un ami avec son code.</p>`}
   ${groups.length < 5 ? `<button class="btn gold" data-act="hubnew">+ Nouveau groupe</button><button class="linkbtn plainlink" data-act="hubjoin">Rejoindre un groupe</button>` : `<p class="note center">Tu es dans 5 groupes, le maximum.</p>`}`;
 }
@@ -585,7 +585,7 @@ function msgActions(ev) {
     : `<button class="smallbtn ghost" data-act="msgreport" data-v="${ev.id}">Signaler</button><button class="smallbtn ghost" data-act="msgblock" data-v="${ev.id}">Bloquer ${esc(ev.p.name)}</button>`}</span>`;
 }
 
-/* jouer le défi du jour : synchronisation avec le serveur d'abord (jour, essais restants) */
+/* jouer le jeu du jour : synchronisation avec le serveur d'abord (jour, essais restants) */
 function srvHomeMsg(m) { ui.homeMsg = m; if (!game) render(); clearTimeout(srvHomeMsg._t); srvHomeMsg._t = setTimeout(() => { ui.homeMsg = ""; if (!game && ui.view === "group") render(); }, 7000); }
 const SRV_PLAYMSG = { catchup_unavailable: "Ce jeu n'est plus disponible au rattrapage.", no_tries_left: "Tu as déjà joué tes 2 essais aujourd'hui. Reviens demain !", no_profile: "Ton profil n'existe pas encore en ligne." };
 async function playToday() {
@@ -594,7 +594,7 @@ async function playToday() {
   ui.busyPlay = true; render();
   const ok = await srvSync(true);
   ui.busyPlay = false;
-  if (!ok) { render(); return srvHomeMsg(srvLost() ? srvMsg("session") : "Connexion nécessaire pour jouer le défi du jour. Tu peux t'entraîner hors ligne depuis le menu."); }
+  if (!ok) { render(); return srvHomeMsg(srvLost() ? srvMsg("session") : "Connexion nécessaire pour jouer le jeu du jour. Tu peux t'entraîner hors ligne depuis le menu."); }
   if (playsOf(today()).length >= triesOf(today())) { render(); return srvHomeMsg(SRV_PLAYMSG.no_tries_left); }
   startGame(false);
 }
@@ -636,7 +636,7 @@ async function srvUseBoost() {
   await srvSync(true);
 }
 function srvStartFailed(r) {
-  return r && r.error === "day_changed" ? "Le jour a changé pendant que tu te préparais. Relance le défi." : (SRV_PLAYMSG[r && r.error] || srvMsg(r && r.error));
+  return r && r.error === "day_changed" ? "Le jour a changé pendant que tu te préparais. Relance le jeu." : (SRV_PLAYMSG[r && r.error] || srvMsg(r && r.error));
 }
 
 /* envoi du score : le serveur recalcule le total ; en cas de coupure, l'envoi est remis à plus tard (store.pending) */

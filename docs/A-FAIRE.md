@@ -14,7 +14,7 @@
 - [ ] Vérifier demain 14 h 30 la **bascule à 41 jeux** (premier jour avec les nouveaux jeux).
 
 ## 2. À faire par Claude (prochaines semaines)
-- [ ] **Audit UX du 19 nov.** (`AUDIT-UX.md`) : lot 1 = Jouer plus haut, un seul bandeau à la fois, plus de doublon de série, e-mail en un toucher, Réglages avec états. En attente du feu vert de Chems.
+- [x] **Audit UX du 19 nov.** : lots 1 et 2 faits (v47). Lot 3 (historique par semaine, barre d'onglets dans le groupe, squelettes de chargement) seulement si retours des joueurs.
 - [ ] **« Qui suis-je » : un peu plus de temps** (note du 18 nov.) : voir `CHRONO` dans `src/pJ_game.js` et la durée du format `quisuisje`.
 - [ ] Agrandir les petites réserves : Rébus, Qui suis-je, Connexions, Top 10, Sigles.
 - [ ] Relecture factuelle des 432 nouvelles questions (un échantillon, ou avec Chems).

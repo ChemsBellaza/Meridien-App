@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v47 (19 nov. 2026)** — **Lots 1 et 2 de l'audit UX** : bouton Jouer remonté (1044 px → 574 px), un seul bandeau à la fois (groupNotice), pastille de série en double retirée, e-mail relié en un toucher (fenêtre Compte), Réglages en deux niveaux (Essentiel avec états, puis « Plus de réglages »), fiche familier plus courte (2547 px → 1556 px : évolutions, histoire et objets à débloquer repliables), classement et saison en top 5 + ma ligne (« Voir tout »), mot « jeu » partout au lieu de « défi », libellé « Historique ». Aucune migration.
+
 - **v46 (19 nov. 2026)** — « Les indispensables » et « Quoi de neuf ? » ont chacun **leur propre fenêtre** (l'une ne montre que les 5 indispensables, l'autre que les nouveautés). Aucune migration.
 
 - **v45 (19 nov. 2026)** — **« Les indispensables » + « Quoi de neuf ? » réécrits** (`src/pU_news.js`) : la fenêtre s'ouvre sur 5 indispensables numérotés (relier son e-mail, installer l'appli, activer les notifications, jouer avant 14 h 30, recharger si l'appli n'est pas à jour), puis 5 nouveautés d'un paragraphe chacune. Textes courts, concrets, sans emoji décoratif ni points d'exclamation, avec apostrophes courbes et espaces insécables. **Sur l'accueil « Mes groupes », une section « Les indispensables » au-dessus de « Quoi de neuf ? »** : les 3 réglages qui comptent (e-mail relié, appli installée, notifications actives) avec une case qui se coche toute seule ; quand tout est fait, elle devient une ligne « Tout est en ordre ». Aucune migration.

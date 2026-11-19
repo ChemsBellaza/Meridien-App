@@ -62,7 +62,7 @@ function vOnboard() {
   if (ui.onbStep === "welcome") return `<div class="onb welcome">
     <div class="whero"><span class="brand">${logoMark(88)}</span><h1 class="display">Méridien</h1><p class="wtag">Une énigme par jour, la même pour tous tes amis.</p></div>
     <ol class="wsteps">
-      <li><span class="wic" aria-hidden="true">🌍</span><div><b>Un défi par jour</b><span>Un seul jeu de culture générale, une surprise chaque matin. 3 manches, 2 essais.</span></div></li>
+      <li><span class="wic" aria-hidden="true">🌍</span><div><b>Un jeu par jour</b><span>Un seul jeu de culture générale, une surprise chaque matin. 3 manches, 2 essais.</span></div></li>
       <li><span class="wic" aria-hidden="true">👥</span><div><b>Un groupe d'amis</b><span>Crée ton groupe ou rejoins celui d'un ami avec son code. Même jeu, même classement.</span></div></li>
       <li><span class="wic" aria-hidden="true">🧭</span><div><b>Des boussoles à gagner</b><span>Plus tu devances d'amis, plus tu en gagnes, et plus la saison avance, plus elles valent.</span></div></li>
       <li><span class="wic" aria-hidden="true">🦊</span><div><b>Un familier à faire grandir</b><span>Il évolue à chaque partie, réagit à tes scores et se débloque en jouant.</span></div></li>
@@ -82,7 +82,7 @@ function vOnboard() {
   const preview = { name: ui.draftName || "Toi", photo: ui.draftPhoto, pet: defaultPet(ui.draftPet) };
   return `<div class="onb">
     <div class="rowtop">${backBtn("onbback")}<span class="kicker">Étape 2 sur 2</span><span></span></div>
-    <div class="ohead"><h1 class="display">Méridien</h1><p class="qsub">Un défi de culture générale par jour, à jouer entre amis.</p></div>
+    <div class="ohead"><h1 class="display">Méridien</h1><p class="qsub">Un jeu de culture générale par jour, à jouer entre amis.</p></div>
     <form class="form" id="onbForm" novalidate>
       <div class="chosen">${avatar(preview, "xl")}<div class="grow"><b>${esc(S.names[0])}</b> ${typeBadge(S.type, 12)}<p class="note">${ui.draftPhoto ? `Ta photo, avec ${esc(S.names[0])} en médaillon.` : `Ajoute une photo si tu veux : ${esc(S.names[0])} se posera dessus.`}</p>
         <div class="btnline">${photoBtn(ui.draftPhoto ? "Changer" : "Ajouter ma photo")}${ui.draftPhoto ? `<button type="button" class="smallbtn ghost" data-act="photo-rm">Retirer</button>` : ""}</div></div></div>
@@ -121,39 +121,38 @@ function vGroup() {
   const st = standings(k), me = st.list.find(r => r.me), prog = progress();
   const mt = myToday(), left = triesOf(k) - mt.used, pet = store.profile.pet, S = SPECIES[pet.species];
   let btn;
-  if (ui.busyPlay) btn = `<button class="btn" disabled><span class="stack">Connexion…<small>Vérification de ton défi du jour</small></span></button>`;
-  else if (left === triesOf(k)) btn = `${firstRun() ? coach("Voici ton défi du jour. Touche « Jouer » 👇") : ""}<button class="btn ${firstRun() ? "pulse" : ""}" data-act="play"><span class="stack">Jouer<small>${triesOf(k) > 1 ? triesOf(k) + " essais · le meilleur compte" : "1 seul essai · jeu spécial du dimanche"}</small></span></button>`;
+  if (ui.busyPlay) btn = `<button class="btn" disabled><span class="stack">Connexion…<small>Vérification de ton jeu du jour</small></span></button>`;
+  else if (left === triesOf(k)) btn = `${firstRun() ? coach("Voici ton jeu du jour. Touche « Jouer » 👇") : ""}<button class="btn ${firstRun() ? "pulse" : ""}" data-act="play"><span class="stack">Jouer<small>${triesOf(k) > 1 ? triesOf(k) + " essais · le meilleur compte" : "1 seul essai · jeu spécial du dimanche"}</small></span></button>`;
   else if (left > 0) btn = `<button class="btn" data-act="play"><span class="stack">Rejouer<small>Dernier essai · nouvelles questions · meilleur : ${fmtNum(mt.best)} pts</small></span></button>`;
-  else btn = `<button class="btn" disabled><span class="stack">Défi terminé<small>Ton meilleur score : ${fmtNum(mt.best)} pts</small></span></button>`;
+  else btn = `<button class="btn" disabled><span class="stack">Jeu terminé<small>Ton meilleur score : ${fmtNum(mt.best)} pts</small></span></button>`;
   const hello = mt.used ? (left > 0 ? petLine(pet.species, "mid", k) : petLine(pet.species, mt.best >= 400 ? "good" : "mid", k + "d")) : petLine(pet.species, "hello", k);
   return `
   <header class="top">
     <button class="plain" data-act="menu" aria-label="Menu">${I.menu}</button>
     <button class="crew" data-act="season" aria-label="${players().length} membres, voir la saison"><span class="avstack">${players().slice(0, 5).map(p => avatar(p, "md")).join("")}</span></button>
-    <button class="plain" data-act="history" aria-label="Jeux précédents">${I.history}</button>
+    <button class="plain hist" data-act="history" aria-label="Historique de mes jeux">${I.history}<small>Historique</small></button>
   </header>
   ${srvOn() ? `<button class="hubback" data-act="hub" aria-label="Retour à mes groupes"><span aria-hidden="true">‹</span> Mes groupes</button>` : ""}
-  <div class="gname"><b>${esc(store.profile.group)}</b><span>Défi n°${issueNo(k)} · ${longDate(k)}</span></div>
+  <div class="gname"><b>${esc(store.profile.group)}</b><span>Jeu du jour n°${issueNo(k)} · ${longDate(k)}</span></div>
   ${srvOn() ? `<div class="gchips"><button class="chipbtn" data-act="ginfo"><span aria-hidden="true">👥</span> Membres et invitation</button></div>` : ""}
-  <div class="pills">
-    ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
-    ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
-    ${pill(I.fire(26), prog.streak, "pet", `Série de ${prog.streak} jour${prog.streak > 1 ? "s" : ""}`)}
-  </div>
-  ${streakStrip()}
-  ${seasonBanner()}${vNewsCard()}${tutoNotice()}${installNotice()}${pushNotice()}${onlineNotice()}${recapCard()}
-  <section class="today" aria-label="Défi du jour">
-    <div class="cover">${art(fmt, k)}${labels(`Défi du jour · 3 manches`, F.name)}</div>
+  <section class="today" aria-label="Jeu du jour">
+    <div class="cover">${art(fmt, k)}${labels(`Jeu du jour · 3 manches`, F.name)}</div>
     <div class="tbody">
       <p class="sub">${fr(F.sub)}</p>
       <div class="rounds">${mans.map((m, i) => roundChip(m, i)).join("")}</div>
       ${btn}
       ${vBoost()}
       ${ui.homeMsg ? `<p class="err" role="alert">${esc(ui.homeMsg)}</p>` : ""}
-      <div class="countdown">Prochain défi dans <b id="cd" class="num">--:--:--</b>${srvOn() ? ` <small>(à ${String(Math.floor(CONFIG.dayStartMin / 60)).padStart(2, "0")} h ${String(CONFIG.dayStartMin % 60).padStart(2, "0")}, heure de Barcelone)</small>` : ""}</div>
+      <div class="countdown">Prochain jeu dans <b id="cd" class="num">--:--:--</b>${srvOn() ? ` <small>(à ${String(Math.floor(CONFIG.dayStartMin / 60)).padStart(2, "0")} h ${String(CONFIG.dayStartMin % 60).padStart(2, "0")}, heure de Barcelone)</small>` : ""}</div>
     </div>
   </section>
   ${vCatchup()}
+  ${groupNotice()}
+  <div class="pills">
+    ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
+    ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
+  </div>
+  ${streakStrip()}
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
@@ -162,9 +161,9 @@ function vGroup() {
 
 function vFeed(k) {
   const ev = feed(k), lead = dayResults(k).played[0];
-  if (!ev.length) return `<div class="feed"><p class="note center">${srvOn() ? "Personne n'a encore joué ni écrit aujourd'hui. Lance le défi, ou dis bonjour à ton groupe !" : "Personne n'a encore joué aujourd'hui. Lance le défi !"}</p></div>`;
+  if (!ev.length) return `<div class="feed"><p class="note center">${srvOn() ? "Personne n'a encore joué ni écrit aujourd'hui. Lance le jeu, ou dis bonjour à ton groupe !" : "Personne n'a encore joué aujourd'hui. Lance le jeu !"}</p></div>`;
   return `<div class="feed">${ev.map(e => {
-    if (e.type === "launch") return `<div class="fpill">${avatar(e.p, "sm")}<span><b>Défi lancé</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></div>`;
+    if (e.type === "launch") return `<div class="fpill">${avatar(e.p, "sm")}<span><b>Jeu lancé</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></div>`;
     if (e.type === "score") return `<div class="fitem"><button class="fpill ${e.best && lead && e.p.id === lead.id ? "best" : ""}" data-act="reactopen" data-v="${e.id}" aria-label="Réagir au score de ${esc(e.p.name)}">${avatar(e.p, "sm")}<span><b>Score : ${fmtNum(e.score)} pts</b><small>${esc(e.p.name)} ${hm(e.at)}</small></span></button>${reactRow(k, e)}</div>`;
     return `<div class="msg ${e.mine ? "me" : ""}" data-mid="${esc(e.mid || "")}">${e.mine ? "" : avatar(e.p, "md")}<div class="mcol"><button class="bubble" data-act="reactopen" data-v="${e.id}">${e.mine ? "" : `<span class="who" style="color:${e.p.color}">${esc(e.p.name)}</span>`}<span class="tx ${msgKind(e.text)}">${msgBody(e)}</span><span class="at num">${hm(e.at)}</span></button>${reactRow(k, e)}</div></div>`;
   }).join("")}</div>`;
@@ -173,8 +172,10 @@ function vFeed(k) {
 function vRanking(k) {
   const res = dayResults(k);
   if (!res.played.length) return `<p class="note center">Aucun score pour l'instant.</p>`;
-  let out = "", sep = false;
-  res.played.forEach(r => {
+  let out = "", sep = false, prev = -1;
+  const many = res.played.length > 6, cut = many && !ui.rankAll, shown = cut ? res.played.filter((r, i) => i < 5 || r.me) : res.played; // classement long : top 5 + ta ligne
+  shown.forEach(r => {
+    const idx = res.played.indexOf(r); if (cut && prev >= 0 && idx - prev > 1) out += `<div class="rkgap" aria-hidden="true">⋯</div>`; prev = idx;
     if (r.pos > 3 && !sep) { out += `<hr class="podium">`; sep = true; }
     out += `<button class="rkp" data-act="detail" data-v="${esc(r.id)}|${k}" aria-label="Détail des points de ${esc(r.name)}, ${fmtNum(r.best)} points, rang ${r.pos}" style="--c:${r.color}">
       <span class="pos num">#${r.pos}</span>
@@ -183,6 +184,7 @@ function vRanking(k) {
     </button>`;
   });
   return `<div class="rank">${out}
+  ${many ? `<button class="smallbtn ghost rkall" data-act="rankall">${ui.rankAll ? "Voir le top 5" : `Voir les ${res.played.length - shown.length} autres`}</button>` : ""}
   ${res.waiting.length ? `<div class="waiting">${res.waiting.map(w => `<span class="w">${avatar(w, "sm")}${esc(w.name)} · pas encore joué</span>`).join("")}</div>` : ""}</div>`;
 }
 
@@ -207,7 +209,7 @@ function vHistoryOnline() {
       <div class="seg light" role="group" aria-label="Période"><button data-act="hmode" data-v="month" aria-pressed="${!all}">30 derniers jours</button><button data-act="hmode" data-v="all" aria-pressed="${all}">Depuis le début</button></div>
       <button class="row" data-act="season">${I.trophy(26)}<span class="grow">Stats de la saison</span>${I.chev}</button>
       <p class="note center">Un seul jeu par jour et par groupe, et c'est la surprise : les jeux passés se consultent, mais ne se rejouent pas.</p>
-      ${h === null || h === undefined ? `<p class="note center">Chargement…</p>` : rows.length ? `<div class="hgrid">${rows.map(card).join("")}</div>` : `<p class="note center">Aucun jeu joué sur cette période. Lance le défi du jour !</p>`}
+      ${h === null || h === undefined ? `<p class="note center">Chargement…</p>` : rows.length ? `<div class="hgrid">${rows.map(card).join("")}</div>` : `<p class="note center">Aucun jeu joué sur cette période. Lance le jeu du jour !</p>`}
     </div></div>`;
 }
 
@@ -237,10 +239,10 @@ function vDay(d) {
   return `<div class="sheetpage">
     <button class="closepill" data-act="history">${I.back}<span>Jeux précédents</span></button>
     <div class="sheetbody">
-      <div class="hcard static">${art(f, d)}${labels(`Défi n°${issueNo(d)} · ${longDate(d)}`, FORMATS[f].name)}</div>
+      <div class="hcard static">${art(f, d)}${labels(`Jeu du jour n°${issueNo(d)} · ${longDate(d)}`, FORMATS[f].name)}</div>
       <div class="rounds center">${manchesOf(d, f).map((m, i) => roundChip(m, i)).join("")}</div>
       ${vRanking(d)}
-      <p class="note center">Ce jeu ne se rejoue pas : un nouveau défi t'attend chaque jour.</p>
+      <p class="note center">Ce jeu ne se rejoue pas : un nouveau jeu t'attend chaque jour.</p>
     </div></div>`;
 }
 
@@ -253,12 +255,13 @@ function vSeason() {
   <div class="datepill">${shortDate(st.S.start)} – ${shortDate(st.S.end)}</div>
   ${seasonBanner()}
   ${seasonMasked(k) ? `<div class="chartbox masked"><p class="note center">🔒 Classement masqué jusqu'à la fin de la saison. Seul ton résultat reste visible.</p></div>` : `<div class="chartbox">${chart}</div>`}
-  <div class="spanel">${(seasonMasked(k) ? st.list.slice().sort((a, b) => (a.me ? -1 : b.me ? 1 : a.name.localeCompare(b.name))) : st.list).map(r => {
+  <div class="spanel">${(seasonMasked(k) ? st.list.slice().sort((a, b) => (a.me ? -1 : b.me ? 1 : a.name.localeCompare(b.name))) : (ui.seasonAll || st.list.length <= 6 ? st.list : st.list.filter((r, i) => i < 5 || r.me))).map(r => {
     if (seasonMasked(k)) return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">${r.me ? "#" + r.rank + toi : "#?"}</div><b>${esc(r.name)}</b><span>${r.me ? `${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""}` : "classement caché"}</span></div><div class="tot">${I.compass(34)}<b class="num">${r.me ? fmtNum(r.total) : "•••"}</b></div></div>`;
     const pr = prev && prev.list.find(x => x.id === r.id);
     const mv = pr ? (pr.rank > r.rank ? `<span class="up" aria-label="monte">↑</span>` : pr.rank < r.rank ? `<span class="down" aria-label="descend">↓</span>` : "") : "";
     return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">#${r.rank} ${mv}${r.me ? toi : ""}</div><b>${esc(r.name)}</b><span>${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""} (sur ${r.played})</span></div><div class="tot">${I.compass(34)}<b class="num">${fmtNum(r.total)}</b></div></div>`;
   }).join("")}
+  ${st.list.length > 6 && !seasonMasked(k) ? `<button class="smallbtn ghost rkall" data-act="seasonall">${ui.seasonAll ? "Voir le top 5" : `Voir les ${st.list.length - st.list.filter((r, i) => i < 5 || r.me).length} autres`}</button>` : ""}
   <p class="note center light">Chaque jour, ${CONFIG.gemsPerRank} boussoles par place devancée, avec un bonus qui monte au fil de la saison (+5 % par jour, jusqu'à +100 % le dernier jour)${srvOn() ? ". Les boussoles du jour sont provisoires jusqu'à la fin de la journée." : ". Les jours précédant ton arrivée sont simulés pour la démo."}</p></div>`;
 }
 
@@ -281,14 +284,20 @@ function vPet() {
   </div>
   <div class="kicker pers">Personnaliser ton familier</div>
   <div class="chips" role="group" aria-label="Catégorie">${["species", "shiny", "bg"].map(c => `<button data-act="pettab" data-v="${c}" aria-pressed="${cat === c}">${ITEMS[c].label}</button>`).join("")}</div>
-  <div class="items">${(cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list).map(it => {
-    const open = isUnlocked(it, prog), on = pet[cat] === it.id, sil = cat === "species" && !open;
-    const shown = { ...pet, [cat]: it.id };
-    const lbl = cat === "species" ? SPECIES[it.id].names[stageOf(pet) - 1] : it.label;
-    return `<${open ? "button" : "div"} class="item ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="${cat}|${it.id}" aria-pressed="${on}"` : ""}>
+  ${(() => {
+    const all = cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list;
+    const card = it => {
+      const open = isUnlocked(it, prog), on = pet[cat] === it.id, sil = cat === "species" && !open;
+      const shown = { ...pet, [cat]: it.id };
+      const lbl = cat === "species" ? SPECIES[it.id].names[stageOf(pet) - 1] : it.label;
+      return `<${open ? "button" : "div"} class="item ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="${cat}|${it.id}" aria-pressed="${on}"` : ""}>
       ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
-  }).join("")}</div>
-  <div class="evorow"><span class="kicker">Évolutions</span><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div>
+    };
+    const opened = all.filter(it => isUnlocked(it, prog)), locked = all.filter(it => !isUnlocked(it, prog));
+    // les familiers et options à débloquer sont repliés : la fiche reste courte
+    return `<div class="items">${opened.map(card).join("")}</div>${locked.length ? `<details class="fold"><summary>À débloquer (${locked.length})</summary><div class="foldbody"><div class="items">${locked.map(card).join("")}</div></div></details>` : ""}`;
+  })()}
+  <details class="fold"><summary>Évolutions · stade ${st} sur 3</summary><div class="foldbody"><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div></details>
   ${petStory(pet)}
 `;
 }
@@ -315,6 +324,7 @@ function vProfile() {
 function vSheet() {
   if (ui.sheet === "news") return vNewsSheet();
   if (ui.sheet === "must") return vMustSheet();
+  if (ui.sheet === "acct") return vAcctSheet();
   if (ui.sheet === "rxwho") return vRxWho();
   if (ui.sheet === "reveal") return vReveal();
   if (ui.sheet === "install") return vInstallSheet();
@@ -337,12 +347,15 @@ function vSheet() {
       <button class="shortcut" data-act="goprofile">${I.medal(24)}<span>Mon profil</span></button>
       <button class="shortcut" data-act="recap">${I.history}<span>Récap de la semaine</span></button>
     </div>
+    ${vEssentiel()}
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
+    <details class="fold plus" ${ui.plusOpen ? "open" : ""}><summary data-act="plustoggle">Plus de réglages</summary><div class="foldbody">
     <section class="sect"><h4>Rappel quotidien</h4>${reminderBlock()}</section>
     <section class="sect"><h4>Application</h4>${mobileSheetBlocks() || `<p class="note">Rien à régler pour l'instant.</p>`}</section>
     <section class="sect"><h4>Compte</h4>${accountSheetBlock()}</section>
     ${online ? "" : `<section class="sect"><h4>Code d'invitation</h4><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></section>`}
     <section class="sect"><h4>Aide</h4><button class="smallbtn" data-act="tuto">Revoir le tutoriel</button></section>
+    </div></details>
     <button class="btn ghost" data-act="closesheet">Fermer</button>
     <p class="note center">Dictionnaire du petit bac enrichi grâce au Wiktionnaire (licence CC BY-SA).</p>
     <p class="note center">Drapeaux : Twemoji, © Twitter, Inc. et contributeurs (licence CC BY 4.0).</p>
@@ -445,6 +458,10 @@ document.addEventListener("click", e => {
     case "recap": ui.sheet = "recap"; render(); break;
     case "news": openNews(); break;
     case "must": ui.sheet = "must"; render(); break;
+    case "acct": ui.sheet = "acct"; render(); break;
+    case "plustoggle": ui.plusOpen = !ui.plusOpen; break;
+    case "rankall": ui.rankAll = !ui.rankAll; render(); break;
+    case "seasonall": ui.seasonAll = !ui.seasonAll; render(); break;
     case "rxwho": ui.rxEv = v; ui.sheet = "rxwho"; render(); break;
     case "revskip": if (ui.reveal && !ui.reveal.skip) { ui.reveal.skip = true; render(); } break;
     case "revgo": ui.reveal = null; ui.sheet = false; render(); break;

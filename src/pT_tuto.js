@@ -59,7 +59,7 @@ function installBody(withSkip) {
 }
 function vInstallPage() { // étape de l'accueil, avant la création du compte
   return `<div class="onb install">
-    <div class="whero"><span class="phone" aria-hidden="true"><span class="screen">${logoMark(44)}<small>Méridien</small></span></span><h1 class="display">Encore mieux sur ton écran d'accueil</h1><p class="wtag">Ajoute Méridien à ton téléphone : c'est comme une vraie application, et tu ne rates plus ton défi du jour.</p></div>
+    <div class="whero"><span class="phone" aria-hidden="true"><span class="screen">${logoMark(44)}<small>Méridien</small></span></span><h1 class="display">Encore mieux sur ton écran d'accueil</h1><p class="wtag">Ajoute Méridien à ton téléphone : c'est comme une vraie application, et tu ne rates plus ton jeu du jour.</p></div>
     ${installBody()}
     <button class="btn" data-act="instnext">${deferredInstall ? "Plus tard, je continue" : "C'est fait, je continue"}</button>
     <button class="linkbtn plainlink" data-act="instnext">Passer cette étape</button>
@@ -112,7 +112,7 @@ function tutoIntro(g) {
 function vEndTuto() {
   const g = game, pet = store.profile.pet, good = g.score >= 200;
   const next = [
-    ["🎯", "Un défi par jour", "Ton meilleur essai compte."],
+    ["🎯", "Un jeu par jour", "Ton meilleur essai compte."],
     ["🧭", "Des boussoles", "Plus tu devances d'amis, plus tu en gagnes."],
     ["🔓", "À débloquer", "Jokers dès le 3e jour, carnet au 5e."]
   ];

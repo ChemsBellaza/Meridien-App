@@ -13,6 +13,7 @@ const MUST = [
   ["Pas à jour ?", "Ferme l’appli et rouvre-la, deux fois."]
 ];
 const NEWS = [
+  { id: "v47", date: "19 nov.", title: "Accueil plus rapide", text: "Le bouton Jouer remonte en haut de l’écran. Un seul bandeau s’affiche à la fois. Dans Réglages, l’essentiel passe en premier. Le classement montre le top 5 et ta ligne, et la fiche de ton familier est plus courte." },
   { id: "v44", date: "19 nov.", title: "Notifications", text: "Chaque message de ton groupe te notifie. Un GIF reçu s’annonce clairement : « Naïs a envoyé un GIF »." },
   { id: "v43", date: "19 nov.", title: "Neuf nouveaux familiers", text: "Fennec, tortue ninja, singe Wukong, paon, aigle des vents, chouette, faon, dragon-perle et colibri. Chacun a son histoire, en trois chapitres qui se débloquent à l’évolution. Le panda fait du kung-fu, le lion s’habille d’or." },
   { id: "v41", date: "19 nov.", title: "GIF et autocollants", text: "Les GIF sont là : le bouton GIF est à côté du 😀. Il y a aussi 71 autocollants, rangés par thème." },
@@ -50,7 +51,7 @@ function vMustSheet() { // « Les indispensables » : uniquement ce qu'il faut p
 /* ---------- « Les indispensables » sur l'accueil : les 3 réglages qui comptent, cochés quand c'est fait ---------- */
 function mustState() { // [{ ok, title, small, act }] : seulement ce qui s'applique à cet appareil
   const rows = [];
-  if (srvOn()) rows.push({ ok: !!(SRV.sess && SRV.sess.user && SRV.sess.user.email), title: "Relie ton e-mail", small: "Sans ça, un téléphone perdu, c’est un profil perdu.", act: "menu" });
+  if (srvOn()) rows.push({ ok: !!(SRV.sess && SRV.sess.user && SRV.sess.user.email), title: "Relie ton e-mail", small: "Sans ça, un téléphone perdu, c’est un profil perdu.", act: "acct" });
   if (typeof installWanted === "function" && isMobileDev()) rows.push({ ok: isStandalone(), title: "Installe l’appli", small: "Sur l’écran d’accueil, en plein écran.", act: "installpage" });
   if (srvOn() && typeof pushSupported === "function" && PUSH.checked && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, title: "Active les notifications", small: "Jeu à 14\u00a0h\u00a030, messages du groupe.", act: pushNeedsInstall() ? "installpage" : "pushon" });
   return rows;
@@ -60,4 +61,24 @@ function vMust() {
   const rows = mustState(), todo = rows.filter(r => !r.ok);
   if (!todo.length) return `<button class="newscard mustok" data-act="must" aria-label="Les indispensables : tout est en ordre"><span class="ntx"><b>Les indispensables</b><small>Tout est en ordre.</small></span><span class="nchev" aria-hidden="true">›</span></button>`;
   return `<section class="must" aria-label="Les indispensables"><div class="musttop"><b>Les indispensables</b><button class="linkbtn" data-act="must">Tout voir</button></div>${rows.map(r => `<button class="mrow ${r.ok ? "ok" : ""}" data-act="${r.act}"><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.title)}</b><small>${esc(r.small)}</small></span>${r.ok ? "" : `<span class="nchev" aria-hidden="true">›</span>`}</button>`).join("")}</section>`;
+}
+/* ---------- un seul bandeau à la fois dans le groupe (priorité : fin de saison, nouveauté débloquée, récap, installation, notifications, accueil en ligne, nouveautés) ---------- */
+function groupNotice() {
+  return [seasonBanner(), tutoNotice(), recapCard(), installNotice(), pushNotice(), onlineNotice(), vNewsCard()].find(Boolean) || "";
+}
+/* ---------- fenêtre « Sauvegarde du compte » : relier son e-mail en un toucher ---------- */
+function vAcctSheet() {
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Sauvegarde du compte" data-stop>
+    <div class="sheethead"><div><h3>Relie ton e-mail</h3><div class="muted">Pour retrouver ton profil sur un autre téléphone.</div></div></div>
+    ${accountSheetBlock()}
+    <button class="btn ghost" data-act="closesheet">Fermer</button></div></div>`;
+}
+/* ---------- Réglages : l'essentiel d'abord, avec l'état de chaque point ---------- */
+function vEssentiel() {
+  const online = srvOn(), email = online && SRV.sess && SRV.sess.user && SRV.sess.user.email, rows = [];
+  if (online) rows.push({ ok: !!email, t: "Compte", v: email ? `E-mail relié · ${maskEmail(email)}` : "E-mail à relier", act: email ? "" : "acct" });
+  if (online && typeof pushSupported === "function" && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, t: "Notifications", v: PUSH.on ? "Activées" : "À activer", act: PUSH.on ? "" : (pushNeedsInstall() ? "installpage" : "pushon") });
+  if (isMobileDev()) rows.push({ ok: isStandalone(), t: "Application", v: isStandalone() ? "Installée" : "À installer sur l’écran d’accueil", act: isStandalone() ? "" : "installpage" });
+  if (!rows.length) return "";
+  return `<div class="essentiel">${rows.map(r => `<${r.act ? "button" : "div"} class="mrow ${r.ok ? "ok" : ""}" ${r.act ? `data-act="${r.act}"` : ""}><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.t)}</b><small>${esc(r.v)}</small></span>${r.act ? `<span class="nchev" aria-hidden="true">›</span>` : ""}</${r.act ? "button" : "div"}>`).join("")}</div>`;
 }

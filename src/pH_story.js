@@ -31,5 +31,5 @@ function petStory(pet) {
   const ch = S.c.map((txt, i) => i < got
     ? `<li class="chap"><b>Chapitre ${i + 1} · ${esc(names[i])}</b><p>${esc(txt)}</p></li>`
     : `<li class="chap lock"><b>Chapitre ${i + 1} · ???</b><p>${I.lock}<span> Se débloque à l'évolution (${esc(reqText(EVO_NEED[i]))}).</span></p></li>`).join("");
-  return `<section class="story" aria-label="Histoire de ${esc(names[0])}"><div class="kicker">Histoire</div><ol class="chaps">${ch}</ol>${got >= 3 ? `<p class="sens"><b>Le sens</b> : ${esc(S.s)}</p>` : ""}</section>`;
+  return `<details class="fold story" aria-label="Histoire de ${esc(names[0])}"><summary>Histoire · ${got} chapitre${got > 1 ? "s" : ""} sur 3</summary><div class="foldbody"><ol class="chaps">${ch}</ol>${got >= 3 ? `<p class="sens"><b>Le sens</b> : ${esc(S.s)}</p>` : ""}</div></details>`;
 }

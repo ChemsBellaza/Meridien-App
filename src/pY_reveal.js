@@ -50,7 +50,7 @@ function vReveal() {
       <div class="rvcurt l"><span>?</span></div><div class="rvcurt r"><span>?</span></div>
       <span class="rvline"></span><div class="rvsparks">${revSparks()}</div>
     </div>
-    <div class="rvtext"><span class="kicker">${sunday ? "Jeu spécial du dimanche · points ×2" : `Défi n°${issueNo(R.k)}`}</span><h2 class="rvname">${esc(F.name)}</h2><p class="rvsub">${fr(F.sub)}</p></div>
+    <div class="rvtext"><span class="kicker">${sunday ? "Jeu spécial du dimanche · points ×2" : `Jeu du jour n°${issueNo(R.k)}`}</span><h2 class="rvname">${esc(F.name)}</h2><p class="rvsub">${fr(F.sub)}</p></div>
     <button class="btn rvgo" data-act="revgo">C'est parti !</button>
     <p class="rvhint" aria-hidden="true">Touche pour passer l'animation</p>
   </div>`;

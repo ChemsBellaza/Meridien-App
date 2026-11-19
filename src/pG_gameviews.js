@@ -36,7 +36,7 @@ function renderGame() {
   } else if (g.phase === "intro") {
     const pet = store.profile.pet, Sp = SPECIES[pet.species];
     body = `
-      <div class="rowtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button>${g.practice ? `<span class="flag">Entraînement · non compté</span>` : g.catchup ? `<span class="kicker">Rattrapage · ${shortDate(g.k)} · 1 seul essai</span>` : `<span class="kicker">Défi n°${issueNo(g.k)} · essai ${g.tryIdx + 1}/${triesOf(g.k)}</span>`}<span></span></div>
+      <div class="rowtop"><button class="roundbtn" data-g="quit" aria-label="Quitter">${I.close}</button>${g.practice ? `<span class="flag">Entraînement · non compté</span>` : g.catchup ? `<span class="kicker">Rattrapage · ${shortDate(g.k)} · 1 seul essai</span>` : `<span class="kicker">Jeu du jour n°${issueNo(g.k)} · essai ${g.tryIdx + 1}/${triesOf(g.k)}</span>`}<span></span></div>
       <div class="hcard static">${art(g.fmt, g.k)}${labels("3 manches", F.name)}</div>
       <p class="qsub">${fr(F.sub)}</p>
       <div class="rounds center">${g.manches.map((m, i) => roundChip(m, i)).join("")}</div>

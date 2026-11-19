@@ -72,8 +72,8 @@ function remindICS(hhmm) {
   const day = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`, stamp = `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T${p(d.getUTCHours())}${p(d.getUTCMinutes())}00Z`;
   const url = location.origin + location.pathname;
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Meridien//FR", "CALSCALE:GREGORIAN", "BEGIN:VEVENT", "UID:rappel-quotidien@meridien", "DTSTAMP:" + stamp,
-    `DTSTART:${day}T${h}${mi}00`, "DURATION:PT10M", "RRULE:FREQ=DAILY", "SUMMARY:Méridien : ton défi du jour", "DESCRIPTION:Un jeu par jour, la même énigme pour tout ton groupe. " + url, "URL:" + url,
-    "BEGIN:VALARM", "TRIGGER:PT0S", "ACTION:DISPLAY", "DESCRIPTION:Méridien : ton défi du jour t'attend", "END:VALARM", "END:VEVENT", "END:VCALENDAR"];
+    `DTSTART:${day}T${h}${mi}00`, "DURATION:PT10M", "RRULE:FREQ=DAILY", "SUMMARY:Méridien : ton jeu du jour", "DESCRIPTION:Un jeu par jour, la même énigme pour tout ton groupe. " + url, "URL:" + url,
+    "BEGIN:VALARM", "TRIGGER:PT0S", "ACTION:DISPLAY", "DESCRIPTION:Méridien : ton jeu du jour t'attend", "END:VALARM", "END:VEVENT", "END:VCALENDAR"];
   const blob = new Blob([lines.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" }), a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = "meridien-rappel.ics"; document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
