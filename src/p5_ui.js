@@ -156,7 +156,7 @@ function vGroup() {
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
-  ${ui.tab === "chat" ? `<div class="composer">${ui.chatMsg ? `<p class="chatmsg" id="chatmsg" role="status">${esc(ui.chatMsg)}</p>` : ""}${ui.stickers ? stickerPanel() : ""}<form id="msgForm"><button type="button" class="stkopen" data-act="stkopen" aria-label="Autocollants" aria-expanded="${!!ui.stickers}">😀</button><input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
+  ${ui.tab === "chat" ? `<div class="composer">${ui.chatMsg ? `<p class="chatmsg" id="chatmsg" role="status">${esc(ui.chatMsg)}</p>` : ""}${ui.stickers ? stickerPanel() : ""}<form id="msgForm"><button type="button" class="stkopen" data-act="stkopen" aria-label="Autocollants" aria-expanded="${!!ui.stickers && ui.stkMode !== "gif"}">😀</button>${gifOn() ? `<button type="button" class="stkopen gifopen" data-act="gifopen" aria-label="GIF" aria-expanded="${!!ui.stickers && ui.stkMode === "gif"}">GIF</button>` : ""}<input id="msg" maxlength="200" placeholder="Message" autocomplete="off" aria-label="Message au groupe"><button type="submit">Envoyer</button></form></div>` : ""}`;
 }
 
 function vFeed(k) {
@@ -461,7 +461,11 @@ document.addEventListener("click", e => {
     case "gleave": { const gr = SRV.groups.find(x => x.id === v); if (!gr) break; ui.confirm = { title: `Quitter « ${gr.name} » ?`, text: "Tes scores dans ce groupe ne compteront plus pour lui. Tu pourras le rejoindre avec son code.", yes: "Quitter", no: "Annuler", run: () => srvLeaveGroup(gr.id) }; render(); break; }
     case "goonline": ui.sheet = false; go("online"); break;
     case "emailskip": go("welcome"); break;
-    case "stkopen": ui.stickers = !ui.stickers; render(); break;
+    case "stkopen": ui.stickers = !(ui.stickers && ui.stkMode !== "gif"); ui.stkMode = "stk"; render(); break;
+    case "gifopen": ui.stickers = !(ui.stickers && ui.stkMode === "gif"); ui.stkMode = "gif"; render(); break;
+    case "chartall": ui.chartAll = !ui.chartAll; render(); break;
+    case "stkclose": ui.stickers = false; render(); break;
+    case "gifq": { GIF.q = v; const gi = document.getElementById("gifq"); if (gi) gi.value = v; document.querySelectorAll(".gifidea").forEach(b => b.classList.toggle("on", b.dataset.v === v)); gifFetch(v); break; }
     case "stkcat": ui.stkCat = v; render(); break;
     case "gifsend": sendGif(v); break;
     case "stksend": sendSticker(v); break;

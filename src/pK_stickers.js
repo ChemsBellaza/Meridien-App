@@ -102,18 +102,21 @@ const msgBody = e => { const id = stickerOf(e.text), g = gifOf(e.text); return i
 /* ---------- panneau : onglets de thèmes + GIF ---------- */
 const GIF = { q: "", res: [], busy: false, err: "", cache: {}, t: 0 };
 const gifOn = () => !!GIPHY_KEY && srvOn();
+const GIF_IDEAS = ["Bravo", "Rire", "Applaudir", "Wow", "Merci", "Triste", "Danse", "Facepalm"];
 function stickerPanel() {
-  const cats = STK_CATS.map(([id, lab, ico]) => ({ id, lab, ico })); if (gifOn()) cats.push({ id: "gif", lab: "GIF", ico: "🎞️" });
-  const cur = cats.some(c => c.id === ui.stkCat) ? ui.stkCat : cats[0].id;
-  const tabs = `<div class="stktabs" role="tablist" aria-label="Thèmes">${cats.map(c => `<button type="button" role="tab" class="stktab ${c.id === cur ? "on" : ""}" aria-selected="${c.id === cur}" data-act="stkcat" data-v="${c.id}"><span aria-hidden="true">${c.ico}</span><b>${esc(c.lab)}</b></button>`).join("")}</div>`;
-  let body;
-  if (cur === "gif") {
-    body = `<div class="gifbox"><input id="gifq" type="search" class="gifq" maxlength="40" placeholder="Chercher un GIF (ex. : bravo, rire…)" aria-label="Chercher un GIF" value="${esc(GIF.q)}" autocomplete="off"><div class="gifgrid" id="gifgrid">${gifGridHTML()}</div><small class="giphycred">Propulsé par GIPHY · les recherches passent par Giphy</small></div>`;
+  const gif = ui.stkMode === "gif" && gifOn();
+  const close = `<button type="button" class="stkclose" data-act="stkclose" aria-label="Fermer le panneau">✕</button>`;
+  if (gif) {
     if (!GIF.res.length && !GIF.busy && !GIF.err) setTimeout(() => gifFetch(GIF.q), 0);
-  } else body = `<div class="stkgrid">${STICKERS.filter(s => s.cat === cur).map(s => `<button type="button" class="stkbtn" data-act="stksend" data-v="${s.id}" aria-label="Envoyer : ${esc(s.label)}">${stickerHTML(s.id, store.profile.pet)}</button>`).join("")}</div>`;
-  return `<div class="stkpanel" role="group" aria-label="Autocollants et GIF">${tabs}${body}</div>`;
-}
-function gifGridHTML() {
+    return `<div class="stkpanel gifmode" role="group" aria-label="Rechercher un GIF">
+      <div class="stkhead"><div class="gifbar"><input id="gifq" type="search" class="gifq" maxlength="40" placeholder="Chercher un GIF…" aria-label="Chercher un GIF" value="${esc(GIF.q)}" autocomplete="off" enterkeyhint="search">${close}</div>
+        <div class="gifideas" role="group" aria-label="Idées de recherche">${GIF_IDEAS.map(w => `<button type="button" class="gifidea ${GIF.q.toLowerCase() === w.toLowerCase() ? "on" : ""}" data-act="gifq" data-v="${esc(w)}">${esc(w)}</button>`).join("")}</div></div>
+      <div class="stkscroll"><div class="gifgrid" id="gifgrid">${gifGridHTML()}</div><small class="giphycred">Propulsé par GIPHY · les recherches passent par Giphy</small></div></div>`;
+  }
+  const cur = STK_CATS.some(c => c[0] === ui.stkCat) ? ui.stkCat : STK_CATS[0][0];
+  const tabs = `<div class="stkhead"><div class="stkbar"><div class="stktabs" role="tablist" aria-label="Thèmes">${STK_CATS.map(([id, lab, ico]) => `<button type="button" role="tab" class="stktab ${id === cur ? "on" : ""}" aria-selected="${id === cur}" data-act="stkcat" data-v="${id}"><span aria-hidden="true">${ico}</span><b>${esc(lab)}</b></button>`).join("")}</div>${close}</div></div>`;
+  return `<div class="stkpanel" role="group" aria-label="Autocollants">${tabs}<div class="stkscroll"><div class="stkgrid">${STICKERS.filter(s => s.cat === cur).map(s => `<button type="button" class="stkbtn" data-act="stksend" data-v="${s.id}" aria-label="Envoyer : ${esc(s.label)}">${stickerHTML(s.id, store.profile.pet)}</button>`).join("")}</div></div></div>`;
+}function gifGridHTML() {
   if (GIF.busy && !GIF.res.length) return `<p class="note">Recherche…</p>`;
   if (GIF.err) return `<p class="note" role="status">${esc(GIF.err)}</p>`;
   if (!GIF.res.length) return `<p class="note">Aucun GIF trouvé.</p>`;

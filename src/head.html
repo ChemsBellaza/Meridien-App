@@ -842,7 +842,7 @@ div.hcard.sq{cursor:default}
 .cerend{justify-content:center}
 .sbanner{display:flex;flex-direction:column;align-items:flex-start;gap:4px;background:var(--card);border:2px solid var(--purple);border-radius:18px;padding:12px 14px;margin:4px 0;font-weight:700;font-size:14.5px;line-height:1.35}
 .sbanner b{font-family:var(--fd);font-weight:800;font-size:15px}.sbanner.gold{background:var(--yellow-soft);border-color:var(--yellow-line)}
-.chartbox.masked{padding:20px 14px}
+.chartbox.masked{padding:20px 14px}.chartbox .chartall{align-self:center;margin:6px auto 2px;display:flex}
 .halllist,.trlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .hallrow{display:flex;flex-direction:column;gap:6px;background:var(--card);border-radius:18px;padding:12px}.hallrow .hh{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .hpod{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}.hpod li{display:flex;align-items:center;gap:8px;font-weight:800}.hpod li b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hpod li.me{color:var(--purple-t)}
@@ -1003,12 +1003,17 @@ input,textarea,.codebox code,.bubble .tx{-webkit-user-select:text;user-select:te
 @keyframes stkTilt{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}65%{transform:rotate(6deg)}}
 @keyframes stkDroop{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(4px) scale(.97)}}
 @keyframes stkIco{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.18) rotate(8deg)}}
-.stkpanel{max-width:460px;margin:0 auto 8px;padding:8px 10px 10px;display:flex;flex-direction:column;gap:8px;background:var(--card);border-radius:22px;box-shadow:0 4px 0 var(--lip);max-height:50vh;overflow:auto}
+.stkpanel{max-width:460px;margin:0 auto 8px;padding:8px 10px 10px;display:flex;flex-direction:column;gap:8px;background:var(--card);border-radius:22px;box-shadow:0 4px 0 var(--lip);height:min(52vh,420px);overflow:hidden}
+.stkhead{flex:none}.stkscroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.stkbar,.gifbar{display:flex;align-items:center;gap:8px}.stkbar .stktabs{flex:1;min-width:0}.gifbar .gifq{flex:1;min-width:0}
+.stkclose{flex:none;width:44px;height:44px;border-radius:50%;background:var(--card-2);font-size:18px;font-weight:900;cursor:pointer}
+.gifideas{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 0 2px}.gifidea{flex:none;min-height:40px;padding:0 14px;border-radius:999px;background:var(--card-2);font-weight:800;font-size:14px;cursor:pointer}.gifidea.on{background:var(--purple);color:#fff}
+.composer .gifopen{width:auto;min-width:44px;padding:0 10px;font-size:14px;font-weight:900}
 .stkgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.stktabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;position:sticky;top:-8px;background:var(--card);padding:4px 0 6px;z-index:2}
+.stktabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0}
 .stktab{flex:none;display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:0 12px;border-radius:999px;background:var(--card-2);font-weight:800;font-size:13.5px;cursor:pointer}.stktab.on{background:var(--purple);color:#fff}.stktab b{font-weight:800}
 .gifbox{display:flex;flex-direction:column;gap:8px}.gifq{width:100%;min-height:44px;border-radius:14px;border:2px solid transparent;background:var(--card-2);padding:6px 12px;font-size:16px;font-weight:700}
-.gifgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.gifbtn{padding:0;border-radius:12px;overflow:hidden;background:var(--card-2);aspect-ratio:1;cursor:pointer}.gifbtn img{display:block;width:100%;height:100%;object-fit:cover}
+.gifgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.gifbtn{padding:0;border-radius:12px;overflow:hidden;background:var(--card-2);aspect-ratio:1;cursor:pointer}.gifbtn img{display:block;width:100%;height:100%;object-fit:cover}
 .giphycred{text-align:center;color:var(--ink-2);font-weight:700;font-size:11.5px}
 .bubble .tx.gifmsg{display:block;padding:4px 2px 2px}.gifimg{display:block;max-width:100%;width:200px;border-radius:14px}
 .stkpanel .stk{width:100%}
