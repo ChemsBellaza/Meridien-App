@@ -9,6 +9,8 @@ const CONFIG = {
   seasonDays: 21,                   // durée d'une saison ; bonus de boussoles : +5 % par jour (jour 1 = 0 %, jour 21 = +100 %)
   dayStartMin: 870,                 // le jeu du jour change à 14 h 30, heure de Barcelone (870 min) : un jour de jeu va de 14 h 30 à 14 h 30
   seasonAnchor: "2026-10-19",       // début de la saison 1 (et défi n°1)
+  rotOld: 35,                       // v39 : la rotation passe de 35 à 41 jeux à partir du jour de jeu rotFrom (les jours avant gardent 35 : rien ne change pour la journée en cours)
+  rotFrom: "2026-11-20",
   formatAnchor: "2026-10-25",       // ce jour-là = premier jeu de la liste
   jokerCost: 25,                    // prix d'un joker en boussoles
   formatOrder: ["sprint", "quiz", "motdujour", "carte", "petitbac", "paysmystere", "drapeaux", "connexions", "anagrammes", "frise", "capitales",

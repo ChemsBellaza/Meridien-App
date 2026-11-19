@@ -2029,13 +2029,15 @@ end $$;
 --
 -- 1. Nouveaux jeux : Histoire de France, Histoire du monde, Sports, Gastronomie, Sciences et nature, Langues du monde.
 --    41 est un nombre premier : tous les pas de rotation des groupes conviennent (avec 35, les pas 5, 15 et 25 faisaient revenir
---    les mêmes 7 jeux en boucle). Le jeu du jour des groupes qui n'ont encore rien joué aujourd'hui change donc une fois.
+--    les mêmes 7 jeux en boucle). La bascule se fait à partir du jour de jeu app_config.rot_from
+--    (20 novembre 2026) : les jours avant gardent la rotation à 35 jeux, donc la journée en cours n'est pas touchée et la migration
+--    peut s'appliquer à toute heure.
 -- 2. format_of(jour, groupe) rend d'abord le jeu réellement joué ce jour-là dans le groupe (table attempts) : ajouter des jeux ne
 --    change plus l'historique ni le jeu d'une journée déjà entamée. Sans partie ce jour-là, la rotation s'applique comme avant.
 -- 3. Jeu de la veille : un membre qui n'a pas joué le jeu d'hier (jour de jeu précédent, dans la saison en cours, depuis son arrivée)
 --    peut en jouer UN essai, comme un rattrapage (classé sans bousculer les autres, boussoles de ce jour, la série l'ignore).
 --
--- À appliquer AVANT de publier le code v39 (idéalement juste avant de pousser, en soirée).
+-- À appliquer AVANT de publier le code v39, à n'importe quelle heure (la journée en cours ne change pas).
 
 -- ---------- 1. les six jeux ----------
 insert into public.formats (position, key, max_points, special) values
@@ -2047,6 +2049,10 @@ insert into public.formats (position, key, max_points, special) values
   (40, 'langues', 300, false)
 on conflict (position) do update set key = excluded.key, max_points = excluded.max_points, special = excluded.special;
 
+-- bascule : 35 jeux avant rot_from, tous les jeux ensuite
+alter table public.app_config add column if not exists rot_old_n int not null default 35;
+alter table public.app_config add column if not exists rot_from date not null default date '2026-11-20';
+
 -- ---------- 2. le jeu déjà joué prime sur la rotation ----------
 create or replace function public.format_of(p_day date, p_group uuid) returns text
 language sql stable security definer set search_path = public as $$
@@ -2054,10 +2060,13 @@ language sql stable security definer set search_path = public as $$
     (select a.fmt from attempts a where a.group_id = p_group and a.day = p_day and a.fmt is not null order by a.started_at limit 1),
     case when extract(dow from p_day) = 0 then 'megaquiz' else (
       select f.key
-      from formats f, app_config c, (select count(*)::int as n from formats where not special) t
+      from app_config c
+      cross join lateral (select case when p_day < c.rot_from then least(c.rot_old_n, x.n) else x.n end as n
+                          from (select count(*)::int as n from formats where not special) x) t
       left join groups g on g.id = p_group
-      where c.id = 1 and not f.special
+      join formats f on not f.special
         and f.position = (((coalesce(g.fmt_offset, 0)::bigint + coalesce(g.fmt_stride, 1)::bigint * (p_day - c.format_anchor)) % t.n) + t.n) % t.n
+      where c.id = 1
     ) end
   )
 $$;

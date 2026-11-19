@@ -164,9 +164,10 @@ function setAppHTML(html) {
 // jeu du jour : en ligne, chaque groupe a sa rotation (décalage + pas) ; sinon la rotation d'origine
 const isSunday = k => new Date(k + "T12:00:00").getDay() === 0;
 const triesOf = k => (isSunday(k) ? 1 : CONFIG.tries); // le dimanche : jeu spécial, un seul essai
+const fmtCountOn = k => (k < CONFIG.rotFrom ? CONFIG.rotOld : CONFIG.formatOrder.length); // nombre de jeux en rotation ce jour-là (35 avant rotFrom, 41 ensuite)
 const fmtOfFor = (k, g) => {
   if (isSunday(k)) return "megaquiz"; // le dimanche, tous les groupes jouent le méga-quiz
-  const n = CONFIG.formatOrder.length;
+  const n = fmtCountOn(k);
   return CONFIG.formatOrder[mod((g ? +g.fmt_offset || 0 : 0) + (g ? +g.fmt_stride || 1 : 1) * diffDays(CONFIG.formatAnchor, k), n)];
 };
 const fmtOf = k => fmtOfFor(k, typeof srvGroupNow === "function" && srvOn() ? srvGroupNow() : null);
