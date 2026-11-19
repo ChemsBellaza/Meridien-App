@@ -291,6 +291,7 @@ function evoFX(key, st, P, R) {
     case "dragon":
       back += side.map(sd => tilt(sx(sd) + sd * 4, cy + 10, sd * 30, flame(sx(sd) + sd * 4, cy + 10, big ? 5.5 : 3.8, C[0], C[1], C[2]))).join("");
       front += [[24, 40, 4.6], [98, 44, 4.2], [28, 86, 3.8], [95, 84, 4.4]].slice(0, big ? 4 : 2).map(([x, y, s]) => star4(x, y, s, C[1])).join(""); break;
+    default: if (window.EVO_EXTRA && EVO_EXTRA[T]) { const x = EVO_EXTRA[T](C, big, bx, cy); back += x.back; front += x.front; }
   }
   // étincelles de lumière (communes à tous les types) : une pluie plus dense au dernier stade
   const sp = big ? [[12, 22, 3.6], [108, 28, 3], [16, 64, 2.6], [106, 70, 3.4], [44, 8, 2.6], [78, 12, 3.2]] : [[14, 30, 2.8], [106, 36, 2.4], [100, 92, 2.2]];

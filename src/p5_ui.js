@@ -15,6 +15,7 @@ const meP = () => players()[0];
 /* ============ RENDUS ============ */
 function render() {
   if (game) { renderGame(); return; }
+  if (typeof vGalerie === "function" && /[?&]galerie/.test(location.search)) { setAppHTML(vGalerie()); return; } // page de présentation des familiers (propositions)
   clearLater();
   if (store.profile && store.profile.pet && !store.profile.pet.stage) { // anciens familiers : on garde l'espèce, on calcule l'évolution
     const pp = progress(); Object.assign(store.profile.pet, { stage: String(ITEMS.stage.list.filter(it => isUnlocked(it, pp)).length), shiny: "normal", bg: "type" }); save();
