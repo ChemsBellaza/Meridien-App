@@ -77,6 +77,9 @@ Fichiers statiques dans `public/` (manifeste, `sw.js`, `icons/`), copiés dans `
 ## Tutoriel et déblocage progressif
 `src/pT_tuto.js` (placé juste après `pA_core.js` dans `order.json` : `render()` l'appelle dès le chargement). `profile.tuto = { done, seen, legacy? }` ; `featureOn("joker"|"carnet"|"trophees")` selon les jours depuis `profile.created` (`TUTO_UNLOCK`). Toute nouvelle fonctionnalité à introduire progressivement : l'ajouter à `TUTO_UNLOCK` et `TUTO_NEWS`. La partie guidée a `game.tuto = true` (1 manche, `practice` vrai) : ne jamais l'enregistrer dans stats/carnet. Dans les textes d'interface, écrire les espaces insécables en ` ` (jamais copiés-collés : ils se transforment en espaces normaux).
 
+## Familiers (v43) : 19 espèces
+- `src/pP2_newpets.js` ajoute les 9 nouvelles espèces (DRAW, PAL, SHINY, SPECIES, types) et applique les refontes du Panda et du Lion sous leurs anciennes clés ; `src/pH_story.js` contient l'histoire (3 chapitres + sens) et `petStory()`. Ajouter un familier : entrée `DRAW` + `PAL` + `SHINY` + `SPECIES` (via `NP(...)`), type dans `TYPES`/`TYPE_ICO`/`EVO_PAL`/`EVO_EXTRA`, histoire dans `STORY`. Page de présentation : adresse `?galerie` (ou `docs/familiers-galerie.html`).
+
 ## Évolutions des familiers
 Chaque espèce garde son dessin (`DRAW[espèce]`) ; `evoFX()` (p4_draw.js) ajoute par-dessus aura, rayons, anneaux, éléments du type (`EVO_PAL`) et étincelles selon le stade. Nouvelle espèce : ajouter son type dans `EVO_PAL` et le `case` correspondant. Les silhouettes verrouillées (`opt.sil`) n'ont pas d'effets. L'animation (`pV_evo.js`) s'ouvre par `openEvo(pet, from, to)` ; son CSS est écrit pour que l'état de base soit l'état final (règle « réduire les animations »).
 

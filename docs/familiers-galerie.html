@@ -790,6 +790,12 @@ div.hcard.sq{cursor:default}
 @keyframes rvup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes rvhint{0%,8%{opacity:0}16%,84%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.rvroot *{animation:none !important}.rvglobe,.rvq,.rvhint,.rvline{display:none}}
+/* histoire des familiers */
+.story{display:flex;flex-direction:column;gap:8px;margin-top:6px}.chaps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.chap{background:var(--card);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}.chap b{font-family:var(--fd);font-size:14px}.chap p{margin:0;font-weight:600;font-size:14.5px;line-height:1.4}
+.chap.lock{opacity:.65}.chap.lock p{display:flex;align-items:center;gap:6px;color:var(--ink-2)}
+.sens{margin:0;padding:12px 14px;border-radius:18px;background:var(--yellow-soft);border:2px solid var(--yellow-line);font-weight:700;line-height:1.4}.sens b{font-family:var(--fd)}
+.evochap{margin:0;color:rgba(255,255,255,.85);font-weight:700;font-size:13px;animation:evoBtn .6s 3.7s both}
 /* nouveau fond débloqué : petite animation sur la carte (pas de plein écran) */
 .unlock{animation:unlockIn .5s ease-out both}.unlock .av{animation:unlockPop .9s .2s cubic-bezier(.2,1.5,.4,1) both}
 @keyframes unlockIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes unlockPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:none}}
@@ -7111,7 +7117,7 @@ function petPicker() {
    Huit familiers à valider : Fennec (Désert), Tortue ninja (Ninja), Paon (Soleil), Aigle des vents (Air), Chouette (Nocturne),
    Faon fleuri (Terre), Dragon-perle (Dragon), Colibri (Vol). Ils NE SONT PAS dans le jeu : ils n'existent que si CONFIG.newPets est vrai
    ou si l'adresse contient « ?galerie » (page de présentation de tous les familiers). Même moteur de dessin que les dix premiers (p4_draw.js). */
-const NEWPETS_ON = !!CONFIG.newPets || (typeof location !== "undefined" && true);
+const NEWPETS_ON = true; // validés par le propriétaire (v43)
 const heart = (x, y, s, c) => pth(`M${pt(x, y + s * .95)}C${pt(x - s * 1.35, y - s * .15)} ${pt(x - s * .6, y - s * 1.25)} ${pt(x, y - s * .4)}C${pt(x + s * .6, y - s * 1.25)} ${pt(x + s * 1.35, y - s * .15)} ${pt(x, y + s * .95)}Z`, c);
 const bloom = (x, y, s, c, c2, n = 5) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2 - Math.PI / 2; return ell(x + s * Math.cos(a), y + s * Math.sin(a), s * .78, s * .78, c); }).join("") + ell(x, y, s * .72, s * .72, c2, 0, false);
 
@@ -7401,6 +7407,15 @@ if (NEWPETS_ON) {
       { eye: "round", iris: "#FF5FA8", lid: [0, 0], mouth: "none", spark: true },
       { hello: ["Bzzz ! Je survole le défi.", "Rien ne m'échappe, même en vol."], good: ["Bzzz-ravo ! Du nectar de victoire !", "Plus rapide que mes ailes !"], mid: ["Je butine encore un peu.", "Presque. Je fais du sur-place et je retente."], bad: ["Un faux pas, un coup d'aile et ça repart.", "Je reviens plus vif."] }, { k: "games", v: 25 })
   });
+
+  // refontes : le Panda et le Lion gardent leur clé (les joueurs gardent leur familier) mais prennent le nouveau dessin, les noms et le type
+  [["panda", "pandapo"], ["lion", "lionor"]].forEach(([k, n]) => {
+    const old = SPECIES[k], nw = SPECIES[n];
+    DRAW[k] = DRAW[n]; PAL[k] = PAL[n]; SHINY[k] = SHINY[n];
+    SPECIES[k] = { ...nw, num: old.num };
+    delete SPECIES[n]; delete DRAW[n]; delete PAL[n]; delete SHINY[n];
+  });
+  ITEMS.species.list = Object.entries(SPECIES).map(([id, S]) => ({ id, label: S.names[0], need: S.need })); // le choix du familier connaît les nouveaux
 }
 
 /* ---------- galerie : tous les familiers, trois stades et la variante chromatique (adresse ?galerie) ---------- */
@@ -7416,6 +7431,41 @@ function vGalerie() {
       <div class="gtiles">${tile(1, false, S.names[0] + " · stade 1")}${tile(2, false, S.names[1] + " · stade 2")}${tile(3, false, S.names[2] + " · stade 3")}${tile(3, true, "Chromatique · stade 3")}</div>
       <p class="gq">« ${esc(S.quote)} »</p><ul class="gs">${S.dex.map(d => `<li>${esc(d)}</li>`).join("")}</ul></section>`; };
   return css + `<div class="gal"><h1>Galerie des familiers</h1><p class="sub">${keys.length} familiers, 3 stades chacun et une variante chromatique. Cadre doré : nouveaux familiers ; cadre bleu : refonte proposée d'un familier existant (juste après l'original). Tout est à valider.</p>${keys.map(card).join("")}</div>`;
+}
+/* ============ L'HISTOIRE DES FAMILIERS (v43) ============
+   Chaque familier est un « Veilleur du Méridien » : une étincelle tombée du premier méridien, née d'un geste qu'il faut pour apprendre.
+   Son histoire a 3 chapitres, un par évolution (stade 1, 2, 3), et un « sens » (la vertu qu'il incarne), lu sur sa fiche « Mon familier ».
+   Uniquement des fonctions déclarées et des données : fichier chargé avant p5_ui. */
+const STORY = {
+  renard: { c: ["Il est né d'une étincelle volée au feu de camp des premiers cartographes. Il aime tromper tout le monde, pour rire.", "Un mensonge de trop égare un voyageur dans la forêt. Flamérou allume la flamme de son front pour le ramener, et découvre qu'elle ne brille que lorsqu'il dit vrai.", "Pyrénard garde les chemins. Il ne triche plus : il flaire les fausses pistes."], s: "la ruse sert à chercher la vérité, pas à la cacher." },
+  loutre: { c: ["La goutte sur sa tête est la toute première pluie tombée sur la carte. Elle la garde comme porte-bonheur.", "Elle remonte les rivières à contre-courant. Chaque fleuve lui apprend un nom, et elle comprend que jouer est sa façon de retenir.", "Marélou connaît le nom de chaque fleuve du monde. Elle l'apprend aux autres en les éclaboussant de rire."], s: "ce qu'on apprend en riant, on ne l'oublie pas." },
+  koala: { c: ["On se moque de lui : il dort presque tout le temps. Pourtant, une pousse grandit sur sa tête pendant son sommeil.", "Eucalou découvre que ses rêves rangent ce qu'il a appris : les capitales se classent toutes seules.", "Sylvoala porte une couronne de fleurs : une éclot chaque fois qu'il comprend quelque chose. Il enseigne que le repos fait partie de l'apprentissage."], s: "apprendre, c'est aussi savoir se reposer." },
+  lapin: { c: ["Il est né d'un éclair et ne finit jamais ses phrases. Il lit la première réponse et file.", "Voltalapin rate une bonne réponse pour avoir été trop vite. Pour la première fois, il s'arrête, et relit.", "Fulgurine sait qu'un éclair est le plus rapide quand il connaît son chemin. Elle lit, puis bondit."], s: "la vitesse sans lecture n'est que du hasard." },
+  ours: { c: ["Il dort sur les galets et se réveille avec un caillou de plus. Une montagne rêve de lui.", "Rocours garde une pierre pour chaque échec. Ses épaulettes sont faites de toutes les fois où il est retombé et s'est relevé.", "Montourse met trois jours à changer d'avis : il pèse chaque idée. Le groupe s'appuie sur lui quand tout vacille."], s: "chaque échec est une pierre de plus pour construire." },
+  tortue: { c: ["Un cristal pousse sur sa carapace pendant les nuits froides. Elle arrive toujours la dernière aux courses, et ne s'en inquiète pas.", "Glacortue a vu passer mille hivers. Elle répond toujours après les autres, car elle a tout écouté.", "Sur le dos de Banquisa repose un iceberg : un glacier garde les années. Elle est la mémoire du monde."], s: "aller lentement permet de se souvenir." },
+  aigle: { c: ["Il voit une fourmi à cent mètres, mais pas ses propres plumes en bataille. Il voit loin, mais pas près de lui.", "Rapaçon comprend que voir de haut ne suffit pas : pour être sûr, il faut descendre vérifier.", "Altaïgle fait le tour d'un continent d'un battement d'ailes. Il connaît chaque frontière, et sait que ce ne sont que des lignes tracées par les gens."], s: "prendre de la hauteur, puis redescendre aux détails." },
+  panda: { c: ["Il apprend le kung-fu entre deux siestes et trois bambous. On rit de sa silhouette ronde, jusqu'à ce qu'il esquive tout en dansant.", "Pandojo a gagné sa ceinture noire en tombant mille fois et en riant à chaque fois : la vraie force, c'est de se relever, et de respirer avant de répondre.", "Grandmaîtrao porte l'emblème d'or du Guerrier du Dragon. Il brise une planche d'un seul regard et préfère la manger : sa maîtrise est de ne pas s'en servir."], s: "la force tranquille, et la joie de tomber pour mieux se relever." },
+  tigre: { c: ["Il se cache dans l'ombre des classements, car il a peur d'être deuxième.", "Noctigre comprend que ses rivaux le font progresser : sans eux, pas de bond.", "Éclipsigre rugit et la lune se voile. Il vise la première place, mais le record qu'il veut battre est le sien."], s: "ton vrai rival, c'est toi d'hier." },
+  lion: { c: ["Une mèche d'or est apparue dans la crinière d'Orceau le jour où il a partagé son repas. Il ne sait pas encore pourquoi.", "Dorlion comprend : chaque bonne action ajoute une mèche d'or. Il brille de plus en plus, mais ne s'en vante jamais.", "Rugior porte une couronne et une crinière de lingots, pourtant il n'a jamais rien gardé pour lui. Le trône ne se prête pas : il se mérite en donnant."], s: "l'or ne vaut que ce qu'on donne ; guider, c'est donner." },
+  fennec: { c: ["Dunette entend tout : le vent, les insectes, les secrets des dunes. Le bruit la rend folle, elle voudrait boucher ses oreilles.", "Mirafennec apprend à trier : l'eau sous le sable ne fait presque aucun bruit. Il comprend qu'il faut écouter ce qui compte, pas ce qui crie le plus fort.", "Saharaja guide les voyageurs perdus jusqu'au puits. Elle ne leur dit pas où aller : elle leur apprend à tendre l'oreille."], s: "apprendre, c'est d'abord écouter, et savoir quoi écouter." },
+  tortueninja: { c: ["Carapin est la plus lente de l'école de l'ombre. Elle répète le même geste mille fois, la nuit, sans témoin, jusqu'à ce qu'il soit parfait.", "Shinotortue comprend que sa lenteur est une force : elle ne gaspille aucun mouvement. Son maître ne la félicite jamais, et elle n'a jamais été aussi fière.", "Kagetortue est l'ombre du groupe : jamais devant, toujours là. Chaque bonne réponse de ses amis contient un peu de ses nuits d'entraînement."], s: "la discipline quotidienne, sans public, fait les maîtres." },
+  singe: { c: ["Ouki est né d'un œuf de pierre. Il n'a ni maître, ni famille : il veut juste voir ce qu'il y a derrière la montagne, puis derrière la suivante.", "Sunwu apprend tous les tours de magie, les soixante-douze transformations, et défie même le Ciel. Il se croit invincible jusqu'à ce qu'on l'enferme sous une montagne, cinq cents ans, pour qu'il apprenne à attendre.", "Wukong sort de sa montagne autre qu'il n'y est entré : toujours malicieux, mais protecteur. Il sait désormais que le plus malin apprend vraiment quand il accepte de ne pas tout savoir."], s: "l'audace ouvre toutes les portes, l'humilité les garde ouvertes." },
+  paon: { c: ["Paonnet n'ose pas ouvrir sa queue : on se moquait de lui parce que « ça brille trop ». Il la garde repliée, mais chaque plume cache déjà un petit soleil.", "Solipaon ouvre sa roue quand quelqu'un doute, pas pour qu'on l'admire. Il découvre que la lumière ne sert à rien si on la garde pour soi.", "Héliopaon éclaire la nuit de ceux qui veulent abandonner. Briller n'est plus de la vanité, c'est un service."], s: "ne crains pas ta lumière : elle sert aux autres." },
+  aigleair: { c: ["Brisaiglon naît d'un soupir du premier vent. On lui confie les messages entre les Veilleurs, mais il parle si vite que le vent en emporte la moitié.", "Aquilon apprend ce qui lui manque : écouter. Il apprend chaque message par cœur avant de partir, et attend la réponse du destinataire avant de repartir.", "Tornaigle réunit tous les savoirs dispersés dans sa spirale : le vent ne garde rien, il fait tout circuler. Là où il passe, les gens s'expliquent enfin les choses."], s: "un savoir n'existe vraiment que lorsqu'on le partage." },
+  chouette: { c: ["Hibouton est né de la dernière étoile qui s'est éteinte à l'aube. Il refuse de dormir, de peur de manquer une question.", "Chouplume apprend à voler sans bruit : il faut se taire pour entendre. Elle comprend qu'une réponse vient souvent après un « et si ce n'était pas ça ? ».", "Athénuit porte le ciel sur ses ailes : chaque constellation est une question qu'on a fini par résoudre. Elle sait que celui qui doute le plus apprend le plus."], s: "douter n'est pas une faiblesse, c'est le début de comprendre." },
+  faon: { c: ["Pétalou est né dans un champ brûlé après l'orage. Une fleur pousse là où il pose le sabot, alors il n'ose plus marcher : il a peur d'écraser quelque chose.", "Floribiche découvre que ses pétales apaisent ceux qui viennent de perdre : elle les laisse tomber sur ceux qui ratent un défi, sans un mot.", "Édencerf ne marche plus sur la pointe des pieds : une forêt entière le suit. La terre rend toujours ce qu'on lui donne, et mille fois plus."], s: "apprendre ensemble nourrit tout le monde ; la gentillesse a les racines les plus longues." },
+  dragonperle: { c: ["Écaillon est né d'une perle tombée au fond d'un fleuve. Il y cache ses questions, jalousement, de peur qu'on se moque de lui.", "Dracolong remarque que la perle brille plus fort quand il la partage. Garder une question pour soi, c'est la laisser s'éteindre.", "Perlodragon sait presque tout, mais ne donne jamais de réponse : il pose des questions. Celui qui trouve seul sa réponse ne l'oublie plus."], s: "la sagesse n'est pas de savoir, c'est de savoir poser la bonne question." },
+  colibri: { c: ["Colibrin ne se pose jamais : s'arrêter lui fait peur. Pourtant il sait rester immobile en plein vol.", "Colibrillant butine tous les savoirs, un par un, pour goûter le meilleur nectar.", "Les ailes de Vibracolibri battent si vite qu'on ne les voit plus. Il fait du sur-place pour mieux observer : l'attention est une forme de mouvement."], s: "être attentif, c'est rester immobile à l'intérieur pendant qu'on avance." }
+};
+
+// section « Histoire » de la fiche du familier : un chapitre par stade débloqué, « le sens » une fois les trois lus
+function petStory(pet) {
+  const S = STORY[pet.species]; if (!S) return "";
+  const names = SPECIES[pet.species].names, prog = progress(), got = ITEMS.stage.list.filter(it => isUnlocked(it, prog)).length;
+  const ch = S.c.map((txt, i) => i < got
+    ? `<li class="chap"><b>Chapitre ${i + 1} · ${esc(names[i])}</b><p>${esc(txt)}</p></li>`
+    : `<li class="chap lock"><b>Chapitre ${i + 1} · ???</b><p>${I.lock}<span> Se débloque à l'évolution (${esc(reqText(EVO_NEED[i]))}).</span></p></li>`).join("");
+  return `<section class="story" aria-label="Histoire de ${esc(names[0])}"><div class="kicker">Histoire</div><ol class="chaps">${ch}</ol>${got >= 3 ? `<p class="sens"><b>Le sens</b> : ${esc(S.s)}</p>` : ""}</section>`;
 }
 /* ---------- état de l'interface ---------- */
 const ui = { view: store.profile ? (store.profile.srv ? "hub" : "group") : "onboard", tab: "chat", sheet: false, onbTab: "create", onbStep: "welcome", petTab: "species", dayKey: null, confirm: null, toast: "", draftPet: "renard", draftName: "", draftGroup: "Les Cartographes", draftCode: "", draftPhoto: null, prevView: "group" };
@@ -7708,6 +7758,7 @@ function vPet() {
       ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
   }).join("")}</div>
   <div class="evorow"><span class="kicker">Évolutions</span><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div>
+  ${petStory(pet)}
 `;
 }
 
@@ -10532,6 +10583,7 @@ function vEvo() {
       <div class="evoflash"></div>${sparks}
     </div>
     <div class="evotxts"><p class="evotxt t1">${t1}</p><p class="evotxt t2" role="status">${t2}</p></div>
+    ${kind === "stage" && typeof STORY !== "undefined" && STORY[e.species] ? `<p class="evochap">📖 Chapitre ${e.to} de son histoire débloqué (Mon familier, Histoire)</p>` : ""}
     <button class="btn evoclose" data-act="evoclose">Super !</button>
   </div></div>`;
 }

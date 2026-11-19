@@ -2,7 +2,7 @@
    Huit familiers à valider : Fennec (Désert), Tortue ninja (Ninja), Paon (Soleil), Aigle des vents (Air), Chouette (Nocturne),
    Faon fleuri (Terre), Dragon-perle (Dragon), Colibri (Vol). Ils NE SONT PAS dans le jeu : ils n'existent que si CONFIG.newPets est vrai
    ou si l'adresse contient « ?galerie » (page de présentation de tous les familiers). Même moteur de dessin que les dix premiers (p4_draw.js). */
-const NEWPETS_ON = !!CONFIG.newPets || (typeof location !== "undefined" && /[?&]galerie/.test(location.search));
+const NEWPETS_ON = true; // validés par le propriétaire (v43)
 const heart = (x, y, s, c) => pth(`M${pt(x, y + s * .95)}C${pt(x - s * 1.35, y - s * .15)} ${pt(x - s * .6, y - s * 1.25)} ${pt(x, y - s * .4)}C${pt(x + s * .6, y - s * 1.25)} ${pt(x + s * 1.35, y - s * .15)} ${pt(x, y + s * .95)}Z`, c);
 const bloom = (x, y, s, c, c2, n = 5) => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2 - Math.PI / 2; return ell(x + s * Math.cos(a), y + s * Math.sin(a), s * .78, s * .78, c); }).join("") + ell(x, y, s * .72, s * .72, c2, 0, false);
 
@@ -292,6 +292,15 @@ if (NEWPETS_ON) {
       { eye: "round", iris: "#FF5FA8", lid: [0, 0], mouth: "none", spark: true },
       { hello: ["Bzzz ! Je survole le défi.", "Rien ne m'échappe, même en vol."], good: ["Bzzz-ravo ! Du nectar de victoire !", "Plus rapide que mes ailes !"], mid: ["Je butine encore un peu.", "Presque. Je fais du sur-place et je retente."], bad: ["Un faux pas, un coup d'aile et ça repart.", "Je reviens plus vif."] }, { k: "games", v: 25 })
   });
+
+  // refontes : le Panda et le Lion gardent leur clé (les joueurs gardent leur familier) mais prennent le nouveau dessin, les noms et le type
+  [["panda", "pandapo"], ["lion", "lionor"]].forEach(([k, n]) => {
+    const old = SPECIES[k], nw = SPECIES[n];
+    DRAW[k] = DRAW[n]; PAL[k] = PAL[n]; SHINY[k] = SHINY[n];
+    SPECIES[k] = { ...nw, num: old.num };
+    delete SPECIES[n]; delete DRAW[n]; delete PAL[n]; delete SHINY[n];
+  });
+  ITEMS.species.list = Object.entries(SPECIES).map(([id, S]) => ({ id, label: S.names[0], need: S.need })); // le choix du familier connaît les nouveaux
 }
 
 /* ---------- galerie : tous les familiers, trois stades et la variante chromatique (adresse ?galerie) ---------- */

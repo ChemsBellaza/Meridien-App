@@ -31,6 +31,7 @@ function vEvo() {
       <div class="evoflash"></div>${sparks}
     </div>
     <div class="evotxts"><p class="evotxt t1">${t1}</p><p class="evotxt t2" role="status">${t2}</p></div>
+    ${kind === "stage" && typeof STORY !== "undefined" && STORY[e.species] ? `<p class="evochap">📖 Chapitre ${e.to} de son histoire débloqué (Mon familier, Histoire)</p>` : ""}
     <button class="btn evoclose" data-act="evoclose">Super !</button>
   </div></div>`;
 }

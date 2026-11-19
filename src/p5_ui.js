@@ -289,6 +289,7 @@ function vPet() {
       ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
   }).join("")}</div>
   <div class="evorow"><span class="kicker">Évolutions</span><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div>
+  ${petStory(pet)}
 `;
 }
 
