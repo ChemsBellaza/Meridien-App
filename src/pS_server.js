@@ -625,9 +625,8 @@ function vCatchup() { // cartes « Jeux à rattraper » de l'accueil
 // boost : une fois par saison, ×1,5 sur le score d'un jeu ; à activer avant le premier essai du jour dans ce groupe
 function vBoost() {
   const b = srvOn() && SRV.boost; if (!b) return "";
-  const bolt = `<svg class="bolt" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M13.5 2 4 14h7l-1.5 8L20 10h-7z" fill="currentColor"/></svg>`;
-  if (b.active_today) return `<p class="boostnote on" role="status">${bolt}<span><b>Boost actif ×1,5</b><small>Ton score d'aujourd'hui est multiplié.</small></span></p>`;
-  if (b.can_use) return `<button class="boostbtn" data-act="boostask"><span class="bico">${bolt}</span><span class="stack"><b>Activer mon boost</b><small>Score de ce jeu ×1,5 · 1 par saison</small></span><span class="nchev" aria-hidden="true">›</span></button>`;
+  if (b.active_today) return `<p class="boostnote on" role="status"><span aria-hidden="true">⚡</span> Boost actif : ton score d'aujourd'hui compte ×1,5.</p>`;
+  if (b.can_use) return `<button class="boostbtn" data-act="boostask"><span aria-hidden="true">⚡</span><span class="stack">Activer mon boost<small>1 par saison · ton score de ce jeu compte ×1,5</small></span></button>`;
   return "";
 }
 async function srvUseBoost() {

@@ -1,7 +1,5 @@
 # Journal des versions
 
-- **v55 (20 nov. 2026)** — Bouton « Activer mon boost » doré avec éclair qui pulse (même place) et bande « Boost actif ×1,5 ». Fiche familier : frise des 3 évolutions dans la carte (toucher un stade déverrouillé l'équipe) avec la prochaine évolution, sélecteur Espèce / Chromatique / Fond avec compteurs ; l'accordéon Évolutions disparaît (fiche 1648 px). Aucune migration.
-
 - **v54 (20 nov. 2026)** — **Graphique de saison à deux modes** (`pZ_season.js`) : « Course » (barres, familier au bout, curseur de jour + rejouer) et « Courbes » (lignes droites, sans aire ni décor). On touche un joueur dans la liste pour l'afficher ou le masquer (`ui.chartSel`). Mode mémorisé (`meridien.chartmode`). Retour en arrière : `CHART_STYLE = "voyage"` ou `"classique"` dans `pZ_season.js`. Aucune migration.
 
 - **v53 (20 nov. 2026)** — L'image du jeu du jour lance la partie d'un toucher (tant qu'il reste un essai) ; le podium affiche les boussoles gagnées par les 3 premiers. Aucune migration.
