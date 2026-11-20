@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v51 (20 nov. 2026)** — Accès au classement complet plus clair : la pastille de rang du groupe affiche « Classement ›» avec un liseré doré (elle ouvrait déjà la saison, mais ressemblait à une simple info). Aucune migration.
+
 - **v50 (20 nov. 2026)** — Retour joueurs : (1) le code de récupération n'est plus annoncé « à 6 chiffres » (il en a 8) : « Code reçu par e-mail » ; (2) notifications refusées : la carte reste sur l'accueil et « Activer » ouvre une fenêtre qui explique comment les rouvrir (le navigateur ne redemande jamais après un refus) ; un fenêtre fermée sans réponse permet de réessayer. Aucune migration.
 
 - **v49 (20 nov. 2026)** — **Animation du nouveau jeu plus spectaculaire** (pY_reveal.js) : flash à l'ouverture des rideaux, deux ondes de choc, rayons dorés qui tournent, 44 confettis, la carte rebondit (vcard) et l'ensemble « tape » légèrement. Désactivé avec « réduire les animations » et au toucher pour passer. Aucune migration.

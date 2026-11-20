@@ -50,7 +50,7 @@ function render() {
 
 const backBtn = (act = "back", label = "Retour") => `<button class="roundbtn" data-act="${act}" aria-label="${label}">${I.back}</button>`;
 const photoBtn = (label) => `<label class="smallbtn">${I.camera}<span>${label}</span><input type="file" id="photoInput" accept="image/*" hidden></label>`;
-const pill = (icon, val, act, aria) => `<button class="spill" data-act="${act}" aria-label="${esc(aria)}"><span class="v num">${val}</span>${icon}</button>`;
+const pill = (icon, val, act, aria, lab = "") => `<button class="spill ${lab ? "go" : ""}" data-act="${act}" aria-label="${esc(aria)}"><span class="v num">${val}</span>${icon}${lab ? `<span class="pl">${lab}</span><span class="nchev" aria-hidden="true">›</span>` : ""}</button>`;
 const labels = (small, big) => `<span class="labels">${small ? `<span class="lab sm">${small}</span>` : ""}<span class="lab">${big}</span></span>`;
 const toi = `<span class="toi">TOI</span>`;
 
@@ -150,7 +150,7 @@ function vGroup() {
   ${groupNotice()}
   <div class="pills">
     ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
-    ${pill(I.trophy(26), "#" + me.rank, "season", `Rang ${me.rank} sur ${st.list.length}`)}
+    ${pill(I.trophy(26), "#" + me.rank, "season", `Classement de saison : rang ${me.rank} sur ${st.list.length}`, "Classement")}
   </div>
   ${streakStrip()}
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
