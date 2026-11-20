@@ -307,6 +307,27 @@ function parseItem(s) {
   if (s[0] === "@") { const [id, ...ex] = s.slice(1).split("|"); const c = CBY[id]; return { label: c.name, keys: [...countryKeys(c), ...ex.map(norm)], id }; }
   const parts = s.split("|"); return { label: parts[0], keys: parts.map(norm) };
 }
+// distance d'édition avec échange de deux lettres voisines compté pour 1 (« Brésli » = 1 faute)
+function lev2(a, b) {
+  const m = a.length, n = b.length; if (!m || !n) return m || n;
+  const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]); for (let j = 1; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+  }
+  return d[m][n];
+}
+// listes à citer : tolérant aux fautes (1 faute dès 4 lettres, 2 dès 7, 3 dès 12). Renvoie la plus petite distance (0 = exact), -1 si trop éloigné
+function listDist(input, keys) {
+  const x = norm(input); if (!x) return -1; let best = -1;
+  for (const k of keys) {
+    if (x === k) return 0;
+    if (k === "guyana" && x.indexOf("guyane") === 0) continue; // la Guyane française n'est pas le Guyana
+    const tol = k.length >= 12 ? 3 : k.length >= 7 ? 2 : k.length >= 4 ? 1 : 0;
+    if (tol && Math.abs(x.length - k.length) <= tol) { const d = lev2(x, k); if (d <= tol && (best < 0 || d < best)) best = d; }
+  }
+  return best;
+}
 ENG.listtype = {
   board: true, focus: "typein",
   build(g, m, d) {
@@ -326,8 +347,9 @@ ENG.listtype = {
       ${rev ? "" : `<div class="btnline center"><span class="count num" id="lcount">${st.found.length} / ${q.items.length}</span><button class="smallbtn ghost" data-g="listdone">J'arrête</button></div>`}`;
   },
   type(g, val, submit) {
-    const q = g.qs[0], st = g.st, test = keys => submit ? matchKeys(val, keys) : exactKeys(val, keys);
-    const i = q.items.findIndex(it => test(it.keys));
+    const q = g.qs[0], st = g.st;
+    const closest = list => { let at = -1, bd = 99; list.forEach((it, k) => { const d = submit ? listDist(val, it.keys) : (exactKeys(val, it.keys) ? 0 : -1); if (d >= 0 && d < bd) { bd = d; at = k; } }); return at; }; // l'entrée la plus proche, sans ambiguïté (Niger / Nigeria)
+    const i = closest(q.items);
     if (i >= 0) {
       if (st.found.includes(i)) { if (submit) flashMsg("typemsg", "Déjà trouvé", ""); return submit; }
       st.found.push(i); flashMsg("typemsg", `${okIco} ${esc(q.items[i].label)}`, "ok");
@@ -336,9 +358,12 @@ ENG.listtype = {
       if (st.found.length === q.items.length) later(listEnd, 350);
       return true;
     }
-    const j = q.opt.findIndex(it => test(it.keys));
-    if (j >= 0 && !st.bonus.includes(j)) { st.bonus.push(j); flashMsg("typemsg", `Exact, en bonus : ${esc(q.opt[j].label)}`, "ok"); return true; }
-    if (submit) flashMsg("typemsg", `${koIco} Pas dans la liste`, "bad");
+    const j = closest(q.opt);
+    if (j >= 0 && !st.bonus.includes(j)) { st.bonus.push(j); flashMsg("typemsg", `Exact, mais hors de la liste : ${esc(q.opt[j].label)} ne compte pas ici`, "ok"); return true; }
+    if (submit) {
+      if (/^guyane( francaise)?$/.test(norm(val)) || lev2(norm(val), "guyane francaise") <= 2) flashMsg("typemsg", `La Guyane française est bien en Amérique du Sud, mais c'est un territoire français, pas un pays`, "bad");
+      else flashMsg("typemsg", `${koIco} Pas dans la liste`, "bad");
+    }
   },
   act(g, a) { if (a === "listdone" && g.phase === "q") { listEnd(); return true; } },
   joker: { label: "+15 s", help: "Ajoute 15 secondes au chrono.", use() { addTime(15); } }
