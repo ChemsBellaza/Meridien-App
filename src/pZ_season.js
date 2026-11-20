@@ -233,7 +233,7 @@ function seasonChart(st) {
   const f = (n, d = 1) => (+n).toFixed(d);
   let grid = ""; const gstep = top / Math.min(4, Math.round(top / step));
   for (let v = 0; v <= top + 0.1; v += gstep) grid += `<line x1="${L}" x2="${W - Rr}" y1="${f(Y(v))}" y2="${f(Y(v))}" stroke="var(--grid)" stroke-width="1" opacity="${v === 0 ? .9 : .4}"/><text x="${L - 6}" y="${f(Y(v) + 4)}" text-anchor="end" font-size="11" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${fmtNum(v)}</text>`;
-  [[1, "start"], [m, "end"]].forEach(([i, anc]) => { const d = st.days[start + i - 1]; if (d && (i === m || m > 2)) grid += `<text x="${f(X(i))}" y="${H - 7}" text-anchor="${anc}" font-size="11" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${shortDate(d)}</text>`; });
+  [[1, "start"], ...(m >= 8 ? [[Math.round((m + 1) / 2), "middle"]] : []), [m, "end"]].forEach(([i, anc]) => { const d = st.days[start + i - 1]; if (d && (i === m || m > 2)) grid += `<text x="${f(X(i))}" y="${H - 7}" text-anchor="${anc}" font-size="11" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${shortDate(d)}</text>`; });
   const smooth = pts => pts.reduce((s, p, i) => (i === 0 ? `M${f(p[0])} ${f(p[1])}` : `${s} C${f((pts[i - 1][0] + p[0]) / 2)} ${f(pts[i - 1][1])} ${f((pts[i - 1][0] + p[0]) / 2)} ${f(p[1])} ${f(p[0])} ${f(p[1])}`), "");
   const podium = new Set(list.slice(0, 3).map(r => r.id)), shown = r => r.me || podium.has(r.id);
   const draw = list.filter(r => all || shown(r)).sort((a, b) => (shown(a) ? 1 : 0) - (shown(b) ? 1 : 0) || (a.me ? 1 : 0) - (b.me ? 1 : 0) || a.total - b.total); // les lignes importantes au-dessus

@@ -172,19 +172,22 @@ function vFeed(k) {
 function vRanking(k) {
   const res = dayResults(k);
   if (!res.played.length) return `<p class="note center">Aucun score pour l'instant.</p>`;
-  let out = "", sep = false, prev = -1;
-  const many = res.played.length > 6, cut = many && !ui.rankAll, shown = cut ? res.played.filter((r, i) => i < 5 || r.me) : res.played; // classement long : top 5 + ta ligne
+  // podium : 3 premiers (2, 1, 3 comme sur un vrai podium), puis des lignes simples
+  const P = res.played, top = P.slice(0, 3), rest = P.slice(3);
+  const crown = `<svg class="crown" viewBox="0 0 32 22" width="30" height="21" aria-hidden="true"><path d="M2 20 0 4l9 8 7-11 7 11 9-8-2 16z" fill="#FFC24A" stroke="#B8860B" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+  const pcol = r => `<button class="pdc ${r.pos === 1 ? "first" : ""} ${r.me ? "me" : ""}" data-act="detail" data-v="${esc(r.id)}|${k}" aria-label="Détail des points de ${esc(r.name)}, ${fmtNum(r.best)} points, rang ${r.pos}" style="--c:${r.color}">${r.pos === 1 ? crown : ""}${avatar(r, r.pos === 1 ? "xl" : "lg")}<b class="num">${fmtNum(r.best)}<small> pts</small></b><span class="nm">${esc(r.name)}${r.me ? toi : ""}</span></button>`;
+  const order = top.length === 3 ? [top[1], top[0], top[2]] : top;
+  const many = rest.length > 3, cut = many && !ui.rankAll, shown = cut ? rest.filter((r, i) => i < 2 || r.me) : rest; // classement long : top 5 + ta ligne
+  let out = "", prev = -1;
   shown.forEach(r => {
-    const idx = res.played.indexOf(r); if (cut && prev >= 0 && idx - prev > 1) out += `<div class="rkgap" aria-hidden="true">⋯</div>`; prev = idx;
-    if (r.pos > 3 && !sep) { out += `<hr class="podium">`; sep = true; }
-    out += `<button class="rkp" data-act="detail" data-v="${esc(r.id)}|${k}" aria-label="Détail des points de ${esc(r.name)}, ${fmtNum(r.best)} points, rang ${r.pos}" style="--c:${r.color}">
-      <span class="pos num">#${r.pos}</span>
-      <span class="main">${avatar(r, "md")}<span class="info"><b class="num">${fmtNum(r.best)} pts</b><span class="nm">${esc(r.name)}${r.me ? toi : ""}</span></span></span>
-      <span class="badges">${r.boost ? `<i class="num" title="Boost ×1,5">⚡×1,5</i>` : ""}${r.tries > 1 ? `<i class="num">${r.tries} ${I.retry(13)}</i>` : ""}<i class="num">+${r.gems} ${I.compass(13)}</i></span>
+    const idx = rest.indexOf(r); if (cut && prev >= 0 && idx - prev > 1) out += `<div class="rkgap" aria-hidden="true">⋯</div>`; prev = idx;
+    out += `<button class="rk2 ${r.me ? "me" : ""}" data-act="detail" data-v="${esc(r.id)}|${k}" aria-label="Détail des points de ${esc(r.name)}, ${fmtNum(r.best)} points, rang ${r.pos}" style="--c:${r.color}">
+      <span class="pos num">${r.pos}</span>${avatar(r, "md")}<span class="nm">${esc(r.name)}${r.me ? toi : ""}</span>
+      <span class="pts"><b class="num">${fmtNum(r.best)} pts</b><small class="num">${r.boost ? "⚡ " : ""}+${r.gems} ${I.compass(12)}</small></span>
     </button>`;
   });
-  return `<div class="rank">${out}
-  ${many ? `<button class="smallbtn ghost rkall" data-act="rankall">${ui.rankAll ? "Voir le top 5" : `Voir les ${res.played.length - shown.length} autres`}</button>` : ""}
+  return `<div class="rank"><div class="pdm">${order.map(pcol).join("")}</div>${out ? `<div class="rk2list">${out}</div>` : ""}
+  ${many ? `<button class="smallbtn ghost rkall" data-act="rankall">${ui.rankAll ? "Voir le top 5" : `Voir les ${rest.length - shown.length} autres`}</button>` : ""}
   ${res.waiting.length ? `<div class="waiting">${res.waiting.map(w => `<span class="w">${avatar(w, "sm")}${esc(w.name)} · pas encore joué</span>`).join("")}</div>` : ""}</div>`;
 }
 
@@ -209,7 +212,16 @@ function vHistoryOnline() {
       <div class="seg light" role="group" aria-label="Période"><button data-act="hmode" data-v="month" aria-pressed="${!all}">30 derniers jours</button><button data-act="hmode" data-v="all" aria-pressed="${all}">Depuis le début</button></div>
       <button class="row" data-act="season">${I.trophy(26)}<span class="grow">Stats de la saison</span>${I.chev}</button>
       <p class="note center">Un seul jeu par jour et par groupe, et c'est la surprise : les jeux passés se consultent, mais ne se rejouent pas.</p>
-      ${h === null || h === undefined ? `<p class="note center">Chargement…</p>` : rows.length ? `<div class="hgrid">${rows.map(card).join("")}</div>` : `<p class="note center">Aucun jeu joué sur cette période. Lance le jeu du jour !</p>`}
+      ${h === null || h === undefined ? `<p class="note center">Chargement…</p>` : rows.length ? (() => {
+        const ok = rows.filter(r => FORMATS[r.fmt]), rk = r => r.play_day + "|" + r.group_id, cur = ok.find(r => rk(r) === ui.histSel) || ok[0];
+        if (!cur) return "";
+        const open = cur.group_id === SRV.gid && cur.play_day >= S.start;
+        const strip = histStrip(ok.map(r => ({ key: rk(r), d: r.play_day, f: r.fmt, rank: r.n >= 2 ? r.pos : 0, label: `${longDate(r.play_day)}, ${r.group_name}` })), rk(cur));
+        if (open) return strip + dayBody(cur.play_day);
+        const F = FORMATS[cur.fmt];
+        return `${strip}<div class="hcard static">${art(cur.fmt, cur.play_day)}${labels(`${longDate(cur.play_day)} · ${cur.group_name}`, F.name)}</div>
+      <div class="hsum"><span><small>Joueurs</small><b class="num">${cur.n}</b></span><span><small>Classement</small><b class="num">${cur.n >= 2 ? "#" + cur.pos : "–"}</b></span><span><small>Score</small><b class="num">${fmtNum(cur.best)}</b></span></div>`;
+      })() : `<p class="note center">Aucun jeu joué sur cette période. Lance le jeu du jour !</p>`}
     </div></div>`;
 }
 
@@ -225,25 +237,33 @@ function vHistory() {
       <h1 class="bigtitle">Jeux précédents</h1><div class="spaced">Saison ${S.n}</div>
       <button class="row" data-act="season">${I.trophy(26)}<span class="grow">Stats de la saison</span>${I.chev}</button>
       <p class="note center">Un seul jeu par jour, et c'est la surprise : les jeux passés se consultent, mais ne se rejouent pas.</p>
-      ${past.length ? `<div class="list">${past.map(({ d, res, f, me }) => {
-        const mine = me ? `${fmtNum(me.best)} pts` : "non joué";
-        return `<button class="hcard" data-act="day" data-v="${d}" aria-label="${FORMATS[f].name}, ${longDate(d)}, ${res.N} joueur${res.N > 1 ? "s" : ""}, ${me ? "ton score : " + fmtNum(me.best) + " points" : "tu n'as pas joué"}">${art(f, d)}
-          <span class="avrow">${res.played.slice(0, 6).map(p => avatar(p, "md")).join("")}</span>
-          ${labels(`${d === k ? "aujourd'hui" : shortDate(d)} · ${mine}`, FORMATS[f].name)}</button>`;
-      }).join("")}</div>` : `<p class="note center">Aucun jeu précédent pour l'instant. Reviens demain !</p>`}
+      ${past.length ? (() => {
+        const sel = past.find(x => x.d === ui.histSel) || past[0];
+        return `${histStrip(past.map(x => ({ key: x.d, d: x.d, f: x.f, rank: x.me ? x.me.pos : 0, label: longDate(x.d) })), sel.d)}${dayBody(sel.d)}`;
+      })() : `<p class="note center">Aucun jeu précédent pour l'instant. Reviens demain !</p>`}
     </div></div>`;
 }
 
-function vDay(d) {
-  const f = fmtOf(d), res = dayResults(d);
-  return `<div class="sheetpage">
-    <button class="closepill" data-act="history">${I.back}<span>Jeux précédents</span></button>
-    <div class="sheetbody">
-      <div class="hcard static">${art(f, d)}${labels(`Jeu du jour n°${issueNo(d)} · ${longDate(d)}`, FORMATS[f].name)}</div>
+// bandeau des jours : jour, date, ton rang ; le jour choisi est en surbrillance
+function histStrip(items, sel) {
+  return `<div class="hstrip" role="group" aria-label="Choisir un jour">${items.map(x => {
+    const dt = parseKey(x.d), on = x.key === sel, rk = x.rank ? "#" + x.rank : "–";
+    return `<button class="hday ${on ? "on" : ""}" data-act="histsel" data-v="${esc(x.key)}" aria-pressed="${on}" aria-label="${esc(x.label)}${x.rank ? ", rang " + x.rank : ", non joué"}"><span class="hart">${art(x.f, x.d)}</span><small>${esc(dt.toLocaleDateString("fr-FR", { weekday: "short" }))}</small><b class="num">${dt.getDate()}</b><i class="num">${rk}</i></button>`;
+  }).join("")}</div>`;
+}
+// détail d'un jour : le jeu, ses 3 manches, le classement
+function dayBody(d) {
+  const f = fmtOf(d), res = dayResults(d), me = res.played.find(r => r.me);
+  return `<div class="hcard static">${art(f, d)}${labels(`Jeu du jour n°${issueNo(d)} · ${longDate(d)}`, FORMATS[f].name)}</div>
+      <div class="hsum"><span><small>Joueurs</small><b class="num">${res.N}</b></span><span><small>Classement</small><b class="num">${me ? "#" + me.pos : "–"}</b></span><span><small>Score</small><b class="num">${me ? fmtNum(me.best) : "–"}</b></span></div>
       <div class="rounds center">${manchesOf(d, f).map((m, i) => roundChip(m, i)).join("")}</div>
       ${vRanking(d)}
-      <p class="note center">Ce jeu ne se rejoue pas : un nouveau jeu t'attend chaque jour.</p>
-    </div></div>`;
+      <p class="note center">Ce jeu ne se rejoue pas : un nouveau jeu t'attend chaque jour.</p>`;
+}
+function vDay(d) {
+  return `<div class="sheetpage">
+    <button class="closepill" data-act="history">${I.back}<span>Jeux précédents</span></button>
+    <div class="sheetbody">${dayBody(d)}</div></div>`;
 }
 
 function vSeason() {
@@ -513,6 +533,7 @@ document.addEventListener("click", e => {
     case "equip": { const [c, id] = v.split("|"); if (c === "species") { store.profile.pet.species = id; } else store.profile.pet[c] = id; save(); render(); break; }
     case "back": go(["season", "pet", "profile", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : (srvOn() ? "hub" : "group")) : (srvOn() ? "hub" : "group")); break;
     case "day": go("day", { dayKey: v }); break;
+    case "histsel": ui.histSel = v; render(); break;
     case "tab": ui.tab = v; render(); break;
     case "hapticpref": store.prefs = Object.assign({ time: 1 }, store.prefs, { haptics: v === "true" }); save(); render(); buzz(30); break;
     case "install": installNow(); break;

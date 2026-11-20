@@ -790,6 +790,46 @@ div.hcard.sq{cursor:default}
 @keyframes rvup{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes rvhint{0%,8%{opacity:0}16%,84%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.rvroot *{animation:none !important}.rvglobe,.rvq,.rvhint,.rvline{display:none}}
+/* audit UX n°2 : classement du jeu en podium + lignes simples */
+.pdm{display:flex;align-items:flex-end;justify-content:center;gap:10px;width:100%;padding:26px 0 4px}
+.pdc{position:relative;flex:1;max-width:112px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--ink);font:inherit;cursor:pointer;min-height:44px;padding:0}
+.pdc.first{max-width:132px;margin-bottom:10px}
+.pdc .crown{position:absolute;top:-24px;left:50%;transform:translateX(-50%)}
+.pdc .av .in{box-shadow:0 0 0 3px var(--c)}
+.pdc.first .av .in{box-shadow:0 0 0 4px #FFC24A}
+.pdc.me .av .in{box-shadow:0 0 0 3px var(--c),0 0 0 6px color-mix(in srgb,var(--c) 30%,transparent)}
+.pdc b{font-family:var(--fd);font-weight:800;font-size:19px;line-height:1.1;margin-top:4px}.pdc.first b{font-size:23px}
+.pdc b small{font-size:12px;font-family:var(--fb,inherit);color:var(--ink-2)}
+.pdc .nm{font-weight:800;font-size:14px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.rk2list{width:100%;display:flex;flex-direction:column;gap:2px;margin-top:6px}
+button.rk2{display:grid;grid-template-columns:28px auto 1fr auto;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-height:52px;padding:6px 10px;border-radius:16px}
+button.rk2.me{background:color-mix(in srgb,var(--c) 16%,transparent);box-shadow:inset 3px 0 0 var(--c)}
+.rk2 .pos{font-family:var(--fd);font-weight:800;font-size:16px;color:var(--ink-2);text-align:center}
+.rk2 .nm{font-weight:800;font-size:16px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk2 .pts{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}
+.rk2 .pts b{font-family:var(--fd);font-weight:800;font-size:16px}
+.rk2 .pts small{display:inline-flex;align-items:center;gap:3px;font-weight:800;font-size:12px;color:var(--ink-2)}
+
+/* audit UX n°2 : jeux précédents en bandeau + saison plus sobre */
+.hstrip{display:flex;gap:8px;overflow-x:auto;margin:10px -4px 14px;padding:4px 4px 8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+button.hday{position:relative;flex:none;width:66px;height:96px;border:0;border-radius:18px;overflow:hidden;padding:0;cursor:pointer;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#fff;font:inherit;opacity:.72;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+button.hday.on{opacity:1;box-shadow:0 0 0 3px #FFC24A}
+.hday .hart{position:absolute;inset:0}.hday .hart svg{width:100%;height:100%}.hday .hart::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.45))}
+.hstrip{scrollbar-width:none}.hstrip::-webkit-scrollbar{display:none}
+.hday .hart::after{background:linear-gradient(rgba(20,12,40,.45),rgba(20,12,40,.7))}
+.hday small,.hday b,.hday i{position:relative}
+.hday small{font-weight:800;font-size:12px;text-transform:capitalize}
+.hday b{font-family:var(--fd);font-weight:800;font-size:28px;line-height:1}
+.hday i{font-style:normal;font-weight:900;font-size:12px;margin-top:5px;background:rgba(255,255,255,.92);color:#2A2333;padding:1px 9px;border-radius:999px;text-shadow:none}
+.hsum{display:flex;justify-content:space-around;gap:8px;margin:12px 0 4px;padding:12px 8px;border-radius:18px;background:var(--card)}
+.hsum span{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hsum small{font-weight:800;font-size:12px;color:var(--ink-2)}
+.hsum b{font-family:var(--fd);font-weight:800;font-size:20px}
+.spanel{gap:2px;border-radius:26px}
+.srow{border:0;border-radius:16px;background:transparent;box-shadow:inset 4px 0 0 var(--c);padding:8px 12px 8px 14px}
+.srow:has(.toi){background:color-mix(in srgb,var(--c) 22%,transparent)}
+.srow b{font-size:17px}
+
 /* lots 1 et 2 de l'audit UX */
 .plain.hist{width:64px;height:auto;min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}.plain.hist small{font-size:12px;font-weight:800;color:var(--ink-2)}
 .top{grid-template-columns:56px 1fr 64px}

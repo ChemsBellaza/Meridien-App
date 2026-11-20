@@ -13,6 +13,7 @@ const MUST = [
   ["Pas à jour ?", "Ferme l’appli et rouvre-la, deux fois."]
 ];
 const NEWS = [
+  { id: "v48", date: "20 nov.", title: "Classement et jeux précédents", text: "Le classement d’un jeu affiche un podium, puis une ligne simple par joueur. Les jeux précédents se parcourent jour par jour, avec ton rang sur chaque jour. Le graphique de saison a plus de dates." },
   { id: "v47", date: "19 nov.", title: "Accueil plus rapide", text: "Le bouton Jouer remonte en haut de l’écran. Un seul bandeau s’affiche à la fois. Dans Réglages, l’essentiel passe en premier. Le classement montre le top 5 et ta ligne, et la fiche de ton familier est plus courte." },
   { id: "v44", date: "19 nov.", title: "Notifications", text: "Chaque message de ton groupe te notifie. Un GIF reçu s’annonce clairement : « Naïs a envoyé un GIF »." },
   { id: "v43", date: "19 nov.", title: "Neuf nouveaux familiers", text: "Fennec, tortue ninja, singe Wukong, paon, aigle des vents, chouette, faon, dragon-perle et colibri. Chacun a son histoire, en trois chapitres qui se débloquent à l’évolution. Le panda fait du kung-fu, le lion s’habille d’or." },
