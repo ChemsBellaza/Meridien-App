@@ -33,3 +33,23 @@ function petStory(pet) {
     : `<li class="chap lock"><b>Chapitre ${i + 1} · ???</b><p>${I.lock}<span> Se débloque à l'évolution (${esc(reqText(EVO_NEED[i]))}).</span></p></li>`).join("");
   return `<details class="fold story" aria-label="Histoire de ${esc(names[0])}"><summary>Histoire · ${got} chapitre${got > 1 ? "s" : ""} sur 3</summary><div class="foldbody"><ol class="chaps">${ch}</ol>${got >= 3 ? `<p class="sens"><b>Le sens</b> : ${esc(S.s)}</p>` : ""}</div></details>`;
 }
+
+/* ---------- bestiaire (adresse ?bestiaire) : tous les familiers, leurs 3 évolutions, la variante chromatique et leur histoire ---------- */
+function vBestiaire() {
+  const keys = Object.keys(SPECIES).sort((a, b) => (SPECIES[a].num || 0) - (SPECIES[b].num || 0));
+  const css = `<style>*{box-sizing:border-box}body{margin:0;background:#F4F1FB;color:#1E1838;font-family:Nunito,"Segoe UI",system-ui,sans-serif}.bx{max-width:980px;margin:0 auto;padding:24px 14px 70px}.bx h1{font-size:30px;margin:0 0 6px}.bx .sub{color:#5B5486;font-weight:700;margin:0 0 22px}
+  .bc{background:#fff;border-radius:22px;padding:18px;margin-bottom:22px;box-shadow:0 4px 0 #D8D2EE;break-inside:avoid}.bh{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}.bn{background:#1E1838;color:#fff;border-radius:999px;padding:3px 12px;font-weight:800;font-size:13px}.bh b{font-size:21px}
+  .ty{color:#fff;border-radius:999px;padding:3px 12px;font-weight:800;font-size:13px}.tr{color:#5B5486;font-weight:700;font-size:14px}.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.t{display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:800;font-size:13px;text-align:center}.t .im{width:100%;aspect-ratio:1;border-radius:18px;overflow:hidden}.t svg{display:block;width:100%;height:100%}
+  .q{font-style:italic;color:#5B5486;font-weight:700;margin:14px 0 4px}.dx{margin:4px 0 0;padding-left:18px;font-weight:600;font-size:14.5px}.hs{margin-top:16px;padding-top:14px;border-top:2px dashed #E3DEF3}.hs h3{margin:0 0 8px;font-size:16px}.ch{margin:0 0 10px}.ch b{display:block;font-size:14px;color:#4C3EBE}.ch p{margin:2px 0 0;line-height:1.5}.sens{background:#FFF3CF;border-radius:14px;padding:10px 14px;font-weight:700}
+  @media(max-width:600px){.tiles{grid-template-columns:repeat(2,1fr)}}@media print{body{background:#fff}.bc{box-shadow:none;border:1px solid #ddd}}</style>`;
+  const card = k => {
+    const S = SPECIES[k], T = TYPES[S.type], St = STORY[k];
+    const tile = (st, shiny, lab) => `<div class="t"><span class="im">${petSVG({ species: k, stage: String(st), shiny: shiny ? "shiny" : "normal", bg: "type" })}</span>${esc(lab)}</div>`;
+    const chap = St ? St.c.map((txt, i) => `<div class="ch"><b>Chapitre ${i + 1} · ${esc(S.names[i])}</b><p>${esc(txt)}</p></div>`).join("") + `<p class="sens"><b>Le sens :</b> ${esc(St.s)}</p>` : "";
+    return `<section class="bc"><div class="bh"><span class="bn">N°${String(S.num).padStart(3, "0")}</span><b>${esc(S.names.join(" → "))}</b><span class="ty" style="background:${T.color}">${esc(T.label)}</span><span class="tr">${(S.traits || []).map(esc).join(" · ")}</span></div>
+      <div class="tiles">${tile(1, false, S.names[0] + " · stade 1")}${tile(2, false, S.names[1] + " · stade 2")}${tile(3, false, S.names[2] + " · stade 3")}${tile(3, true, "Chromatique · stade 3")}</div>
+      <p class="q">« ${esc(S.quote)} »</p><ul class="dx">${S.dex.map(d => `<li>${esc(d)}</li>`).join("")}</ul>
+      <div class="hs"><h3>Histoire</h3>${chap}</div></section>`;
+  };
+  return `<!--BEST-START-->${css}<div class="bx"><h1>Bestiaire de Méridien</h1><p class="sub">${keys.length} familiers : leurs 3 évolutions, leur variante chromatique et leur histoire.</p>${keys.map(card).join("")}</div><!--BEST-END-->`;
+}
