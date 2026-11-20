@@ -36,6 +36,16 @@ function revSparks() {
   }
   return s;
 }
+// confettis : 44 morceaux qui tombent après l'ouverture des rideaux (positions fixes, pas de hasard : rendu stable)
+function revConfetti() {
+  let s = "";
+  const cols = ["#FFC24A", "#fff", "#B4AAFF", "#6B5BE2", "#FF8FA3", "#5FD1B0"];
+  for (let i = 0; i < 44; i++) {
+    const x = Math.abs((Math.sin(i * 7.31) * 9301.7) % 1), w = 6 + (i % 4) * 2, d = 2.55 + Math.abs((Math.sin(i * 2.7) * 77.3) % 1) * 0.9, t = 1.6 + (i % 5) * 0.35;
+    s += `<b style="left:${(x * 100).toFixed(1)}%;width:${w}px;height:${w * 1.6}px;background:${cols[i % cols.length]};--d:${d.toFixed(2)}s;--t:${t.toFixed(2)}s;--r:${(i % 2 ? 1 : -1) * (240 + i * 13)}deg"></b>`;
+  }
+  return s;
+}
 function vReveal() {
   const R = ui.reveal; if (!R) return "";
   const F = FORMATS[R.f], sunday = isSunday(R.k);
@@ -45,11 +55,14 @@ function vReveal() {
     <p class="sr" role="status">${sunday ? "Jeu spécial du dimanche" : "Nouveau jeu du jour"} : ${esc(F.name)}. ${esc(fr(F.sub))}</p>
     <div class="rvglobe" aria-hidden="true">${globe}</div>
     <p class="rvq" aria-hidden="true">Quel sera le jeu du jour ?</p>
-    <div class="rvstage" aria-hidden="true">
+    <span class="rvflash" aria-hidden="true"></span>
+    <div class="rvwrap" aria-hidden="true"><span class="rvrays"></span><i class="rvring"></i><i class="rvring r2"></i>
+    <div class="rvstage">
       <div class="rvcard"><div class="cover">${art(R.f, R.k)}</div></div>
       <div class="rvcurt l"><span>?</span></div><div class="rvcurt r"><span>?</span></div>
       <span class="rvline"></span><div class="rvsparks">${revSparks()}</div>
-    </div>
+    </div></div>
+    <div class="rvconf" aria-hidden="true">${revConfetti()}</div>
     <div class="rvtext"><span class="kicker">${sunday ? "Jeu spécial du dimanche · points ×2" : `Jeu du jour n°${issueNo(R.k)}`}</span><h2 class="rvname">${esc(F.name)}</h2><p class="rvsub">${fr(F.sub)}</p></div>
     <button class="btn rvgo" data-act="revgo">C'est parti !</button>
     <p class="rvhint" aria-hidden="true">Touche pour passer l'animation</p>

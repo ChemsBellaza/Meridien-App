@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v49 (20 nov. 2026)** — **Animation du nouveau jeu plus spectaculaire** (pY_reveal.js) : flash à l'ouverture des rideaux, deux ondes de choc, rayons dorés qui tournent, 44 confettis, la carte rebondit (vcard) et l'ensemble « tape » légèrement. Désactivé avec « réduire les animations » et au toucher pour passer. Aucune migration.
+
 - **v48 (20 nov. 2026)** — **Audit UX n°2** (docs/AUDIT-UX-2.md) : classement d'un jeu en podium (2-1-3, couronne) + lignes simples (Ranking), jeux précédents en bandeau de jours avec ton rang (histStrip, dayBody, action histsel), lignes de saison plus sobres, 3 dates sur l'axe du graphique. Aucune migration.
 
 - **v47 (19 nov. 2026)** — **Lots 1 et 2 de l'audit UX** : bouton Jouer remonté (1044 px → 574 px), un seul bandeau à la fois (groupNotice), pastille de série en double retirée, e-mail relié en un toucher (fenêtre Compte), Réglages en deux niveaux (Essentiel avec états, puis « Plus de réglages »), fiche familier plus courte (2547 px → 1556 px : évolutions, histoire et objets à débloquer repliables), classement et saison en top 5 + ma ligne (« Voir tout »), mot « jeu » partout au lieu de « défi », libellé « Historique ». Aucune migration.
