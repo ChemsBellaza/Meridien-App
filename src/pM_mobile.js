@@ -10,15 +10,21 @@
 (function () {
   const vv = window.visualViewport; if (!vv) return;
   let last = -1;
+  // un clavier n'existe que si un champ de saisie a le focus : sur iPhone, visualViewport garde parfois l'ancienne hauteur après la fermeture du clavier,
+  // ce qui coupait l'écran en deux (jeu ou barre de message arrêtés à mi-hauteur)
+  const editing = () => { const a = document.activeElement; return !!(a && a.matches && a.matches('input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]),textarea,[contenteditable="true"]')); };
   const update = () => {
     const raw = Math.round(window.innerHeight - vv.height - vv.offsetTop);
-    const kb = raw > 140 ? raw : 0; // en dessous : barre d'adresse qui bouge, pas un clavier
+    const kb = raw > 140 && editing() ? raw : 0; // en dessous : barre d'adresse qui bouge, pas un clavier
     if (kb === last) return; last = kb;
     document.documentElement.style.setProperty("--kb", kb + "px");
     document.documentElement.classList.toggle("kbopen", kb > 0);
     if (kb > 0) setTimeout(() => { const a = document.activeElement; if (a && a.matches && a.matches("input,textarea")) a.scrollIntoView({ block: "nearest", behavior: "auto" }); }, 80);
   };
   vv.addEventListener("resize", update); vv.addEventListener("scroll", update); update();
+  document.addEventListener("focusin", () => { setTimeout(update, 60); setTimeout(update, 350); });
+  document.addEventListener("focusout", () => { setTimeout(update, 60); setTimeout(update, 400); });
+  window.addEventListener("pageshow", update); document.addEventListener("visibilitychange", update);
 })();
 
 /* ---------- 2) bouton retour ---------- */
