@@ -363,25 +363,25 @@ function vSheet() {
   const me = meP(), online = srvOn();
   return `<div class="scrim" data-act="closesheet"><div class="sheet settings" role="dialog" aria-label="Réglages" data-stop>
     <div class="sheethead">${avatar(me, "lg")}<div><h3>${esc(store.profile.name)}</h3><div class="muted">Réglages et raccourcis</div></div></div>
-    <div class="shortcuts">
-      ${online ? `<button class="shortcut" data-act="hub">${I.duel(24)}<span>Mes groupes</span></button>` : ""}
+    <nav class="shortcuts" aria-label="Raccourcis">
+      ${online ? `<button class="shortcut" data-act="hub"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.4-3.2 2.6-5 5.5-5s5.1 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.2c2.4-.2 4 1.3 4.4 4.2"/></svg><span>Mes groupes</span></button>` : ""}
       <button class="shortcut" data-act="gopet">${petAv(store.profile.pet, "sm", petName(store.profile.pet))}<span>Mon familier</span></button>
       <button class="shortcut" data-act="goprofile">${I.medal(24)}<span>Mon profil</span></button>
       <button class="shortcut" data-act="recap">${I.history}<span>Récap de la semaine</span></button>
-    </div>
+    </nav>
     ${vEssentiel()}
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
-    <details class="fold plus" ${ui.plusOpen ? "open" : ""}><summary data-act="plustoggle">Plus de réglages</summary><div class="foldbody">
-    <section class="sect"><h4>Rappel quotidien</h4>${reminderBlock()}</section>
+    <div class="fold plus"><button type="button" class="foldhead" data-act="plustoggle" aria-expanded="${!!ui.plusOpen}" aria-controls="plusbody"><span>Plus de réglages</span><span class="fchev" aria-hidden="true">›</span></button><div id="plusbody" class="foldbody" ${ui.plusOpen ? "" : "hidden"}>
+    <section class="sect">${reminderBlock()}</section>
     <section class="sect"><h4>Application</h4>${mobileSheetBlocks() || `<p class="note">Rien à régler pour l'instant.</p>`}</section>
     <section class="sect"><h4>Compte</h4>${accountSheetBlock()}</section>
     ${online ? "" : `<section class="sect"><h4>Code d'invitation</h4><div class="codebox"><code id="gcodeTxt">${esc(fmtCode(store.profile.code))}</code><button class="smallbtn" data-act="copy">${ui.toast === "copied" ? "Copié" : "Copier"}</button></div></section>`}
     <section class="sect"><h4>Aide</h4><button class="smallbtn" data-act="tuto">Revoir le tutoriel</button></section>
-    </div></details>
+    <section class="sect"><h4>Zone sensible</h4><button class="linkbtn" data-act="askreset">Réinitialiser le prototype</button></section>
+    </div></div>
     <button class="btn ghost" data-act="closesheet">Fermer</button>
     <p class="note center">Dictionnaire du petit bac enrichi grâce au Wiktionnaire (licence CC BY-SA).</p>
     <p class="note center">Drapeaux : Twemoji, © Twitter, Inc. et contributeurs (licence CC BY 4.0).</p>
-    <button class="linkbtn" data-act="askreset">Réinitialiser le prototype</button>
   </div></div>`;
 }
 
@@ -481,7 +481,7 @@ document.addEventListener("click", e => {
     case "news": openNews(); break;
     case "must": ui.sheet = "must"; render(); break;
     case "acct": ui.sheet = "acct"; render(); break;
-    case "plustoggle": ui.plusOpen = !ui.plusOpen; break;
+    case "plustoggle": { const sh = document.querySelector(".sheet"), top = sh ? sh.scrollTop : 0; ui.plusOpen = !ui.plusOpen; render(); const sh2 = document.querySelector(".sheet"); if (sh2) sh2.scrollTop = top; break; }
     case "rankall": ui.rankAll = !ui.rankAll; render(); break;
     case "seasonall": ui.seasonAll = !ui.seasonAll; render(); break;
     case "rxwho": ui.rxEv = v; ui.sheet = "rxwho"; render(); break;

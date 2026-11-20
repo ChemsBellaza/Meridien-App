@@ -805,6 +805,14 @@ div.hcard.sq{cursor:default}
 .chartbox .cstar{transform-box:fill-box;transform-origin:center;animation:rvtwinkle 3.2s ease-in-out var(--d,0s) infinite;opacity:.4}.chartbox .cmark{animation:cfade 1.6s ease both}
 @media (prefers-reduced-motion:reduce){.chartbox .cstar{animation:none}}
 .spill.go{padding-right:12px;box-shadow:0 4px 0 var(--lip),0 0 0 2px color-mix(in srgb,#FFC24A 55%,transparent)}.spill.go .nchev{font-size:22px;line-height:1;color:var(--ink-2)}
+/* v58 : menu accessible (lignes à la bonne largeur, « Plus de réglages » en vrai bouton) */
+.mrow{box-sizing:border-box;max-width:100%}
+.foldhead{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:52px;padding:0 16px;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;text-align:left;cursor:pointer}
+.foldhead .fchev{font-size:24px;color:var(--ink-2);transform:rotate(90deg);transition:transform .2s}.foldhead[aria-expanded="true"] .fchev{transform:rotate(-90deg)}
+.foldbody[hidden]{display:none}
+.fold.plus{flex:none}
+.sect .linkbtn{color:var(--red,#FF6B6B)}
+@media (prefers-reduced-motion:reduce){.foldhead .fchev{transition:none}}
 /* v54 : graphique de saison, modes Course et Courbes */
 .chartmode{margin:0 0 10px}.chartnote{margin:6px 0 2px}
 button.srow{border:0;width:100%;text-align:left;font:inherit;cursor:pointer;min-height:44px}

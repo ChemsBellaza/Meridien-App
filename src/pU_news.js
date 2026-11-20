@@ -83,5 +83,5 @@ function vEssentiel() {
   if (online && typeof pushSupported === "function" && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, t: "Notifications", v: PUSH.on ? "Activées" : "À activer", act: PUSH.on ? "" : (pushNeedsInstall() ? "installpage" : "pushon") });
   if (isMobileDev()) rows.push({ ok: isStandalone(), t: "Application", v: isStandalone() ? "Installée" : "À installer sur l’écran d’accueil", act: isStandalone() ? "" : "installpage" });
   if (!rows.length) return "";
-  return `<div class="essentiel">${rows.map(r => `<${r.act ? "button" : "div"} class="mrow ${r.ok ? "ok" : ""}" ${r.act ? `data-act="${r.act}"` : ""}><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.t)}</b><small>${esc(r.v)}</small></span>${r.act ? `<span class="nchev" aria-hidden="true">›</span>` : ""}</${r.act ? "button" : "div"}>`).join("")}</div>`;
+  return `<div class="essentiel" role="group" aria-label="État du compte et des notifications">${rows.map(r => `<${r.act ? "button" : "div"} class="mrow ${r.ok ? "ok" : ""}" ${r.act ? `data-act="${r.act}"` : ""}><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.t)}</b><small>${esc(r.v)}</small></span>${r.act ? `<span class="nchev" aria-hidden="true">›</span>` : ""}</${r.act ? "button" : "div"}>`).join("")}</div>`;
 }
