@@ -126,8 +126,8 @@ Deno.serve(async (req) => {
       const pick = (arr: string[]) => arr[[...String(a.id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % arr.length];
       const game = a.catchup ? "le jeu de la veille" : "le jeu du jour";
       const recordTxt = pick([`${who} a établi un nouveau record sur ${game} : ${n} pts`, `Nouveau record ! ${who} fait ${n} pts sur ${game}`, `${who} vient de battre le record de ${game} (${n} pts)`]);
-      const both = pick([`${who} a établi un nouveau record et t'a dépassé :O`, `${who} t'a dépassé et bat le record de ${game} :O`]);
-      const passTxt = pick([`${who} t'a dépassé :O`, `${who} vient de passer devant toi. Tu ripostes ?`, `Aïe, ${who} t'a dépassé`]);
+      const both = pick([`${who} a établi un nouveau record et t'a dépassé 😮`, `${who} t'a dépassé et bat le record de ${game} 😮`]);
+      const passTxt = pick([`${who} t'a dépassé 😮`, `${who} vient de passer devant toi. Tu ripostes ?`, `Aïe, ${who} t'a dépassé`]);
       const playTxt = a.catchup ? `${who} rattrape le jeu de la veille : ${n} pts` : a.try_idx > 0 ? `${who} retente sa chance : ${n} pts` : pick([`${who} vient de jouer : ${n} pts`, `${who} a fait son essai : ${n} pts`, `${who} a joué : ${n} pts`]);
       // une notification par personne, la plus importante d'abord : record (et dépassé), dépassé, sinon essai
       const plays: Sub[] = [], bothS: Sub[] = [], recS: Sub[] = [], passS: Sub[] = [];
