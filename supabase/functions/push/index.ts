@@ -96,6 +96,56 @@ Deno.serve(async (req) => {
       const r = await sendAll(subs ?? [], { title: grp?.name ?? "Méridien", body: text, tag: "msg-" + msg.group_id, url: `./?chat=${msg.group_id}&msg=${msg.id}` });
       return reply({ ok: true, ...r });
     }
+    // un essai terminé : « X vient de jouer », « nouveau record », « X t'a dépassé »
+    if (b.type === "attempt" && typeof b.id === "string") {
+      const { data: a } = await sb.from("attempts").select("id, user_id, group_id, day, fmt, score, catchup, try_idx, submitted_at").eq("id", b.id).maybeSingle();
+      if (!a || a.score == null || !a.group_id || Date.now() - Date.parse(a.submitted_at) > 10 * 60e3) return reply({ ok: true, skipped: "stale" });
+      if (!(await once("att:" + a.id, madrid().day))) return reply({ ok: true, skipped: "already_sent" });
+      const [{ data: mem }, { data: blocks }, { data: pr }, { data: grp }, { data: others }, { data: past }] = await Promise.all([
+        sb.from("group_members").select("user_id").eq("group_id", a.group_id),
+        sb.from("blocks").select("blocker_id").eq("blocked_id", a.user_id),
+        sb.from("profiles").select("pseudo").eq("id", a.user_id).maybeSingle(),
+        sb.from("groups").select("name").eq("id", a.group_id).maybeSingle(),
+        // meilleur score de chacun ce jour-là dans ce groupe (hors rattrapages et hors cet essai)
+        sb.from("attempts").select("user_id, score").eq("group_id", a.group_id).eq("day", a.day).eq("catchup", false).not("submitted_at", "is", null).neq("id", a.id),
+        // meilleur score de tous les temps sur ce jeu dans ce groupe (avant cet essai)
+        sb.from("attempts").select("score").eq("group_id", a.group_id).eq("fmt", a.fmt).not("submitted_at", "is", null).neq("id", a.id).order("score", { ascending: false }).limit(1),
+      ]);
+      const blocked = new Set((blocks ?? []).map((x) => x.blocker_id));
+      const best = new Map<string, number>(); // meilleur score du jour par joueur
+      for (const o of others ?? []) best.set(o.user_id, Math.max(best.get(o.user_id) ?? -1, o.score));
+      const mine = best.get(a.user_id) ?? -1; // mon meilleur avant cet essai
+      const prevRecord = past && past.length ? past[0].score : null;
+      const record = prevRecord !== null && a.score > prevRecord;
+      const passed = new Set<string>(); // ceux que je viens de dépasser (rattrapage : le classement ne bouge pas)
+      if (!a.catchup) for (const [u, s] of best) if (u !== a.user_id && a.score > s && mine <= s) passed.add(u);
+      const ids = (mem ?? []).map((x) => x.user_id).filter((u) => u !== a.user_id && !blocked.has(u));
+      if (!ids.length) return reply({ ok: true, sent: 0 });
+      const { data: subs } = await sb.from("push_subs").select("endpoint, p256dh, auth, user_id, plays, rivals").in("user_id", ids);
+      const who = pr?.pseudo ?? "Un ami", n = a.score, title = grp?.name ?? "Méridien", url = `./?chat=${a.group_id}`;
+      const pick = (arr: string[]) => arr[[...String(a.id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % arr.length];
+      const game = a.catchup ? "le jeu de la veille" : "le jeu du jour";
+      const recordTxt = pick([`${who} a établi un nouveau record sur ${game} : ${n} pts`, `Nouveau record ! ${who} fait ${n} pts sur ${game}`, `${who} vient de battre le record de ${game} (${n} pts)`]);
+      const both = pick([`${who} a établi un nouveau record et t'a dépassé :O`, `${who} t'a dépassé et bat le record de ${game} :O`]);
+      const passTxt = pick([`${who} t'a dépassé :O`, `${who} vient de passer devant toi. Tu ripostes ?`, `Aïe, ${who} t'a dépassé`]);
+      const playTxt = a.catchup ? `${who} rattrape le jeu de la veille : ${n} pts` : a.try_idx > 0 ? `${who} retente sa chance : ${n} pts` : pick([`${who} vient de jouer : ${n} pts`, `${who} a fait son essai : ${n} pts`, `${who} a joué : ${n} pts`]);
+      // une notification par personne, la plus importante d'abord : record (et dépassé), dépassé, sinon essai
+      const plays: Sub[] = [], bothS: Sub[] = [], recS: Sub[] = [], passS: Sub[] = [];
+      for (const s of subs ?? []) {
+        const hit = passed.has(s.user_id);
+        if (record && hit && s.rivals) bothS.push(s);
+        else if (record && s.rivals) recS.push(s);
+        else if (hit && s.rivals) passS.push(s);
+        else if (s.plays) plays.push(s);
+      }
+      const out = await Promise.all([
+        sendAll(bothS, { title, body: both, tag: "rival-" + a.id, url }),
+        sendAll(recS, { title, body: recordTxt, tag: "record-" + a.group_id, url }),
+        sendAll(passS, { title, body: passTxt, tag: "pass-" + a.id, url }),
+        sendAll(plays, { title, body: playTxt, tag: "plays-" + a.group_id, url }), // même étiquette : les « X a joué » se remplacent au lieu de s'empiler
+      ]);
+      return reply({ ok: true, record, passed: passed.size, sent: out.reduce((t, x) => t + x.sent, 0) });
+    }
     return reply({ ok: false, error: "bad_request" }, 400);
   } catch (e) {
     return reply({ ok: false, error: String((e as Error).message ?? e) }, 500);

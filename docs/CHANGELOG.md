@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v56 (20 nov. 2026)** — **Notifications de jeu** : « X vient de jouer : N pts » (un ami a terminé un essai ; les messages se remplacent au lieu de s'empiler), « nouveau record » (meilleur score de tous les temps sur ce jeu dans le groupe), « X t'a dépassé :O » (il passe devant ton meilleur score du jour ; rattrapages exclus) ; une seule notification par personne, la plus importante d'abord, textes variés. Deux réglages : « Un ami a joué » et « Records et dépassements ». Migration `20261128000000_push_plays.sql` (colonnes plays/rivals, déclencheur sur attempts) à appliquer AVANT de publier le code, puis redéployer la fonction Edge.
+
 - **v54 (20 nov. 2026)** — **Graphique de saison à deux modes** (`pZ_season.js`) : « Course » (barres, familier au bout, curseur de jour + rejouer) et « Courbes » (lignes droites, sans aire ni décor). On touche un joueur dans la liste pour l'afficher ou le masquer (`ui.chartSel`). Mode mémorisé (`meridien.chartmode`). Retour en arrière : `CHART_STYLE = "voyage"` ou `"classique"` dans `pZ_season.js`. Aucune migration.
 
 - **v53 (20 nov. 2026)** — L'image du jeu du jour lance la partie d'un toucher (tant qu'il reste un essai) ; le podium affiche les boussoles gagnées par les 3 premiers. Aucune migration.

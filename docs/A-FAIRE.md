@@ -40,3 +40,5 @@
 
 ## 5. Fait récemment (voir `HISTORIQUE.md` pour le reste)
 ✅ Notifications push · ✅ 41 jeux · ✅ jeu de la veille · ✅ fin de saison · ✅ 19 familiers avec histoire · ✅ GIF Giphy · ✅ révélation du jeu du jour · ✅ fin de partie plus claire · ✅ graphique épuré · ✅ page d'installation · ✅ rattrapage des 3 derniers jeux.
+
+- [ ] **v56 (Chems)** : 1) coller supabase/migrations/20261128000000_push_plays.sql dans le SQL Editor ; 2) redéployer la fonction Edge dynamic-handler avec supabase/functions/push/index.ts ; 3) Push origin ; 4) tester à deux comptes : un essai, un record, un dépassement.

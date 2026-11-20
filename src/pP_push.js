@@ -3,7 +3,7 @@
    save_push_sub. Le serveur (fonction Edge « push ») envoie « Nouveau jeu du jour » à 14 h 30 et les messages du groupe.
    Sur iPhone, les notifications ne marchent que si l'application est installée sur l'écran d'accueil (iOS 16.4 ou plus).
    Uniquement des fonctions déclarées et un objet d'état : fichier chargé avant pB_logic. */
-const PUSH = { on: false, msgs: true, daily: true, busy: false, msg: "", checked: false };
+const PUSH = { on: false, msgs: true, daily: true, plays: true, rivals: true, busy: false, msg: "", checked: false };
 const pushSupported = () => !!(("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window) && /^https?:$/.test(location.protocol));
 const pushNeedsInstall = () => isIOS() && !isStandalone();
 function pushB64(s) { const pad = "=".repeat((4 - (s.length % 4)) % 4), r = atob((s + pad).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); }
@@ -18,7 +18,7 @@ async function pushKey() { // clé publique : lue dans la base, sinon demandée 
 }
 async function pushSave(sub) {
   const j = sub.toJSON(); if (!j || !j.keys) return false;
-  const r = await srvRpc("save_push_sub", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_msgs: PUSH.msgs, p_daily: PUSH.daily });
+  const r = await srvRpc("save_push_sub", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_msgs: PUSH.msgs, p_daily: PUSH.daily, p_plays: PUSH.plays, p_rivals: PUSH.rivals });
   return !!(r && r.ok);
 }
 async function pushStatus() { // état de CET appareil : abonné ou non, et ses choix
@@ -26,7 +26,7 @@ async function pushStatus() { // état de CET appareil : abonné ou non, et ses 
   try {
     const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
     PUSH.on = !!sub && Notification.permission === "granted";
-    if (PUSH.on) { const r = await srvRpc("my_push_sub", { p_endpoint: sub.endpoint }); if (r && typeof r.msgs === "boolean") { PUSH.msgs = r.msgs; PUSH.daily = r.daily; } else await pushSave(sub); } // abonnement inconnu du serveur : on le réenregistre
+    if (PUSH.on) { const r = await srvRpc("my_push_sub", { p_endpoint: sub.endpoint }); if (r && typeof r.msgs === "boolean") { PUSH.msgs = r.msgs; PUSH.daily = r.daily; if (typeof r.plays === "boolean") { PUSH.plays = r.plays; PUSH.rivals = r.rivals; } } else await pushSave(sub); } // abonnement inconnu du serveur : on le réenregistre
   } catch (e) {}
   PUSH.checked = true;
 }
@@ -67,7 +67,7 @@ function pushBlock() {
   const seg = (k, label) => `<div class="kicker" style="margin:8px 0 6px">${label}</div><div class="seg light" role="group" aria-label="${label}">${[[true, "Oui"], [false, "Non"]].map(([v, l]) => `<button data-act="pushpref" data-v="${k}|${v}" aria-pressed="${PUSH[k] === v}">${l}</button>`).join("")}</div>`;
   const msg = PUSH.msg ? `<p class="note" role="status">${esc(PUSH.msg)}</p>` : "";
   if (!PUSH.on) return `<div>${head}<button class="btn ghost" data-act="pushon" ${PUSH.busy ? "disabled" : ""}>🔔 ${PUSH.busy ? "Activation…" : "Activer les notifications"}</button><p class="note">Une notification à 14 h 30 quand le nouveau jeu arrive, et quand un ami écrit dans ton groupe.</p>${msg}</div>`;
-  return `<div>${head}<p class="note">✅ Notifications activées sur cet appareil.</p>${seg("daily", "Nouveau jeu à 14 h 30")}${seg("msgs", "Messages du groupe")}<button class="linkbtn" data-act="pushoff">Désactiver sur cet appareil</button>${msg}</div>`;
+  return `<div>${head}<p class="note">✅ Notifications activées sur cet appareil.</p>${seg("daily", "Nouveau jeu à 14 h 30")}${seg("msgs", "Messages du groupe")}${seg("plays", "Un ami a joué")}${seg("rivals", "Records et dépassements")}<button class="linkbtn" data-act="pushoff">Désactiver sur cet appareil</button>${msg}</div>`;
 }
 /* ---------- fenêtre « Notifications bloquées » : comment les rouvrir (le navigateur ne redemande pas) ---------- */
 function vPushHelp() {
