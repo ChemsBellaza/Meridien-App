@@ -221,7 +221,57 @@ async function cerShare() {
 
 /* ---------- graphique de la saison (v41, épuré) : part de la gauche, 3 repères horizontaux, toi + le top 3 en couleur ;
    « Voir tous les joueurs » ajoute les autres en traits discrets ---------- */
-function seasonChart(st) {
+/* STYLE DU GRAPHIQUE : "voyage" (v52 : ciel étoilé, méridiens, familiers au bout des lignes) ou "classique" (v41). Pour revenir en arrière : mettre "classique". */
+const CHART_STYLE = "voyage";
+function seasonChart(st) { return CHART_STYLE === "classique" ? seasonChartClassic(st) : seasonChartVoyage(st); }
+
+/* ---------- graphique « Voyage » : un trajet autour du globe, les familiers avancent d'étape en étape ---------- */
+function seasonChartVoyage(st) {
+  const W = 360, H = 270, L = 34, Rr = 40, T = 16, B = 28, list = st.list, all = !!ui.chartAll;
+  let first = Infinity; list.forEach(r => { const j = r.series.findIndex(v => v > 0); if (j >= 0) first = Math.min(first, j); });
+  const start = isFinite(first) ? Math.max(0, first - 1) : 0;
+  const ser = r => { const s = r.series.slice(start); return s.length < 2 ? [0, ...s] : s; };
+  const m = Math.max(1, ...list.map(r => ser(r).length - 1));
+  const maxV = Math.max(100, ...list.map(r => r.total)), step = maxV > 1000 ? 500 : maxV > 400 ? 200 : maxV > 200 ? 100 : 50;
+  let top = Math.ceil(maxV / step) * step; if (top / step > 4) top = Math.ceil(maxV / (step * 2)) * step * 2;
+  const X = i => L + (W - L - Rr) * (i / m), Y = v => T + (H - T - B) * (1 - v / top), yb = H - B, xr = W - Rr, cx = (L + xr) / 2;
+  const f = (n, d = 1) => (+n).toFixed(d);
+  // fond : méridiens (courbes qui se rejoignent aux pôles) et étoiles fixes
+  let bg = "";
+  for (let i = 0; i <= 6; i++) { const x = L + (xr - L) * (i / 6), bow = (x - cx) * 0.22; bg += `<path d="M${f(x)} ${T} Q${f(x + bow)} ${f((T + yb) / 2)} ${f(x)} ${yb}" fill="none" stroke="var(--grid)" stroke-width="1" opacity=".28"/>`; }
+  for (let i = 0; i < 16; i++) { const sx = Math.abs((Math.sin(i * 12.9898) * 43758.5453) % 1), sy = Math.abs((Math.sin(i * 78.233) * 12543.123) % 1); bg += `<circle class="cstar" cx="${f(L + 6 + sx * (xr - L - 12))}" cy="${f(T + 4 + sy * (yb - T - 8))}" r="${f(.8 + (i % 3) * .45)}" fill="#FFC24A" style="--d:${f((i % 5) * .6)}s"/>`; }
+  // paliers : un repère horizontal avec une petite boussole
+  let grid = ""; const gstep = top / Math.min(4, Math.round(top / step));
+  for (let v = 0; v <= top + 0.1; v += gstep) grid += `<line x1="${L}" x2="${xr}" y1="${f(Y(v))}" y2="${f(Y(v))}" stroke="var(--grid)" stroke-width="1" stroke-dasharray="${v === 0 ? "0" : "3 5"}" opacity="${v === 0 ? .9 : .5}"/><text x="${L - 6}" y="${f(Y(v) + 4)}" text-anchor="end" font-size="11" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${fmtNum(v)}</text>`;
+  [[1, "start"], ...(m >= 8 ? [[Math.round((m + 1) / 2), "middle"]] : []), [m, "end"]].forEach(([i, anc]) => { const d = st.days[start + i - 1]; if (d && (i === m || m > 2)) grid += `<text x="${f(X(i))}" y="${H - 8}" text-anchor="${anc}" font-size="11" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${shortDate(d)}</text>`; });
+  const smooth = pts => pts.reduce((s, p, i) => (i === 0 ? `M${f(p[0])} ${f(p[1])}` : `${s} C${f((pts[i - 1][0] + p[0]) / 2)} ${f(pts[i - 1][1])} ${f((pts[i - 1][0] + p[0]) / 2)} ${f(p[1])} ${f(p[0])} ${f(p[1])}`), "");
+  const podium = new Set(list.slice(0, 3).map(r => r.id)), shown = r => r.me || podium.has(r.id);
+  // gagnant de chaque jour : celui qui gagne le plus de boussoles ce jour-là
+  const dayWin = []; for (let i = 1; i <= m; i++) { let best = -1, id = null; list.forEach(r => { const s = ser(r), g = (s[i] ?? s[s.length - 1]) - (s[i - 1] ?? 0); if (g > best) { best = g; id = r.id; } }); dayWin[i] = best > 0 ? id : null; }
+  const draw = list.filter(r => all || shown(r)).sort((a, b) => (shown(a) ? 1 : 0) - (shown(b) ? 1 : 0) || (a.me ? 1 : 0) - (b.me ? 1 : 0) || a.total - b.total);
+  const spark = (x, y, c) => `<path class="cmark" d="M${f(x)} ${f(y - 7)}l1.6 4.6 4.6 1.6-4.6 1.6-1.6 4.6-1.6-4.6-4.6-1.6 4.6-1.6z" fill="#FFC24A" stroke="${c}" stroke-width=".8"/>`;
+  let lines = "", defs = "", ends = [], stops = "";
+  draw.forEach(r => {
+    const s = ser(r), pts = s.map((v, i) => [X(i), Y(v)]), d = smooth(pts), last = pts[pts.length - 1], key = shown(r);
+    if (r.me) { defs += `<linearGradient id="gme" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${r.color}" stop-opacity=".3"/><stop offset="1" stop-color="${r.color}" stop-opacity="0"/></linearGradient>`; lines += `<path class="carea" d="${d} L${f(last[0])} ${yb} L${f(pts[0][0])} ${yb} Z" fill="url(#gme)"/><path d="${d}" fill="none" stroke="#FFC24A" stroke-width="10" stroke-linecap="round" opacity=".16"/>`; }
+    lines += `<path class="cline" pathLength="1" d="${d}" fill="none" stroke="${key ? r.color : "var(--ink-2)"}" stroke-width="${r.me ? 4 : key ? 2.8 : 1.4}" stroke-linecap="round" stroke-linejoin="round" opacity="${key ? 1 : .35}"/>`;
+    if (key) {
+      pts.forEach((p, i) => { if (i > 0 && i < pts.length - 1) stops += `<circle class="cmark" cx="${f(p[0])}" cy="${f(p[1])}" r="${r.me ? 2.6 : 2}" fill="var(--paper)" stroke="${r.color}" stroke-width="1.6"/>`; if (i > 0 && dayWin[i] === r.id) stops += spark(p[0], p[1] - 9, r.color); });
+      ends.push({ r, x: last[0], y: last[1], ly: last[1] });
+    }
+  });
+  ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 30) ends[i].ly = ends[i - 1].ly + 30;
+  const over = ends.length ? ends[ends.length - 1].ly - (yb - 14) : 0; if (over > 0) ends.forEach(e => { e.ly -= over; });
+  const marks = ends.map((e, n) => { const mx = W - Rr + 20, c = e.r.color, id = "cm" + n, R = 15, p = e.r;
+    const face = p.photo ? `<image href="${esc(p.photo)}" x="${mx - R}" y="${f(e.ly - R)}" width="${R * 2}" height="${R * 2}" preserveAspectRatio="xMidYMid slice"/>`
+      : p.pet ? petSVG(p.pet, { head: true, plain: true }).replace("<svg ", `<svg x="${mx - R}" y="${f(e.ly - R)}" width="${R * 2}" height="${R * 2}" `) : "";
+    return `<clipPath id="${id}"><circle cx="${mx}" cy="${f(e.ly)}" r="${R}"/></clipPath><circle cx="${f(e.x)}" cy="${f(e.y)}" r="${p.me ? 5 : 4}" fill="${c}" stroke="var(--paper)" stroke-width="2"/><line x1="${f(e.x + 5)}" y1="${f(e.y)}" x2="${mx - R + 1}" y2="${f(e.ly)}" stroke="${c}" stroke-width="1.4" opacity=".6"/><circle cx="${mx}" cy="${f(e.ly)}" r="${R + 2}" fill="${c}"/><g clip-path="url(#${id})">${face}</g><circle cx="${mx}" cy="${f(e.ly)}" r="${R + 2}" fill="none" stroke="${p.me ? "#FFC24A" : "var(--paper)"}" stroke-width="${p.me ? 3 : 1.6}"/>`; }).join("");
+  const lead = list[0], aria = `Évolution des boussoles cumulées. ${lead ? `${lead.name} est premier avec ${fmtNum(lead.total)} boussoles.` : ""}`;
+  const toggle = list.length > 4 ? `<button type="button" class="smallbtn ghost chartall" data-act="chartall" aria-pressed="${all}">${all ? "Voir le top 3 et moi" : "Voir tous les joueurs"}</button>` : "";
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(aria)}"><defs>${defs}</defs>${bg}${grid}${lines}${stops}${marks}</svg>${toggle}`;
+}
+
+function seasonChartClassic(st) {
   const W = 360, H = 250, L = 34, Rr = 36, T = 14, B = 26, list = st.list, all = !!ui.chartAll;
   let first = Infinity; list.forEach(r => { const j = r.series.findIndex(v => v > 0); if (j >= 0) first = Math.min(first, j); });
   const start = isFinite(first) ? Math.max(0, first - 1) : 0; // on commence la veille du premier jour joué

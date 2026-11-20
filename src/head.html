@@ -802,6 +802,8 @@ div.hcard.sq{cursor:default}
 @keyframes rvfall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(108vh) rotate(var(--r))}}
 .rvroot.skip .rvrays,.rvroot.skip .rvring,.rvroot.skip .rvflash,.rvroot.skip .rvconf{display:none}
 @media (prefers-reduced-motion:reduce){.rvroot *{animation:none !important}.rvglobe,.rvq,.rvhint,.rvline,.rvrays,.rvring,.rvflash,.rvconf{display:none}}
+.chartbox .cstar{transform-box:fill-box;transform-origin:center;animation:rvtwinkle 3.2s ease-in-out var(--d,0s) infinite;opacity:.4}.chartbox .cmark{animation:cfade 1.6s ease both}
+@media (prefers-reduced-motion:reduce){.chartbox .cstar{animation:none}}
 .spill.go{padding-right:12px;box-shadow:0 4px 0 var(--lip),0 0 0 2px color-mix(in srgb,#FFC24A 55%,transparent)}.spill.go .nchev{font-size:22px;line-height:1;color:var(--ink-2)}
 /* audit UX n°2 : classement du jeu en podium + lignes simples */
 .pdm{display:flex;align-items:flex-end;justify-content:center;gap:10px;width:100%;padding:26px 0 4px}

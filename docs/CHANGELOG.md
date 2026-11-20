@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v52 (20 nov. 2026)** — **Graphique de saison « Voyage »** (seasonChartVoyage, pZ_season.js) : ciel étoilé, méridiens qui se rejoignent aux pôles, paliers en pointillés, une étape par jour sur chaque ligne, étincelle dorée les jours gagnés, familier (ou photo) au bout de la ligne, lueur dorée sous ta courbe. **Pour revenir à l'ancien graphique** : mettre CHART_STYLE = "classique" dans src/pZ_season.js puis reconstruire ; ou, pour tout défaire, git revert des commits v52 / tag vant-graphique-voyage. Aucune migration.
+
 - **v51 (20 nov. 2026)** — Accès au classement complet plus clair : la pastille de rang du groupe affiche « Classement ›» avec un liseré doré (elle ouvrait déjà la saison, mais ressemblait à une simple info). Aucune migration.
 
 - **v50 (20 nov. 2026)** — Retour joueurs : (1) le code de récupération n'est plus annoncé « à 6 chiffres » (il en a 8) : « Code reçu par e-mail » ; (2) notifications refusées : la carte reste sur l'accueil et « Activer » ouvre une fenêtre qui explique comment les rouvrir (le navigateur ne redemande jamais après un refus) ; un fenêtre fermée sans réponse permet de réessayer. Aucune migration.
