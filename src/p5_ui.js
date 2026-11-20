@@ -289,11 +289,11 @@ function vSeason() {
 function vPet() {
   const pet = store.profile.pet, S = SPECIES[pet.species], prog = progress(), cat = ["species", "shiny", "bg"].includes(ui.petTab) ? ui.petTab : "species", nx = nextUnlock(prog);
   const me = meP(), st = stageOf(pet), T = TYPES[S.type];
-  const evo = [1, 2, 3].map(n => {
+  const nextN = [1, 2, 3].find(n => !isUnlocked(ITEMS.stage.list[n - 1], prog));
+  const evoStrip = `<div class="evostrip" role="group" aria-label="Évolutions">${[1, 2, 3].map(n => {
     const it = ITEMS.stage.list[n - 1], open = isUnlocked(it, prog), on = st === n, p2 = { ...pet, stage: String(n) };
-    return `${n > 1 ? `<span class="evoarr" aria-hidden="true">›</span>` : ""}<${open ? "button" : "div"} class="evo ${on ? "on" : ""} ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="stage|${n}" aria-pressed="${on}"` : ""}>
-      ${petAv(p2, "lg", S.names[n - 1], { sil: !open })}<b>${open ? esc(S.names[n - 1]) : "???"}</b><span>${open ? `Stade ${n}` : reqText(it.need)}</span></${open ? "button" : "div"}>`;
-  }).join("");
+    return `${n > 1 ? `<span class="eline ${open ? "on" : ""}" aria-hidden="true"></span>` : ""}<${open ? "button" : "div"} class="eb ${on ? "on" : ""} ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="stage|${n}" aria-pressed="${on}"` : ""} aria-label="${open ? esc(S.names[n - 1]) + ", stade " + n : "Stade " + n + " verrouillé"}">${petAv(p2, "md", S.names[n - 1], { sil: !open })}<small>${open ? `Stade ${n}` : "???"}</small></${open ? "button" : "div"}>`;
+  }).join("")}</div>${nextN ? `<p class="evonext">Prochaine évolution : ${esc(reqText(ITEMS.stage.list[nextN - 1].need))}</p>` : ""}${st > 1 ? `<button class="linkbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}`;
   return `
   <div class="rowtop">${backBtn()}<span class="kicker">Fiche n°${String(S.num).padStart(3, "0")}</span><span></span></div>
   ${petSwitch("pet")}
@@ -302,9 +302,10 @@ function vPet() {
     <div class="dexhead"><h1 class="display">${esc(petName(pet))}</h1><div class="dexmeta">${typeBadge(S.type)}<span class="tchip">Stade ${st}</span>${pet.shiny === "shiny" ? `<span class="tchip shiny">✦ Chromatique</span>` : ""}</div></div>
     <p class="dextext">${fr(S.dex[st - 1])}</p>
     <div class="traits">${S.traits.map(t => `<span>${t}</span>`).join("")}</div>
+    ${evoStrip}
   </div>
   <div class="kicker pers">Personnaliser ton familier</div>
-  <div class="chips" role="group" aria-label="Catégorie">${["species", "shiny", "bg"].map(c => `<button data-act="pettab" data-v="${c}" aria-pressed="${cat === c}">${ITEMS[c].label}</button>`).join("")}</div>
+  <div class="seg light three petcats" role="group" aria-label="Catégorie">${["species", "shiny", "bg"].map(c => { const L = c === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[c].list; return `<button data-act="pettab" data-v="${c}" aria-pressed="${cat === c}">${ITEMS[c].label}<small>${L.filter(it => isUnlocked(it, prog)).length}/${L.length}</small></button>`; }).join("")}</div>
   ${(() => {
     const all = cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list;
     const card = it => {
@@ -318,7 +319,6 @@ function vPet() {
     // les familiers et options à débloquer sont repliés : la fiche reste courte
     return `<div class="items">${opened.map(card).join("")}</div>${locked.length ? `<details class="fold"><summary>À débloquer (${locked.length})</summary><div class="foldbody"><div class="items">${locked.map(card).join("")}</div></div></details>` : ""}`;
   })()}
-  <details class="fold"><summary>Évolutions · stade ${st} sur 3</summary><div class="foldbody"><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div></details>
   ${petStory(pet)}
 `;
 }
