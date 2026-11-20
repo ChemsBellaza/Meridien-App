@@ -222,8 +222,81 @@ async function cerShare() {
 /* ---------- graphique de la saison (v41, épuré) : part de la gauche, 3 repères horizontaux, toi + le top 3 en couleur ;
    « Voir tous les joueurs » ajoute les autres en traits discrets ---------- */
 /* STYLE DU GRAPHIQUE : "voyage" (v52 : ciel étoilé, méridiens, familiers au bout des lignes) ou "classique" (v41). Pour revenir en arrière : mettre "classique". */
-const CHART_STYLE = "voyage";
-function seasonChart(st) { return CHART_STYLE === "classique" ? seasonChartClassic(st) : seasonChartVoyage(st); }
+const CHART_STYLE = "modes"; // "modes" (v54 : Course + Courbes) | "voyage" (v52) | "classique" (v41)
+function seasonChart(st) {
+  if (CHART_STYLE === "classique") return seasonChartClassic(st);
+  if (CHART_STYLE === "voyage") return seasonChartVoyage(st);
+  const mode = chartMode(), all = !!ui.chartAll, list = st.list;
+  RACE_ST = st;
+  const sw = `<div class="seg chartmode" role="group" aria-label="Type de graphique"><button data-act="chartmode" data-v="race" aria-pressed="${mode === "race"}">Course</button><button data-act="chartmode" data-v="lines" aria-pressed="${mode === "lines"}">Courbes</button></div>`;
+  const toggle = list.length > 4 ? `<button type="button" class="smallbtn ghost chartall" data-act="chartall" aria-pressed="${all}">${all ? "Voir le top 3 et moi" : "Voir tous les joueurs"}</button>` : "";
+  return `${sw}${mode === "race" ? seasonRace(st) : seasonLines(st)}<p class="note center light chartnote">Touche un joueur dans la liste pour l’afficher ou le masquer.</p>${toggle}`;
+}
+let RACE_ST = null;
+const chartMode = () => { if (ui.chartMode) return ui.chartMode; let m = ""; try { m = localStorage.getItem("meridien.chartmode") || ""; } catch (e) {} return ui.chartMode = m === "lines" ? "lines" : "race"; };
+// qui est visible : par défaut toi + le top 3 ; « Voir tous » = tout le monde ; sinon la sélection faite en touchant les joueurs
+const chartOn = (r, list) => ui.chartSel ? ui.chartSel.includes(r.id) : !!(ui.chartAll || r.me || list.slice(0, 3).some(x => x.id === r.id));
+
+/* ---------- mode « Course » : une barre par joueur, le familier au bout, un curseur pour revoir chaque jour ---------- */
+function raceRows(st, d) {
+  const list = st.list, val = r => r.series[Math.min(d, r.series.length - 1)] || 0, fin = Math.max(1, ...list.map(r => r.total));
+  const rank = r => 1 + list.filter(x => val(x) > val(r)).length;
+  const rows = list.filter(r => chartOn(r, list)).sort((a, b) => val(b) - val(a));
+  if (!rows.length) return `<p class="note center light">Aucun joueur affiché. Touche un joueur dans la liste.</p>`;
+  return rows.map(r => `<div class="rc ${r.me ? "me" : ""}" style="--c:${r.color}"><span class="rn num">${rank(r)}</span><div class="rmain"><span class="rnm">${esc(r.name)}${r.me ? toi : ""}</span><div class="rtrack"><span class="rbar" style="width:calc(${(val(r) / fin * 100).toFixed(1)}% )"><span class="rtip">${avatar(r, "md")}</span></span></div></div><span class="rv num">${fmtNum(val(r))}${I.compass(16)}</span></div>`).join("");
+}
+function seasonRace(st) {
+  const nd = st.days.length, d = Math.max(0, Math.min(nd, ui.raceDay === undefined || ui.raceDay === null ? nd : ui.raceDay));
+  return `<div class="race"><div id="racebody" class="racebody">${raceRows(st, d)}</div>
+    <div class="rday"><button class="plain" data-act="raceplay" aria-label="Rejouer la course depuis le début">${I.retry ? I.retry(20) : "↻"}</button><button class="plain" data-act="raceday" data-v="-1" aria-label="Jour précédent">‹</button><input id="raceDay" type="range" min="0" max="${nd}" step="1" value="${d}" aria-label="Jour de la saison"><button class="plain" data-act="raceday" data-v="1" aria-label="Jour suivant">›</button></div>
+    <div id="racedate" class="rdate" aria-live="polite">${raceDateLabel(st, d)}</div></div>`;
+}
+const raceDateLabel = (st, d) => d === 0 ? "Début de la saison" : (d === st.days.length ? "Aujourd’hui" : shortDate(st.days[d - 1]));
+function raceDraw() {
+  if (!RACE_ST) return; const st = RACE_ST, nd = st.days.length, d = Math.max(0, Math.min(nd, ui.raceDay === undefined || ui.raceDay === null ? nd : ui.raceDay));
+  const b = document.getElementById("racebody"), t = document.getElementById("racedate"), s = document.getElementById("raceDay");
+  if (b) b.innerHTML = raceRows(st, d); if (t) t.textContent = raceDateLabel(st, d); if (s && +s.value !== d) s.value = d;
+}
+function racePlay() { // rejoue la course jour par jour
+  if (!RACE_ST) return; const nd = RACE_ST.days.length; let d = 0;
+  const step = () => { ui.raceDay = d; raceDraw(); if (d < nd) { d++; later(step, 420); } else ui.raceDay = null; };
+  step();
+}
+document.addEventListener("input", e => { if (e.target && e.target.id === "raceDay") { ui.raceDay = +e.target.value; raceDraw(); } });
+
+/* ---------- mode « Courbes » : classique et lisible. Lignes droites, pas d'aire, pas de décor ; le familier au bout ---------- */
+function seasonLines(st) {
+  const W = 360, H = 260, L = 34, Rr = 42, T = 14, B = 28, list = st.list;
+  let first = Infinity; list.forEach(r => { const j = r.series.findIndex(v => v > 0); if (j >= 0) first = Math.min(first, j); });
+  const start = isFinite(first) ? Math.max(0, first - 1) : 0;
+  const ser = r => { const s = r.series.slice(start); return s.length < 2 ? [0, ...s] : s; };
+  const m = Math.max(1, ...list.map(r => ser(r).length - 1));
+  const maxV = Math.max(100, ...list.map(r => r.total)), step = maxV > 1000 ? 500 : maxV > 400 ? 200 : maxV > 200 ? 100 : 50;
+  let top = Math.ceil(maxV / step) * step; if (top / step > 4) top = Math.ceil(maxV / (step * 2)) * step * 2;
+  const X = i => L + (W - L - Rr) * (i / m), Y = v => T + (H - T - B) * (1 - v / top), yb = H - B, xr = W - Rr, cx = (L + xr) / 2;
+  const f = (n, d = 1) => (+n).toFixed(d);
+  let bg = ""; // seul clin d'œil au thème : de fins méridiens en fond
+  for (let i = 0; i <= 6; i++) { const x = L + (xr - L) * (i / 6), bow = (x - cx) * 0.22; bg += `<path d="M${f(x)} ${T} Q${f(x + bow)} ${f((T + yb) / 2)} ${f(x)} ${yb}" fill="none" stroke="var(--grid)" stroke-width="1" opacity=".16"/>`; }
+  let grid = ""; const gstep = top / Math.min(4, Math.round(top / step));
+  for (let v = 0; v <= top + 0.1; v += gstep) grid += `<line x1="${L}" x2="${xr}" y1="${f(Y(v))}" y2="${f(Y(v))}" stroke="var(--grid)" stroke-width="1" opacity="${v === 0 ? .9 : .45}"/><text x="${L - 6}" y="${f(Y(v) + 4)}" text-anchor="end" font-size="11" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${fmtNum(v)}</text>`;
+  [[1, "start"], ...(m >= 8 ? [[Math.round((m + 1) / 2), "middle"]] : []), [m, "end"]].forEach(([i, anc]) => { const d = st.days[start + i - 1]; if (d && (i === m || m > 2)) grid += `<text x="${f(X(i))}" y="${H - 8}" text-anchor="${anc}" font-size="11" font-weight="800" font-family="Nunito, sans-serif" fill="var(--ink-2)">${shortDate(d)}</text>`; });
+  const draw = list.filter(r => chartOn(r, list)).sort((a, b) => (a.me ? 1 : 0) - (b.me ? 1 : 0) || a.total - b.total); // ta ligne au-dessus
+  if (!draw.length) return `<p class="note center light">Aucun joueur affiché. Touche un joueur dans la liste.</p>`;
+  let lines = "", ends = [];
+  draw.forEach(r => {
+    const pts = ser(r).map((v, i) => [X(i), Y(v)]), last = pts[pts.length - 1];
+    lines += `<polyline class="cline" pathLength="1" points="${pts.map(p => f(p[0]) + "," + f(p[1])).join(" ")}" fill="none" stroke="${r.color}" stroke-width="${r.me ? 4 : 3}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    ends.push({ r, x: last[0], y: last[1], ly: last[1] });
+  });
+  ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 32) ends[i].ly = ends[i - 1].ly + 32;
+  const over = ends.length ? ends[ends.length - 1].ly - (yb - 14) : 0; if (over > 0) ends.forEach(e => { e.ly -= over; });
+  const marks = ends.map((e, n) => { const mx = W - Rr + 22, c = e.r.color, id = "cl" + n, R = 15, p = e.r;
+    const face = p.photo ? `<image href="${esc(p.photo)}" x="${mx - R}" y="${f(e.ly - R)}" width="${R * 2}" height="${R * 2}" preserveAspectRatio="xMidYMid slice"/>`
+      : p.pet ? petSVG(p.pet, { head: true, plain: true }).replace("<svg ", `<svg x="${mx - R}" y="${f(e.ly - R)}" width="${R * 2}" height="${R * 2}" `) : "";
+    return `<clipPath id="${id}"><circle cx="${mx}" cy="${f(e.ly)}" r="${R}"/></clipPath><circle cx="${f(e.x)}" cy="${f(e.y)}" r="4.5" fill="${c}" stroke="var(--paper)" stroke-width="2"/><line x1="${f(e.x + 5)}" y1="${f(e.y)}" x2="${mx - R}" y2="${f(e.ly)}" stroke="${c}" stroke-width="1.4" opacity=".6"/><circle cx="${mx}" cy="${f(e.ly)}" r="${R + 2}" fill="${c}"/><g clip-path="url(#${id})">${face}</g><circle cx="${mx}" cy="${f(e.ly)}" r="${R + 2}" fill="none" stroke="${p.me ? "#FFC24A" : "var(--paper)"}" stroke-width="${p.me ? 3 : 1.6}"/>`; }).join("");
+  const lead = list[0], aria = `Évolution des boussoles cumulées. ${lead ? `${lead.name} est premier avec ${fmtNum(lead.total)} boussoles.` : ""}`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(aria)}">${bg}${grid}${lines}${marks}</svg>`;
+}
 
 /* ---------- graphique « Voyage » : un trajet autour du globe, les familiers avancent d'étape en étape ---------- */
 function seasonChartVoyage(st) {

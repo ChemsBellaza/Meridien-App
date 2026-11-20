@@ -805,6 +805,27 @@ div.hcard.sq{cursor:default}
 .chartbox .cstar{transform-box:fill-box;transform-origin:center;animation:rvtwinkle 3.2s ease-in-out var(--d,0s) infinite;opacity:.4}.chartbox .cmark{animation:cfade 1.6s ease both}
 @media (prefers-reduced-motion:reduce){.chartbox .cstar{animation:none}}
 .spill.go{padding-right:12px;box-shadow:0 4px 0 var(--lip),0 0 0 2px color-mix(in srgb,#FFC24A 55%,transparent)}.spill.go .nchev{font-size:22px;line-height:1;color:var(--ink-2)}
+/* v54 : graphique de saison, modes Course et Courbes */
+.chartmode{margin:0 0 10px}.chartnote{margin:6px 0 2px}
+button.srow{border:0;width:100%;text-align:left;font:inherit;cursor:pointer;min-height:44px}
+.srow.off{opacity:.42}.srow.off .av{filter:grayscale(.7)}
+.race{display:flex;flex-direction:column;gap:6px}
+.racebody{display:flex;flex-direction:column;gap:12px;padding:6px 0 4px}
+.rc{display:grid;grid-template-columns:22px 1fr auto;align-items:end;gap:8px;color:#fff}
+.rc .rn{font-family:var(--fd);font-weight:800;font-size:16px;color:#B7B3AC;text-align:center;padding-bottom:9px}
+.rnm{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;color:#D9D6D0;margin:0 0 7px 4px}
+.rday [data-act="raceday"]{font-size:34px;line-height:1}
+.rtrack{height:34px;border-radius:999px;background:rgba(255,255,255,.07)}
+.rbar{position:relative;display:block;height:100%;min-width:34px;border-radius:999px;background:var(--c);transition:width .35s ease}
+.rtip{position:absolute;right:-3px;top:50%;transform:translateY(-50%);display:block}
+.rtip .av{--s:40px}.rtip .av .in{box-shadow:0 0 0 3px #1B1546,0 0 0 5px var(--c)}
+.rc.me .rtip .av .in{box-shadow:0 0 0 3px #1B1546,0 0 0 5px #FFC24A}
+.rv{display:inline-flex;align-items:center;gap:4px;font-family:var(--fd);font-weight:800;font-size:15px;color:#F6D774;padding-bottom:7px;min-width:70px;justify-content:flex-end}
+.rday{display:flex;align-items:center;gap:6px;margin-top:6px}
+.rday input[type=range]{flex:1;accent-color:#FFC24A;min-height:44px}
+.rday .plain{color:#fff;font-size:26px;min-width:44px;min-height:44px;display:grid;place-items:center}
+.rdate{text-align:center;font-weight:800;font-size:14px;color:#D9D6D0}
+@media (prefers-reduced-motion:reduce){.rbar{transition:none}}
 /* audit UX n°2 : classement du jeu en podium + lignes simples */
 .pdm{display:flex;align-items:flex-end;justify-content:center;gap:10px;width:100%;padding:26px 0 4px}
 .pdc{position:relative;flex:1;max-width:112px;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--ink);font:inherit;cursor:pointer;min-height:44px;padding:0}

@@ -13,6 +13,7 @@ const MUST = [
   ["Pas à jour ?", "Ferme l’appli et rouvre-la, deux fois."]
 ];
 const NEWS = [
+  { id: "v54", date: "20 nov.", title: "Graphique de saison", text: "Deux affichages : Course, avec une barre par joueur et un curseur pour revoir chaque jour, ou Courbes. Touche un joueur dans la liste pour l’afficher ou le masquer." },
   { id: "v52", date: "20 nov.", title: "Graphique de saison", text: "Les familiers avancent au bout de leur ligne, jour après jour. Une étincelle marque chaque jour gagné. Un bouton Classement mène au détail de la saison." },
   { id: "v48", date: "20 nov.", title: "Classement et jeux précédents", text: "Le classement d’un jeu affiche un podium, puis une ligne simple par joueur. Les jeux précédents se parcourent jour par jour, avec ton rang sur chaque jour. Le graphique de saison a plus de dates." },
   { id: "v47", date: "19 nov.", title: "Accueil plus rapide", text: "Le bouton Jouer remonte en haut de l’écran. Un seul bandeau s’affiche à la fois. Dans Réglages, l’essentiel passe en premier. Le classement montre le top 5 et ta ligne, et la fiche de ton familier est plus courte." },

@@ -279,7 +279,8 @@ function vSeason() {
     if (seasonMasked(k)) return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">${r.me ? "#" + r.rank + toi : "#?"}</div><b>${esc(r.name)}</b><span>${r.me ? `${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""}` : "classement caché"}</span></div><div class="tot">${I.compass(34)}<b class="num">${r.me ? fmtNum(r.total) : "•••"}</b></div></div>`;
     const pr = prev && prev.list.find(x => x.id === r.id);
     const mv = pr ? (pr.rank > r.rank ? `<span class="up" aria-label="monte">↑</span>` : pr.rank < r.rank ? `<span class="down" aria-label="descend">↓</span>` : "") : "";
-    return `<div class="srow" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">#${r.rank} ${mv}${r.me ? toi : ""}</div><b>${esc(r.name)}</b><span>${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""} (sur ${r.played})</span></div><div class="tot">${I.compass(34)}<b class="num">${fmtNum(r.total)}</b></div></div>`;
+    const on = CHART_STYLE === "modes" ? chartOn(r, st.list) : true;
+    return `<${CHART_STYLE === "modes" ? `button type="button" data-act="chartpick" data-v="${esc(r.id)}" aria-pressed="${on}" aria-label="${esc(r.name)} : ${on ? "masquer du" : "afficher sur le"} graphique"` : "div"} class="srow ${on ? "" : "off"}" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">#${r.rank} ${mv}${r.me ? toi : ""}</div><b>${esc(r.name)}</b><span>${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""} (sur ${r.played})</span></div><div class="tot">${I.compass(34)}<b class="num">${fmtNum(r.total)}</b></div></${CHART_STYLE === "modes" ? "button" : "div"}>`;
   }).join("")}
   ${st.list.length > 6 && !seasonMasked(k) ? `<button class="smallbtn ghost rkall" data-act="seasonall">${ui.seasonAll ? "Voir le top 5" : `Voir les ${st.list.length - st.list.filter((r, i) => i < 5 || r.me).length} autres`}</button>` : ""}
   <p class="note center light">Chaque jour, ${CONFIG.gemsPerRank} boussoles par place devancée, avec un bonus qui monte au fil de la saison (+5 % par jour, jusqu'à +100 % le dernier jour)${srvOn() ? ". Les boussoles du jour sont provisoires jusqu'à la fin de la journée." : ". Les jours précédant ton arrivée sont simulés pour la démo."}</p></div>`;
@@ -507,7 +508,11 @@ document.addEventListener("click", e => {
     case "emailskip": go("welcome"); break;
     case "stkopen": ui.stickers = !(ui.stickers && ui.stkMode !== "gif"); ui.stkMode = "stk"; render(); break;
     case "gifopen": ui.stickers = !(ui.stickers && ui.stkMode === "gif"); ui.stkMode = "gif"; render(); break;
-    case "chartall": ui.chartAll = !ui.chartAll; render(); break;
+    case "chartall": ui.chartAll = !ui.chartAll; ui.chartSel = null; render(); break;
+    case "chartmode": ui.chartMode = v === "lines" ? "lines" : "race"; try { localStorage.setItem("meridien.chartmode", ui.chartMode); } catch (e) {} render(); break;
+    case "chartpick": { const sl = standings(today()).list, cur = sl.filter(r => chartOn(r, sl)).map(r => r.id); ui.chartSel = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v]; render(); break; }
+    case "raceday": { const nd = RACE_ST ? RACE_ST.days.length : 0, cur = ui.raceDay === undefined || ui.raceDay === null ? nd : ui.raceDay; ui.raceDay = Math.max(0, Math.min(nd, cur + (+v || 0))); raceDraw(); break; }
+    case "raceplay": racePlay(); break;
     case "stkclose": ui.stickers = false; render(); break;
     case "gifq": { GIF.q = v; const gi = document.getElementById("gifq"); if (gi) gi.value = v; document.querySelectorAll(".gifidea").forEach(b => b.classList.toggle("on", b.dataset.v === v)); gifFetch(v); break; }
     case "stkcat": ui.stkCat = v; render(); break;
