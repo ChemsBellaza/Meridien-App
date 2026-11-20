@@ -136,7 +136,7 @@ function vGroup() {
   <div class="gname"><b>${esc(store.profile.group)}</b><span>Jeu du jour n°${issueNo(k)} · ${longDate(k)}</span></div>
   ${srvOn() ? `<div class="gchips"><button class="chipbtn" data-act="ginfo"><span aria-hidden="true">👥</span> Membres et invitation</button></div>` : ""}
   <section class="today" aria-label="Jeu du jour">
-    <div class="cover">${art(fmt, k)}${labels(`Jeu du jour · 3 manches`, F.name)}</div>
+    ${left > 0 && !ui.busyPlay ? `<button class="cover coverbtn" data-act="play" aria-label="Jouer au jeu du jour : ${esc(F.name)}">${art(fmt, k)}${labels(`Jeu du jour · 3 manches`, F.name)}</button>` : `<div class="cover">${art(fmt, k)}${labels(`Jeu du jour · 3 manches`, F.name)}</div>`}
     <div class="tbody">
       <p class="sub">${fr(F.sub)}</p>
       <div class="rounds">${mans.map((m, i) => roundChip(m, i)).join("")}</div>
@@ -175,7 +175,7 @@ function vRanking(k) {
   // podium : 3 premiers (2, 1, 3 comme sur un vrai podium), puis des lignes simples
   const P = res.played, top = P.slice(0, 3), rest = P.slice(3);
   const crown = `<svg class="crown" viewBox="0 0 32 22" width="30" height="21" aria-hidden="true"><path d="M2 20 0 4l9 8 7-11 7 11 9-8-2 16z" fill="#FFC24A" stroke="#B8860B" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
-  const pcol = r => `<button class="pdc ${r.pos === 1 ? "first" : ""} ${r.me ? "me" : ""}" data-act="detail" data-v="${esc(r.id)}|${k}" aria-label="Détail des points de ${esc(r.name)}, ${fmtNum(r.best)} points, rang ${r.pos}" style="--c:${r.color}">${r.pos === 1 ? crown : ""}${avatar(r, r.pos === 1 ? "xl" : "lg")}<b class="num">${fmtNum(r.best)}<small> pts</small></b><span class="nm">${esc(r.name)}${r.me ? toi : ""}</span></button>`;
+  const pcol = r => `<button class="pdc ${r.pos === 1 ? "first" : ""} ${r.me ? "me" : ""}" data-act="detail" data-v="${esc(r.id)}|${k}" aria-label="Détail des points de ${esc(r.name)}, ${fmtNum(r.best)} points, rang ${r.pos}" style="--c:${r.color}">${r.pos === 1 ? crown : ""}${avatar(r, r.pos === 1 ? "xl" : "lg")}<b class="num">${fmtNum(r.best)}<small> pts</small></b><span class="nm">${esc(r.name)}${r.me ? toi : ""}</span><small class="num gm">${r.boost ? "⚡ " : ""}+${r.gems} ${I.compass(12)}</small></button>`;
   const order = top.length === 3 ? [top[1], top[0], top[2]] : top;
   const many = rest.length > 3, cut = many && !ui.rankAll, shown = cut ? rest.filter((r, i) => i < 2 || r.me) : rest; // classement long : top 5 + ta ligne
   let out = "", prev = -1;
