@@ -345,6 +345,7 @@ function vSheet() {
   if (ui.sheet === "news") return vNewsSheet();
   if (ui.sheet === "must") return vMustSheet();
   if (ui.sheet === "acct") return vAcctSheet();
+  if (ui.sheet === "pushhelp") return vPushHelp();
   if (ui.sheet === "rxwho") return vRxWho();
   if (ui.sheet === "reveal") return vReveal();
   if (ui.sheet === "install") return vInstallSheet();

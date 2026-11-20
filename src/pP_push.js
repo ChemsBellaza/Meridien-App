@@ -33,8 +33,10 @@ async function pushStatus() { // état de CET appareil : abonné ou non, et ses 
 async function pushEnable() {
   PUSH.busy = true; PUSH.msg = ""; if (!game) render();
   try {
-    if (Notification.permission === "denied") PUSH.msg = "Les notifications sont bloquées pour Méridien : autorise-les dans les réglages de ton téléphone ou de ton navigateur.";
-    else if ((await Notification.requestPermission()) !== "granted") PUSH.msg = "Autorisation refusée : tu peux la redonner dans les réglages de ton téléphone.";
+    let perm = Notification.permission;
+    if (perm !== "denied") perm = await Notification.requestPermission();
+    if (perm === "denied") { PUSH.busy = false; PUSH.checked = true; ui.sheet = "pushhelp"; render(); return; } // bloquées : le navigateur ne redemande plus, on explique comment les rouvrir
+    else if (perm !== "granted") PUSH.msg = "Tu n'as pas répondu : touche « Activer » pour réessayer.";
     else {
       const key = await pushKey();
       if (!key) PUSH.msg = "Les notifications ne sont pas encore prêtes sur le serveur. Réessaie un peu plus tard.";
@@ -67,10 +69,22 @@ function pushBlock() {
   if (!PUSH.on) return `<div>${head}<button class="btn ghost" data-act="pushon" ${PUSH.busy ? "disabled" : ""}>🔔 ${PUSH.busy ? "Activation…" : "Activer les notifications"}</button><p class="note">Une notification à 14 h 30 quand le nouveau jeu arrive, et quand un ami écrit dans ton groupe.</p>${msg}</div>`;
   return `<div>${head}<p class="note">✅ Notifications activées sur cet appareil.</p>${seg("daily", "Nouveau jeu à 14 h 30")}${seg("msgs", "Messages du groupe")}<button class="linkbtn" data-act="pushoff">Désactiver sur cet appareil</button>${msg}</div>`;
 }
+/* ---------- fenêtre « Notifications bloquées » : comment les rouvrir (le navigateur ne redemande pas) ---------- */
+function vPushHelp() {
+  const ios = typeof isIOS === "function" && isIOS(), android = /Android/i.test(navigator.userAgent);
+  const steps = ios ? ["Ouvre les <b>Réglages</b> de l’iPhone", "Va dans <b>Notifications</b>, puis <b>Méridien</b>", "Active <b>Autoriser les notifications</b>"]
+    : android ? ["Touche le <b>cadenas</b> ou le menu ⋮ à côté de l’adresse", "Choisis <b>Autorisations</b>, puis <b>Notifications</b>", "Mets <b>Autoriser</b>"]
+    : ["Clique sur le <b>cadenas</b> à gauche de l’adresse", "Mets <b>Notifications</b> sur <b>Autoriser</b>", "Recharge la page"];
+  return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Notifications bloquées" data-stop>
+    <div class="sheethead"><div><h3>Notifications bloquées</h3><div class="muted">Le navigateur ne redemande pas. Il faut les rouvrir à la main.</div></div></div>
+    <ol class="isteps">${steps.map((t, i) => `<li><span class="in num">${i + 1}</span><span class="tx"><span>${t}</span></span></li>`).join("")}</ol>
+    <p class="note">Ensuite, reviens ici et touche « Activer ».</p>
+    <button class="btn ghost" data-act="closesheet">Fermer</button></div></div>`;
+}
 /* ---------- carte discrète sur l'accueil, après la première vraie partie ; « Plus tard » la masque 7 jours ---------- */
 function pushNotice() {
   if (!store.profile || !store.profile.pet || !srvOn() || !tutoState().done || !PUSH.checked || PUSH.on) return "";
-  if (!pushSupported() || pushNeedsInstall() || Notification.permission === "denied" || progress().plays < 1) return "";
+  if (!pushSupported() || pushNeedsInstall() || progress().plays < 1) return ""; // bloquées : la carte reste, « Activer » explique comment les rouvrir
   const until = store.profile.pushLater || ""; if (until && today() < until) return "";
   return `<div class="tnotice" role="note"><span class="kicker">Notifications</span><b>Ne rate plus le nouveau jeu</b><span>Une notification à 14 h 30 quand il arrive, et quand un ami écrit dans ton groupe.</span><span class="btnline"><button class="smallbtn" data-act="pushon">Activer</button><button class="smallbtn ghost" data-act="pushlater">Plus tard</button></span></div>`;
 }

@@ -1,5 +1,5 @@
 /* =================== SERVEUR (Supabase) : lot 3, étape 2 ===================
-   Session anonyme (aucune donnée personnelle), profil et groupes réels, récupération du compte par e-mail (code à 6 chiffres).
+   Session anonyme (aucune donnée personnelle), profil et groupes réels, récupération du compte par e-mail (code reçu par e-mail).
    Aucune bibliothèque : appels `fetch` vers CE projet uniquement. L'URL et la clé « publishable » sont PUBLIQUES par conception
    (la sécurité vient des règles de la base, voir supabase/). Ne JAMAIS mettre ici la clé « service_role ».
    Placé après pA_core.js : ne pas toucher à `ui` / `game` au chargement (ils sont définis plus tard) ; seulement dans les fonctions. */
@@ -210,7 +210,7 @@ async function srvResetAccount() { // « Réinitialiser » : supprime aussi le c
   srvSave(null); SRV.group = null; SRV.members = null;
 }
 
-/* ---------- récupération du compte par e-mail (code à 6 chiffres) ---------- */
+/* ---------- récupération du compte par e-mail (code reçu par e-mail) ---------- */
 function srvAuthErr(r) {
   if (r.offline) return "offline";
   if (r.status === 429) return "rate";
@@ -265,11 +265,11 @@ function vRecover() {
   return `<div class="onb">
     <div class="rowtop">${backBtn("recoverback")}<span class="kicker">J'ai déjà un compte</span><span></span></div>
     <div class="ohead"><span class="brand">${logoMark(52)}</span><h1 class="display">Retrouver mon compte</h1>
-      <p class="qsub">${r.step === 0 ? "Entre l'adresse e-mail que tu avais liée à ton compte. Tu recevras un code à 6 chiffres." : `Un code a été envoyé à ${esc(r.email)}. Entre-le ci-dessous (il peut mettre une minute à arriver).`}</p></div>
+      <p class="qsub">${r.step === 0 ? "Entre l'adresse e-mail que tu avais liée à ton compte. Tu recevras un code par e-mail." : `Un code a été envoyé à ${esc(r.email)}. Entre-le ci-dessous (il peut mettre une minute à arriver).`}</p></div>
     ${r.step === 0
       ? `<form class="form" id="recForm1" novalidate><div class="field"><label for="recEmail">Adresse e-mail</label><input id="recEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" value="${esc(r.email)}"></div>
          <p class="err" id="recErr" role="alert" ${r.msg ? "" : "hidden"}>${esc(r.msg)}</p><button class="btn" type="submit">Recevoir un code</button></form>`
-      : `<form class="form" id="recForm2" novalidate><div class="field"><label for="recCode">Code à 6 chiffres</label><input id="recCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*"></div>
+      : `<form class="form" id="recForm2" novalidate><div class="field"><label for="recCode">Code reçu par e-mail</label><input id="recCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*"></div>
          <p class="err" id="recErr" role="alert" ${r.msg ? "" : "hidden"}>${esc(r.msg)}</p><button class="btn" type="submit">Valider</button>
          <button type="button" class="linkbtn" data-act="recoveragain">Changer d'adresse</button></form>`}
     <p class="note center">Pas encore de compte sauvegardé ? Reviens en arrière et crée un profil.</p>
@@ -280,8 +280,8 @@ function vEmailCode() { // juste après la création du profil : confirmer l'e-m
   const a = ui.acct || { email: "", msg: "" };
   return `<div class="onb">
     <div class="ohead"><span class="brand">${logoMark(52)}</span><h1 class="display">Confirme ton e-mail</h1>
-      <p class="qsub">Un code à 6 chiffres vient d'être envoyé à ${esc(a.email)}. Entre-le pour sécuriser ton compte (il peut mettre une minute à arriver).</p></div>
-    <form class="form" id="acctForm2" novalidate><div class="field"><label for="acctCode">Code à 6 chiffres</label><input id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*"></div>
+      <p class="qsub">Un code vient d'être envoyé à ${esc(a.email)}. Entre-le pour sécuriser ton compte (il peut mettre une minute à arriver).</p></div>
+    <form class="form" id="acctForm2" novalidate><div class="field"><label for="acctCode">Code reçu par e-mail</label><input id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]*"></div>
       ${a.msg ? `<p class="err" role="alert">${esc(a.msg)}</p>` : ""}<button class="btn" type="submit">Valider</button></form>
     <button class="linkbtn plainlink" data-act="emailskip">Plus tard</button>
     <p class="note center">Tu pourras le faire depuis le menu. Sans e-mail, tu ne pourras pas retrouver ton compte si tu changes de téléphone.</p>
