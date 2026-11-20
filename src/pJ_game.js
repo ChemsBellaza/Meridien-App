@@ -127,6 +127,11 @@ function finishTry() {
   // carnet de voyage (aussi en entraînement)
   g.newStamps = g.stamps.filter(id => !store.carnet[id]);
   g.newStamps.forEach(id => store.carnet[id] = g.k);
+  { // « Ce que tu as appris » du profil : on garde les anecdotes (sans doublon, les plus récentes d'abord, 60 au plus)
+    const L = store.learned = store.learned || [];
+    g.learned.forEach(l => { const key = (l.t || "") + "|" + (l.f || ""), at = L.findIndex(x => (x.t || "") + "|" + (x.f || "") === key); if (at >= 0) L.splice(at, 1); L.unshift({ t: l.t, f: l.f || "", d: g.k }); });
+    if (L.length > 60) L.length = 60;
+  }
   const st = store.stats; st.fmts[g.fmt] = (st.fmts[g.fmt] || 0) + 1;
   g.manches.forEach((m, i) => { if (g.roundPts[i] >= FORMATS[g.fmt].max * CONFIG.mult[g.diffs[i] ?? 0] * .999) st.perfect++; });
   { // déblocages et évolution : aussi après une partie d'entraînement

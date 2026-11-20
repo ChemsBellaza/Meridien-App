@@ -247,9 +247,10 @@ function raceRows(st, d) {
 }
 function seasonRace(st) {
   const nd = st.days.length, d = Math.max(0, Math.min(nd, ui.raceDay === undefined || ui.raceDay === null ? nd : ui.raceDay));
-  return `<div class="race"><div id="racebody" class="racebody">${raceRows(st, d)}</div>
+  return `<div class="race">
     <div class="rday"><button class="plain" data-act="raceplay" aria-label="Rejouer la course depuis le début">${I.retry ? I.retry(20) : "↻"}</button><button class="plain" data-act="raceday" data-v="-1" aria-label="Jour précédent">‹</button><input id="raceDay" type="range" min="0" max="${nd}" step="1" value="${d}" aria-label="Jour de la saison"><button class="plain" data-act="raceday" data-v="1" aria-label="Jour suivant">›</button></div>
-    <div id="racedate" class="rdate" aria-live="polite">${raceDateLabel(st, d)}</div></div>`;
+    <div id="racedate" class="rdate" aria-live="polite">${raceDateLabel(st, d)}</div>
+    <div id="racebody" class="racebody">${raceRows(st, d)}</div></div>`;
 }
 const raceDateLabel = (st, d) => d === 0 ? "Début de la saison" : (d === st.days.length ? "Aujourd’hui" : shortDate(st.days[d - 1]));
 function raceDraw() {

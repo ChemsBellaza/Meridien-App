@@ -136,6 +136,11 @@ function vGroup() {
   ${srvOn() ? `<button class="hubback" data-act="hub" aria-label="Retour à mes groupes"><span aria-hidden="true">‹</span> Mes groupes</button>` : ""}
   <div class="gname"><b>${esc(store.profile.group)}</b><span>Jeu du jour n°${issueNo(k)} · ${longDate(k)}</span></div>
   ${srvOn() ? `<div class="gchips"><button class="chipbtn" data-act="ginfo"><span aria-hidden="true">👥</span> Membres et invitation</button></div>` : ""}
+  <div class="pills">
+    ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
+    ${pill(I.trophy(26), "#" + me.rank, "season", `Classement de saison : rang ${me.rank} sur ${st.list.length}`, "Classement")}
+  </div>
+  ${streakStrip()}
   <section class="today" aria-label="Jeu du jour">
     ${left > 0 && !ui.busyPlay ? `<button class="cover coverbtn" data-act="play" aria-label="Jouer au jeu du jour : ${esc(F.name)}">${art(fmt, k)}${labels(`Jeu du jour · 3 manches`, F.name)}</button>` : `<div class="cover">${art(fmt, k)}${labels(`Jeu du jour · 3 manches`, F.name)}</div>`}
     <div class="tbody">
@@ -149,11 +154,6 @@ function vGroup() {
   </section>
   ${vCatchup()}
   ${groupNotice()}
-  <div class="pills">
-    ${pill(I.compass(26), fmtNum(me.total), "season", `${fmtNum(me.total)} boussoles`)}
-    ${pill(I.trophy(26), "#" + me.rank, "season", `Classement de saison : rang ${me.rank} sur ${st.list.length}`, "Classement")}
-  </div>
-  ${streakStrip()}
   <button class="petline" data-act="pet" aria-label="Mon familier. ${esc(petDesc(pet))}">${petAv(pet, "md", petName(pet))}<span><b>${esc(petName(pet))}</b> ${fr(hello)}</span></button>
   <div class="seg light" role="group" aria-label="Affichage"><button data-act="tab" data-v="chat" aria-pressed="${ui.tab === "chat"}">Chat</button><button data-act="tab" data-v="scores" aria-pressed="${ui.tab === "scores"}">Scores</button></div>
   ${ui.tab === "chat" ? vFeed(k) : vRanking(k)}
@@ -324,6 +324,13 @@ function vPet() {
 `;
 }
 
+// « Ce que tu as appris » : les « Le saviez-vous ? » des jeux terminés, les plus récents d'abord (gardés sur l'appareil, 60 au plus)
+function vLearned() {
+  const all = store.learned || [], shown = ui.learnAll ? all : all.slice(0, 8);
+  const body = all.length ? `<ul class="learnlist">${shown.map(l => `<li><b>${fr(l.t)}</b>${l.f ? `<span>${fr(l.f)}</span>` : ""}<small>${l.d ? esc(shortDate(l.d)) : ""}</small></li>`).join("")}</ul>${all.length > 8 ? `<button class="smallbtn ghost rkall" data-act="learnall">${ui.learnAll ? "Voir moins" : `Voir tout (${all.length})`}</button>` : ""}`
+    : `<p class="note">Joue un jeu : ce que tu apprends s'affichera ici.</p>`;
+  return `<section class="learnsec" aria-label="Ce que tu as appris"><div class="kicker">Ce que tu as appris</div>${body}</section>`;
+}
 const petSwitch = v => `<div class="seg light petswitch" role="group" aria-label="Familier ou profil"><button data-act="gopet" aria-pressed="${v === "pet"}">Mon familier</button><button data-act="goprofile" aria-pressed="${v === "profile"}">Mon profil</button></div>`;
 function vProfile() {
   const pet = store.profile.pet, S = SPECIES[pet.species], prog = progress(), nx = nextUnlock(prog), me = meP();
@@ -339,6 +346,7 @@ function vProfile() {
   </div>
   ${trophyBlock()}
   <div class="homerow"><button class="hrow" data-act="trophees">${I.medal(24)}<span class="grow"><b>Succès</b></span><b class="num">${Object.keys(store.ach).length}<small>/${ACH.length}</small></b></button><button class="hrow" data-act="carnet">${I.book(24)}<span class="grow"><b>Carnet</b></span><b class="num">${prog.carnet}</b></button></div>
+  ${vLearned()}
   ${nx ? `<div class="nextup"><span class="kicker">Prochain déblocage</span><b>${esc(nx.cat === "species" ? `${SPECIES[nx.it.id].names[0]} · nouveau familier` : nx.cat === "stage" ? `Évolution en ${S.names[+nx.it.id - 1]}` : `${nx.it.label} · ${ITEMS[nx.cat].label.toLowerCase()}`)}</b><span class="note">${reqText(nx.it.need)} : encore ${fmtNum(nx.left)}.</span><div class="bar" aria-hidden="true"><i style="width:${Math.min(100, Math.round(100 * nx.have / nx.it.need.v))}%"></i></div></div>` : `<div class="nextup"><b>Tout est débloqué. Bravo !</b></div>`}
 `;
 }
@@ -514,6 +522,7 @@ document.addEventListener("click", e => {
     case "chartpick": { const sl = standings(today()).list, cur = sl.filter(r => chartOn(r, sl)).map(r => r.id); ui.chartSel = cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v]; render(); break; }
     case "raceday": { const nd = RACE_ST ? RACE_ST.days.length : 0, cur = ui.raceDay === undefined || ui.raceDay === null ? nd : ui.raceDay; ui.raceDay = Math.max(0, Math.min(nd, cur + (+v || 0))); raceDraw(); break; }
     case "raceplay": racePlay(); break;
+    case "learnall": ui.learnAll = !ui.learnAll; render(); break;
     case "stkclose": ui.stickers = false; render(); break;
     case "gifq": { GIF.q = v; const gi = document.getElementById("gifq"); if (gi) gi.value = v; document.querySelectorAll(".gifidea").forEach(b => b.classList.toggle("on", b.dataset.v === v)); gifFetch(v); break; }
     case "stkcat": ui.stkCat = v; render(); break;
