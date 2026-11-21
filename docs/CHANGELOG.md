@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v70 (21 nov. 2026)** — **Voisins : 24 pays en plus** (`NEIGHBORS`, `d2_content.js`) : 14 pays par difficulté au lieu de 6 (retour d'un pays après environ 96 jours au lieu de 41). Facile : Luxembourg, Tchéquie, Mexique, Thaïlande, Viêt Nam, Norvège, Finlande, Grèce. Moyen : Hongrie, Roumanie, Ukraine, Colombie, Pérou, Afrique du Sud, Kazakhstan, Bolivie. Difficile : Éthiopie, Soudan, Mali, Afghanistan, Irak, Ouzbékistan, Iran, Cameroun. Vérifié par script : codes pays valides, aucun doublon, et **symétrie** (si A liste B, B liste A) sur les 42 pays. Aucune migration.
+
 - **v69 (21 nov. 2026)** — **Qui suis-je : 60 énigmes en plus** (`CLUES`, `d2_content.js`) : 8 énigmes par case (5 thèmes × 3 difficultés) au lieu de 4 ; une énigme revient après environ 82 jours au lieu de 41. Vérifié par script : 4 indices, explication, aucun doublon dans un thème, et aucun indice ne contient la réponse, sauf le dernier indice voulu (surnom ou nom d'usage, comme « Roi-Soleil »). Aucune migration.
 
 - **v68 (21 nov. 2026)** — **Frise : 72 événements en plus** (`DATA.frise`, `d3_bank.js`) : 8 événements par case (6 thèmes × 3 difficultés) au lieu de 4 ; un événement revient après environ 82 jours au lieu de 41. Vérifié par script : année dans sa plage, plage valide, explication présente, aucun doublon dans un thème. Aucune migration.

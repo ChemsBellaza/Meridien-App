@@ -466,6 +466,38 @@ expr: [
 ]
 };
 
+/* Voisins : suite (v70), 14 par difficulté au lieu de 6. { id, n: voisins terrestres, f } */
+NEIGHBORS[0].push(
+  { id: "LUX", n: ["BEL", "FRA", "DEU"], f: "Le Luxembourg est l'un des plus petits pays d'Europe, avec environ 2 586 km²." },
+  { id: "CZE", n: ["DEU", "POL", "SVK", "AUT"], f: "La Tchéquie n'a pas d'accès à la mer." },
+  { id: "MEX", n: ["USA", "GTM", "BLZ"], f: "La frontière avec les États-Unis mesure environ 3 100 km." },
+  { id: "THA", n: ["MMR", "LAO", "KHM", "MYS"], f: "La Thaïlande est le seul pays d'Asie du Sud-Est à n'avoir jamais été colonisé." },
+  { id: "VNM", n: ["CHN", "LAO", "KHM"], f: "Le Viêt Nam s'étire sur plus de 1 600 km du nord au sud." },
+  { id: "NOR", n: ["SWE", "FIN", "RUS"], f: "La Norvège touche la Russie sur environ 195 km." },
+  { id: "FIN", n: ["SWE", "NOR", "RUS"], f: "La frontière entre la Finlande et la Russie mesure environ 1 340 km." },
+  { id: "GRC", n: ["ALB", "MKD", "BGR", "TUR"], f: "La Grèce touche la Turquie sur environ 200 km, le long du fleuve Evros." }
+);
+NEIGHBORS[1].push(
+  { id: "HUN", n: ["AUT", "SVK", "UKR", "ROU", "SRB", "HRV", "SVN"], f: "La Hongrie n'a pas d'accès à la mer." },
+  { id: "ROU", n: ["UKR", "MDA", "BGR", "SRB", "HUN"], f: "Le Danube forme une grande partie de la frontière avec la Bulgarie." },
+  { id: "UKR", n: ["BLR", "RUS", "POL", "SVK", "HUN", "ROU", "MDA"], f: "L'Ukraine est le plus grand pays entièrement situé en Europe." },
+  { id: "COL", n: ["VEN", "BRA", "PER", "ECU", "PAN"], f: "La Colombie est le seul pays d'Amérique du Sud ouvert à la fois sur l'Atlantique et sur le Pacifique." },
+  { id: "PER", n: ["ECU", "COL", "BRA", "BOL", "CHL"], f: "Le Pérou partage le lac Titicaca avec la Bolivie." },
+  { id: "ZAF", n: ["NAM", "BWA", "ZWE", "MOZ", "SWZ", "LSO"], f: "Le Lesotho est entièrement enclavé dans l'Afrique du Sud." },
+  { id: "KAZ", n: ["RUS", "CHN", "KGZ", "UZB", "TKM"], f: "Le Kazakhstan est le plus grand pays sans accès à la mer du monde." },
+  { id: "BOL", n: ["BRA", "PRY", "ARG", "CHL", "PER"], f: "La Bolivie n'a plus d'accès à la mer depuis sa défaite face au Chili, au XIXe siècle." }
+);
+NEIGHBORS[2].push(
+  { id: "ETH", n: ["ERI", "DJI", "SOM", "KEN", "SSD", "SDN"], f: "L'Éthiopie est sans accès à la mer depuis l'indépendance de l'Érythrée, en 1993." },
+  { id: "SDN", n: ["EGY", "LBY", "TCD", "CAF", "SSD", "ETH", "ERI"], f: "Le Nil Blanc et le Nil Bleu se rejoignent à Khartoum, la capitale." },
+  { id: "MLI", n: ["DZA", "NER", "BFA", "CIV", "GIN", "SEN", "MRT"], f: "Le Mali est entièrement enclavé et traversé par le fleuve Niger." },
+  { id: "AFG", n: ["PAK", "IRN", "TKM", "UZB", "TJK", "CHN"], f: "Un étroit corridor, le Wakhan, relie l'Afghanistan à la Chine." },
+  { id: "IRQ", n: ["TUR", "IRN", "KWT", "SAU", "JOR", "SYR"], f: "L'Irak ne possède qu'environ 58 km de côte." },
+  { id: "UZB", n: ["KAZ", "KGZ", "TJK", "AFG", "TKM"], f: "Avec le Liechtenstein, c'est l'un des deux seuls pays au monde doublement enclavés." },
+  { id: "IRN", n: ["IRQ", "TUR", "ARM", "AZE", "TKM", "AFG", "PAK"], f: "L'Iran borde la mer Caspienne au nord et le golfe Persique au sud." },
+  { id: "CMR", n: ["NGA", "TCD", "CAF", "COG", "GAB", "GNQ"], f: "Le Cameroun est surnommé « l'Afrique en miniature » pour la diversité de ses paysages." }
+);
+
 /* Qui suis-je : suite (v69), 8 par case au lieu de 4. [réponse, variantes, 4 indices du plus dur au plus facile, le saviez-vous] */
 {
   const add = (th, lvl, ...rows) => CLUES[th][lvl].push(...rows);
