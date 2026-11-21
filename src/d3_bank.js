@@ -423,7 +423,7 @@ cine: [
     ["Sortie du film Avatar", 2009, 1990, 2026, "James Cameron détrône son propre Titanic au box-office mondial."],
     ["Sortie d'Intouchables", 2011, 1990, 2026, "Le film attire plus de 19 millions de spectateurs en France."]);
   add("cine", 1,
-    ["Sortie de Psychose d'Alfred Hitchcock", 1960, 1920, 2000, "La scène de la douche compte une cinquantaine de coupes pour moins d'une minute à l'écran."],
+    ["Sortie de Psychose d'Alfred Hitchcock", 1960, 1920, 2000, "La scène de la douche compte 78 positions de caméra et 52 coupes."],
     ["Sortie des Dents de la mer", 1975, 1940, 2010, "Le film de Steven Spielberg est considéré comme le premier grand blockbuster d'été."],
     ["Sortie de Pulp Fiction", 1994, 1960, 2015, "Le film de Quentin Tarantino remporte la Palme d'or à Cannes en 1994."],
     ["Sortie du Parrain", 1972, 1940, 2010, "Le film de Francis Ford Coppola remporte l'Oscar du meilleur film."]);
