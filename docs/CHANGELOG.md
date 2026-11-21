@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v76 (21 nov. 2026) — Jeux de culture, 6e partie : Chanson et Pop culture, +144 questions** (`src/pQ_bank2.js`) : 16 questions par case, ce qui termine l'agrandissement des 13 jeux de culture. Faits choisis stables (années de sortie, auteurs, studios), pas de classements ni de records qui évoluent. Une question à réponse ambiguë retirée (le frère de Bart), un énoncé qui contenait sa réponse réécrit (Emily in Paris). Aucune migration.
+
 - **v75 (21 nov. 2026)** — **Jeux de culture, 5e partie : Langues, Expressions, Inventions, +216 questions** (`src/pQ_bank2.js`) : 16 questions par case. Relecture des faits sensibles : étymologies (formulations prudentes pour koala et zombie), expressions dont plusieurs animaux possibles (distractors changés pour ne laisser qu'une bonne réponse : paon, escargot, tomate, marmotte, ogre), dates d'inventions et prix Nobel recoupés. Aucune migration.
 
 - **v74 (21 nov. 2026)** — **Jeux de culture, 4e partie : Monuments, Corps humain, +144 questions** (`src/pQ_bank2.js`) : 16 questions par case. Vérification web : cathédrale de Rouen (flèche de 151 m, la plus haute de France, confirmée). Une affirmation non confirmée (inscription UNESCO du pont Valentré) retirée au profit de faits vérifiables (138 m, six arches, trois tours). Aucune migration.
