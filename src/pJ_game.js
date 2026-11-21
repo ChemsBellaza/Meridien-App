@@ -24,8 +24,11 @@ function fromPool(g, pool, per, poolKey, shared) {
   if (g.practice) return shuffle(pool).slice(0, per);
   // ordre fixe pour ce jeu et cette réserve (indépendant du jour) ; chaque passage du jeu (tous les 28 jours) avance de tout un bloc :
   // les questions ne reviennent qu'après avoir fait le tour de la réserve
-  const order = shuffle(pool.map((_, i) => i), rng(`${g.fmt}|${poolKey}`));
-  const occ = Math.max(0, Math.floor(diffDays(CONFIG.formatAnchor, g.k) / (g.fmt === "megaquiz" ? 7 : fmtCountOn(g.k)))), block = (shared ? 3 : 1) * per * CONFIG.tries;
+  // v63 : chaque groupe a son propre ordre et son propre décalage, pour que deux groupes qui jouent le même jeu n'aient pas les mêmes questions
+  // (à partir du 22 novembre : les joueurs qui n'ont pas encore rechargé l'appli ne voient pas de jeu différent de leurs amis en cours de journée)
+  const gk = g.k >= CONFIG.poolGroupFrom && typeof srvOn === "function" && srvOn() && SRV.gid ? String(SRV.gid) : "";
+  const order = shuffle(pool.map((_, i) => i), rng(`${g.fmt}|${poolKey}${gk ? "|" + gk : ""}`));
+  const occ = Math.max(0, Math.floor(diffDays(CONFIG.formatAnchor, g.k) / (g.fmt === "megaquiz" ? 7 : fmtCountOn(g.k)))) + (gk ? hashSeed(gk) % 7 : 0), block = (shared ? 3 : 1) * per * CONFIG.tries;
   const off = occ * block + (shared ? (g.tryIdx * 3 + g.round) * per : g.tryIdx * per);
   return Array.from({ length: per }, (_, i) => pool[order[(off + i) % order.length]]);
 }

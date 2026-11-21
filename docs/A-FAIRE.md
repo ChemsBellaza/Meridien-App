@@ -44,3 +44,5 @@
 - [ ] **v56 (Chems)** : 1) coller supabase/migrations/20261128000000_push_plays.sql dans le SQL Editor ; 2) redéployer la fonction Edge dynamic-handler avec supabase/functions/push/index.ts ; 3) Push origin ; 4) tester à deux comptes : un essai, un record, un dépassement.
 
 - [ ] **v60 (Chems)** : coller supabase/migrations/20261129000000_catchup_ranking.sql dans le SQL Editor AVANT le Push origin, puis vérifier un classement de rattrapages (places et boussoles différentes selon le score).
+
+- [ ] **Agrandir les banques de questions** : Top 10, Voisins, Connexions (6 listes par difficulté), Rebus (6 par case), Carte, Frise, Qui suis-je (4 par case), puis les 12 jeux de culture (8 par case, viser 24). Elles reviennent dès le 2e passage (~41 jours).
