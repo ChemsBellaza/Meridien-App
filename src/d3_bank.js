@@ -227,6 +227,86 @@ cine: [
 ]
 });
 
+/* Carte : suite (v67), 8 lieux par case au lieu de 4. [lieu, indice, lat, lon, région, le saviez-vous] */
+{
+  const add = (th, lvl, ...rows) => DATA.carte[th][lvl].push(...rows);
+  add("hist", 0,
+    ["Le Colisée", "Amphithéâtre de la Rome antique", 41.890, 12.492, "europe", "Inauguré en 80 apr. J.-C., il pouvait accueillir environ 50 000 spectateurs."],
+    ["Versailles", "Château du Roi-Soleil", 48.805, 2.120, "france", "Louis XIV y installe la cour en 1682."],
+    ["Le Parthénon", "Temple d'Athéna sur l'Acropole", 37.971, 23.726, "europe", "Il est construit au Ve siècle avant J.-C., en l'honneur d'Athéna."],
+    ["Machu Picchu", "Cité inca dans les Andes", -13.163, -72.545, "americas", "La cité a été construite au XVe siècle, à environ 2 400 m d'altitude."]);
+  add("hist", 1,
+    ["Alésia", "Défaite de Vercingétorix en 52 av. J.-C.", 47.537, 4.500, "france", "Jules César y assiège Vercingétorix, qui se rend à la fin de l'été 52 av. J.-C."],
+    ["Lascaux", "Grotte ornée de la préhistoire", 45.054, 1.169, "france", "Les peintures de la grotte, vieilles d'environ 17 000 ans, sont découvertes en 1940."],
+    ["Jérusalem", "Ville sainte de trois religions", 31.777, 35.235, "africa", "La vieille ville est sacrée pour le judaïsme, le christianisme et l'islam."],
+    ["Gettysburg", "Bataille de la guerre de Sécession, 1863", 39.830, -77.231, "americas", "La bataille, du 1er au 3 juillet 1863, est un tournant de la guerre de Sécession."]);
+  add("hist", 2,
+    ["Marathon", "Bataille de 490 av. J.-C.", 38.150, 23.960, "europe", "Les Athéniens y battent les Perses. La légende du messager qui court jusqu'à Athènes a inspiré l'épreuve du marathon."],
+    ["Stalingrad (Volgograd)", "Tournant de la Seconde Guerre mondiale", 48.708, 44.514, "europe", "La bataille dure de l'été 1942 à février 1943."],
+    ["Hiroshima", "Bombe atomique du 6 août 1945", 34.385, 132.455, "asia", "La ville est détruite le 6 août 1945. Nagasaki est touchée trois jours plus tard."],
+    ["Diên Biên Phu", "Défaite française de 1954", 21.390, 103.020, "asia", "La chute du camp retranché, le 7 mai 1954, met fin à la guerre d'Indochine."]);
+  add("geopo", 0,
+    ["Le Kremlin", "Siège de la présidence russe", 55.752, 37.617, "europe", "Cette forteresse de Moscou abrite la présidence de la Fédération de Russie."],
+    ["La Maison-Blanche", "Résidence du président américain", 38.898, -77.037, "americas", "Elle se trouve au 1600 Pennsylvania Avenue, à Washington."],
+    ["La porte de Brandebourg", "Symbole de Berlin", 52.516, 13.378, "europe", "Le mur de Berlin, érigé en 1961, tombe le 9 novembre 1989."],
+    ["Westminster", "Parlement britannique", 51.499, -0.125, "europe", "Le palais de Westminster abrite la Chambre des communes et la Chambre des lords."]);
+  add("geopo", 1,
+    ["Le canal de Panama", "Lien entre Atlantique et Pacifique", 9.080, -79.680, "americas", "Inauguré en 1914, il évite aux navires de contourner l'Amérique du Sud."],
+    ["La place Tian'anmen", "Cœur du pouvoir chinois, à Pékin", 39.904, 116.397, "asia", "Avec environ 44 hectares, c'est l'une des plus vastes places publiques du monde."],
+    ["New Delhi", "Capitale de l'Inde", 28.614, 77.209, "asia", "Elle est inaugurée comme capitale de l'Inde britannique en 1931."],
+    ["Gibraltar", "Rocher britannique à la pointe de l'Espagne", 36.140, -5.353, "europe", "Territoire britannique depuis 1713, il est revendiqué par l'Espagne."]);
+  add("geopo", 2,
+    ["Le détroit de Malacca", "Voie maritime entre Malaisie et Sumatra", 2.500, 101.500, "asia", "Près d'un quart du commerce maritime mondial y passe."],
+    ["Kaliningrad", "Enclave russe sur la Baltique", 54.710, 20.510, "europe", "Cette région russe est enclavée entre la Pologne et la Lituanie."],
+    ["Srinagar", "Vallée du Cachemire, région disputée", 34.084, 74.797, "asia", "Le Cachemire est divisé depuis 1947-1949 entre l'Inde, le Pakistan et la Chine."],
+    ["Nicosie", "Capitale divisée de Chypre", 35.170, 33.360, "europe", "Une ligne de démarcation, la ligne verte, coupe la ville en deux depuis 1974."]);
+  add("geo", 0,
+    ["Le mont Blanc", "Plus haut sommet des Alpes", 45.833, 6.865, "france", "Il culmine à environ 4 806 m, entre la France et l'Italie."],
+    ["Les chutes du Niagara", "Frontière entre Canada et États-Unis", 43.080, -79.075, "americas", "Elles sont partagées entre l'Ontario, au Canada, et l'État de New York."],
+    ["Le Grand Canyon", "Gorge creusée par le Colorado", 36.107, -112.113, "americas", "Il mesure environ 446 km de long."],
+    ["Venise", "La ville sur l'eau", 45.440, 12.330, "europe", "Elle est bâtie sur plus d'une centaine de petites îles."]);
+  add("geo", 1,
+    ["Le Mont-Saint-Michel", "Île de Normandie", 48.636, -1.511, "france", "Il est entouré de l'une des plus fortes marées d'Europe continentale."],
+    ["Le lac Victoria", "Plus grand lac d'Afrique", -1.000, 33.000, "africa", "Il est partagé entre le Kenya, l'Ouganda et la Tanzanie."],
+    ["Uluru", "Rocher sacré d'Australie", -25.345, 131.036, "oceania", "Ce monolithe de grès rouge mesure environ 348 m de haut."],
+    ["Reykjavik", "Capitale la plus septentrionale du monde", 64.147, -21.940, "world", "C'est la capitale d'un État souverain la plus au nord de la planète."]);
+  add("geo", 2,
+    ["Le cap Horn", "Pointe sud de l'Amérique", -55.980, -67.270, "americas", "Ce cap redouté des marins se trouve au Chili."],
+    ["Le delta de l'Okavango", "Delta intérieur en plein désert", -19.300, 22.900, "africa", "Au Botswana, ce delta se forme dans le désert du Kalahari."],
+    ["Le lac Tonlé Sap", "Grand lac du Cambodge", 12.900, 104.100, "asia", "Le sens du courant de son émissaire s'inverse à la saison des pluies."],
+    ["La Vallée de la Mort", "Point le plus bas d'Amérique du Nord", 36.240, -116.820, "americas", "Le bassin de Badwater est à environ 86 m sous le niveau de la mer."]);
+  add("cine", 0,
+    ["Emeryville", "Studio de Toy Story et du Monde de Nemo", 37.832, -122.285, "americas", "Le studio Pixar, fondé en 1986, se trouve près de San Francisco."],
+    ["Disneyland Paris", "Parc d'attractions de Marne-la-Vallée", 48.870, 2.780, "france", "Le parc a ouvert ses portes en 1992."],
+    ["Notting Hill", "Quartier londonien d'un film de 1999", 51.510, -0.205, "europe", "Son marché de Portobello Road et ses façades colorées ont rendu le quartier célèbre."],
+    ["Cinecittà", "Studios historiques de Rome", 41.857, 12.571, "europe", "Fondés en 1937, ils ont accueilli Fellini et le tournage de Ben-Hur."]);
+  add("cine", 1,
+    ["Babelsberg", "Studios près de Berlin", 52.390, 13.120, "europe", "Fondés en 1912, ce sont les plus anciens grands studios du monde. Metropolis y est tourné en 1927."],
+    ["Wellington", "Capitale de la Nouvelle-Zélande et du studio Weta", -41.290, 174.780, "oceania", "Le studio d'effets spéciaux Weta a travaillé sur Le Seigneur des anneaux."],
+    ["Aït-Ben-Haddou", "Ksar marocain vu dans Gladiator", 31.047, -7.131, "africa", "Ce village fortifié est classé à l'UNESCO depuis 1987."],
+    ["Burbank", "Capitale des grands studios américains", 34.180, -118.310, "americas", "Warner Bros. et Disney y ont leurs studios."]);
+  add("cine", 2,
+    ["Tataouine", "Ville qui a inspiré une planète de Star Wars", 32.930, 10.450, "africa", "Le nom de la planète Tatooine vient de cette ville du sud tunisien."],
+    ["Zhangjiajie", "Montagnes qui ont inspiré Avatar", 29.320, 110.430, "asia", "Ses piliers de grès ont inspiré les montagnes flottantes du film de 2009."],
+    ["Alnwick", "Château de Poudlard dans les premiers Harry Potter", 55.415, -1.706, "europe", "Ce château du Northumberland a servi aux scènes de vol à balai."],
+    ["Glenfinnan", "Viaduc du Poudlard Express", 56.876, -5.431, "europe", "Ce viaduc écossais de 21 arches apparaît dans plusieurs films de la saga."]);
+  add("sport", 0,
+    ["Roland-Garros", "Tournoi de tennis sur terre battue", 48.846, 2.253, "france", "Le tournoi se joue sur le site actuel, à Paris, depuis 1928."],
+    ["Old Trafford", "Stade de Manchester United", 53.463, -2.291, "europe", "On le surnomme « le Théâtre des rêves »."],
+    ["Le Camp Nou", "Stade du FC Barcelone", 41.381, 2.123, "europe", "Inauguré en 1957, il est longtemps resté le plus grand stade d'Europe."],
+    ["Le Parc des Princes", "Stade du Paris Saint-Germain", 48.841, 2.253, "france", "Le stade actuel a été inauguré en 1972."]);
+  add("sport", 1,
+    ["Silverstone", "Circuit du Grand Prix de Grande-Bretagne", 52.070, -1.017, "europe", "Le premier championnat du monde de Formule 1 y a débuté en 1950."],
+    ["Indianapolis", "Les 500 miles", 39.795, -86.234, "americas", "Les 500 miles d'Indianapolis se disputent depuis 1911."],
+    ["Chamonix", "Premiers Jeux olympiques d'hiver", 45.924, 6.869, "france", "Les premiers Jeux olympiques d'hiver y ont lieu en 1924."],
+    ["Cortina d'Ampezzo", "Station des Dolomites, Jeux d'hiver 1956", 46.540, 12.136, "europe", "Elle a accueilli les Jeux d'hiver de 1956, puis ceux de 2026 avec Milan."]);
+  add("sport", 2,
+    ["Wembley", "Stade national du football anglais", 51.556, -0.280, "europe", "Le stade rouvert en 2007 est surmonté d'une arche de 133 m."],
+    ["Interlagos", "Grand Prix du Brésil de Formule 1", -23.700, -46.700, "americas", "Ce circuit de São Paulo se parcourt dans le sens inverse des aiguilles d'une montre."],
+    ["Suzuka", "Circuit japonais de Formule 1", 34.843, 136.541, "asia", "C'est l'un des rares circuits dont le tracé forme un huit."],
+    ["Lord's", "Berceau du cricket", 51.529, -0.173, "europe", "Le stade de Londres est installé sur son site actuel depuis 1814."]);
+}
+
 Object.assign(DATA.frise, {
 sport: [
   [

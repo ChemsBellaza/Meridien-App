@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v67 (21 nov. 2026)** — **Carte : 60 lieux en plus** (`DATA.carte`, `d3_bank.js`) : 8 lieux par case (5 thèmes × 3 difficultés) au lieu de 4 ; un lieu revient après environ 82 jours au lieu de 41. Vérifié par script : chaque point est dans le cadre de sa région, aucun nom en double dans un thème, explication présente. Aucune migration.
+
 - **v66 (21 nov. 2026)** — **Rébus : 54 énigmes en plus** (`REBUS.*.push(...)`, `d2_content.js`) : 12 par case (cinéma, lieux, expressions × 3 difficultés) au lieu de 6, soit 108 au total ; une énigme revient après environ 82 jours au lieu de 41. Vérifié par script : 4 réponses sans doublon, une explication, aucun emoji en double dans une case. Aucune migration.
 
 - **v65 (21 nov. 2026)** — **Connexions : 24 grilles en plus** (`CONNEX`, `d2_content.js`) : 14 grilles par difficulté au lieu de 6 (retour d'une grille après environ 96 jours au lieu de 41). Facile : couleurs, ferme, jours, métiers, pays d'Europe, instruments, saisons, langues, fleurs… Moyen : capitales d'Amérique du Sud, organes et os, monnaies, épices, compositeurs, détroits et déserts, Harry Potter / Star Wars / Tintin, réseaux sociaux et navigateurs. Difficile : philosophes des Lumières, mathématiciens, opéras et ballets, gaz nobles et planètes naines, cathédrales et abbayes, pays des Balkans, termes d'échecs / golf / tennis / rugby, dieux égyptiens / nordiques / romains / grecs. Vérifié par script : 4 groupes de 4 mots, aucun mot ni libellé en double dans une grille. Aucune migration.
