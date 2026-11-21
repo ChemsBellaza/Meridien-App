@@ -466,6 +466,80 @@ expr: [
 ]
 };
 
+/* Rébus : suite (v66), 12 par case au lieu de 6 */
+REBUS.cine[0].push(
+  ["🧸🤠🚀", ["Toy Story", "Buzz l'Éclair", "Cars", "Monstres et Cie"], "Premier long-métrage entièrement en images de synthèse, Toy Story sort en 1995."],
+  ["🧞‍♂️🪔🐒", ["Aladdin", "Le Livre de la jungle", "Tarzan", "Les Mille et Une Nuits"], "Le génie d'Aladdin (1992) est doublé en version originale par Robin Williams."],
+  ["🐼🥋🍜", ["Kung Fu Panda", "Madagascar", "Mulan", "Ratatouille"], "Po, un panda gourmand, devient le Guerrier Dragon dans ce film de 2008."],
+  ["🚗⚡🏁", ["Cars", "Taxi", "Fast and Furious", "Speed Racer"], "Flash McQueen apparaît dans ce film Pixar de 2006."],
+  ["🦸‍♂️🛡️⭐", ["Captain America", "Iron Man", "Thor", "Superman"], "Steve Rogers reçoit son bouclier dans Captain America : First Avenger (2011)."],
+  ["👻🚫🚑", ["SOS Fantômes", "Casper", "Beetlejuice", "Scooby-Doo"], "Le film original, sorti en 1984, a donné naissance à une chanson devenue culte."]
+);
+REBUS.cine[1].push(
+  ["🏴‍☠️🦜⚓", ["Pirates des Caraïbes", "L'Île au trésor", "Peter Pan", "Hook"], "Le film de 2003 est inspiré d'une attraction de Disneyland."],
+  ["🐕🍝❤️", ["La Belle et le Clochard", "Les 101 Dalmatiens", "Ratatouille", "Belle et Sébastien"], "Sorti en 1955, ce Disney contient la célèbre scène des spaghettis."],
+  ["🧜‍♀️🦀🌊", ["La Petite Sirène", "Vaiana", "Le Monde de Nemo", "Aquaman"], "Sébastien le crabe chante « Sous l'océan » dans ce Disney de 1989."],
+  ["🔴💊🕶️", ["Matrix", "Inception", "Blade Runner", "Men in Black"], "Neo choisit entre la pilule rouge et la pilule bleue."],
+  ["🔨🧔🌩️", ["Thor", "Hulk", "Wonder Woman", "Aquaman"], "Le marteau de Thor s'appelle Mjöllnir."],
+  ["👸🍎😴", ["Blanche-Neige", "La Belle au bois dormant", "Cendrillon", "Raiponce"], "Premier long-métrage d'animation de Disney, sorti en 1937."]
+);
+REBUS.cine[2].push(
+  ["🚿🔪🏨", ["Psychose", "Shining", "Le Silence des agneaux", "Les Oiseaux"], "Alfred Hitchcock tourne Psychose en 1960."],
+  ["🐑🤫🦋", ["Le Silence des agneaux", "Psychose", "Se7en", "Les Dents de la mer"], "Anthony Hopkins n'apparaît qu'environ 16 minutes dans le film."],
+  ["🏐🏝️✈️", ["Seul au monde", "Lost", "Robinson Crusoé", "Vaiana"], "Le ballon de volley du héros s'appelle Wilson."],
+  ["🌆🎹💃", ["La La Land", "Chicago", "Moulin Rouge", "Whiplash"], "Le film de Damien Chazelle a reçu six Oscars en 2017."],
+  ["🛰️🔴🐒", ["2001 : L'Odyssée de l'espace", "Interstellar", "Solaris", "Alien"], "Stanley Kubrick sort le film en 1968, un an avant les premiers pas sur la Lune."],
+  ["🐴🛏️🍊", ["Le Parrain", "Scarface", "Les Affranchis", "Casino"], "Le film de Francis Ford Coppola est sorti en 1972."]
+);
+REBUS.geo[0].push(
+  ["🍺🥨🏰", ["Allemagne", "Autriche", "Suisse", "Pologne"], "L'Oktoberfest de Munich attire environ 6 millions de visiteurs chaque année."],
+  ["🌮🪅☀️", ["Mexique", "Espagne", "Pérou", "Cuba"], "Le Mexique fête chaque année le Jour des morts, début novembre."],
+  ["🎡🚌☔", ["Londres", "Dublin", "Édimbourg", "Manchester"], "Big Ben est le nom de la cloche, pas de la tour."],
+  ["🎰🌃🎲", ["Las Vegas", "Miami", "Monaco", "Macao"], "Les casinos de Las Vegas sont concentrés sur une avenue, le Strip."],
+  ["🐼🏯🥢", ["Chine", "Japon", "Corée du Sud", "Thaïlande"], "Le panda géant ne vit à l'état sauvage qu'en Chine."],
+  ["🧇🍫🍺", ["Belgique", "Pays-Bas", "Allemagne", "Luxembourg"], "Bruxelles abrite le célèbre Manneken-Pis."]
+);
+REBUS.geo[1].push(
+  ["🧿🎈🕌", ["Turquie", "Maroc", "Égypte", "Iran"], "La Cappadoce est célèbre pour ses montgolfières."],
+  ["🪆❄️🐻", ["Russie", "Finlande", "Pologne", "Ukraine"], "Le Transsibérien relie Moscou à Vladivostok, soit environ 9 300 km."],
+  ["🌴🛕🐘", ["Thaïlande", "Cambodge", "Vietnam", "Inde"], "Bangkok porte l'un des noms de ville les plus longs du monde."],
+  ["🫒🏛️🥙", ["Grèce", "Italie", "Chypre", "Turquie"], "La Grèce compte plus de 6 000 îles et îlots."],
+  ["🚅🏙️🎌", ["Tokyo", "Séoul", "Pékin", "Bangkok"], "Le Shinkansen, le train à grande vitesse japonais, circule depuis 1964."],
+  ["🌉🚋🌫️", ["San Francisco", "Los Angeles", "Seattle", "Boston"], "Le Golden Gate Bridge est peint en « orange international »."]
+);
+REBUS.geo[2].push(
+  ["🏰🌉🍺", ["Prague", "Vienne", "Budapest", "Cracovie"], "Le pont Charles, à Prague, a été construit entre 1357 et le début du XVe siècle."],
+  ["🦥🌋🐸", ["Costa Rica", "Panama", "Équateur", "Colombie"], "Le Costa Rica a supprimé son armée en 1948."],
+  ["🧖🦌🎅", ["Finlande", "Suède", "Norvège", "Islande"], "Le Père Noël est censé habiter en Laponie finlandaise, près de Rovaniemi."],
+  ["🏔️🧗🚩", ["Népal", "Bhoutan", "Pakistan", "Mongolie"], "Le drapeau du Népal est le seul au monde qui ne soit pas rectangulaire."],
+  ["🎷🐊⚜️", ["La Nouvelle-Orléans", "Chicago", "Memphis", "Miami"], "La ville est considérée comme le berceau du jazz."],
+  ["🧵🐫🕌", ["Samarcande", "Bagdad", "Tombouctou", "Damas"], "Cette cité d'Ouzbékistan fut une étape majeure de la route de la soie."]
+);
+REBUS.expr[0].push(
+  ["🐟💧", ["Être comme un poisson dans l'eau", "Noyer le poisson", "Être muet comme une carpe", "Poisson d'avril"], "Se sentir parfaitement à l'aise."],
+  ["🍒🎂", ["La cerise sur le gâteau", "Avoir la pêche", "Casser du sucre sur le dos", "Faire du pied"], "Le petit plus qui couronne le tout."],
+  ["🐘🏺💥", ["Comme un éléphant dans un magasin de porcelaine", "Avoir une mémoire d'éléphant", "Faire d'une mouche un éléphant", "Être un pachyderme"], "Être très maladroit dans un endroit fragile."],
+  ["😭🍰", ["Pleurer comme une madeleine", "Avoir les larmes aux yeux", "Rire aux larmes", "Pleurer à chaudes larmes"], "Pleurer abondamment. L'expression fait allusion à Marie-Madeleine, souvent représentée en larmes."],
+  ["🥬❤️", ["Avoir un cœur d'artichaut", "Avoir un cœur de pierre", "Avoir le cœur sur la main", "Avoir un faible"], "Tomber facilement amoureux."],
+  ["🧂🗣️", ["Mettre son grain de sel", "Mettre de l'huile sur le feu", "Mettre les pieds dans le plat", "Mettre les bouchées doubles"], "Se mêler de ce qui ne nous regarde pas."]
+);
+REBUS.expr[1].push(
+  ["🕛🔍🕑", ["Chercher midi à quatorze heures", "Tuer le temps", "Avoir du temps devant soi", "Une heure de colle"], "Compliquer les choses inutilement."],
+  ["❤️✋", ["Avoir le cœur sur la main", "Avoir la main verte", "Avoir un cœur d'artichaut", "Avoir le cœur brisé"], "Être généreux."],
+  ["🦶🍽️", ["Mettre les pieds dans le plat", "Mettre son grain de sel", "Mettre la table", "Avoir un pied dans la tombe"], "Dire ou faire une gaffe, sans ménagement."],
+  ["😺💤⚠️", ["Ne pas réveiller le chat qui dort", "Dormir comme un loir", "Chat échaudé craint l'eau froide", "Il n'y a pas un chat"], "Ne pas rouvrir un sujet délicat."],
+  ["🦢🎶🌅", ["Le chant du cygne", "Le canard boiteux", "Un vilain petit canard", "Chanter comme une casserole"], "La dernière œuvre ou le dernier exploit avant la fin."],
+  ["💪📏", ["Avoir le bras long", "Avoir un coup de main", "Avoir les bras cassés", "Baisser les bras"], "Avoir beaucoup d'influence."]
+);
+REBUS.expr[2].push(
+  ["🌳🙈🌲", ["L'arbre qui cache la forêt", "Prendre racine", "Tomber de l'arbre", "Retomber sur ses pattes"], "Un détail qui masque l'ensemble."],
+  ["😈🧵💸", ["Tirer le diable par la queue", "Se faire l'avocat du diable", "Avoir le diable au corps", "Habiter au diable vauvert"], "Avoir du mal à boucler ses fins de mois."],
+  ["🌪️🥛", ["Une tempête dans un verre d'eau", "Un coup d'épée dans l'eau", "Une goutte d'eau dans l'océan", "Se noyer dans un verre d'eau"], "Beaucoup d'agitation pour pas grand-chose."],
+  ["🪨🥊2️⃣", ["Faire d'une pierre deux coups", "Jeter la pierre", "Un coup de pied dans la fourmilière", "Casser la baraque"], "Atteindre deux buts avec une seule action."],
+  ["🥚🐔❓", ["L'œuf ou la poule", "Marcher sur des œufs", "Tuer la poule aux œufs d'or", "Quand les poules auront des dents"], "Un dilemme sans fin sur l'origine des choses."],
+  ["🙈🔥", ["N'y voir que du feu", "Jouer avec le feu", "Avoir le feu sacré", "Faire feu de tout bois"], "Ne s'apercevoir de rien."]
+);
+
 /* Qui a dit ça ? : [phrase, [auteur, leurre, leurre, leurre], le saviez-vous] */
 const QUOTES = {
 hist: [

@@ -45,4 +45,4 @@
 
 - [ ] **v60 (Chems)** : coller supabase/migrations/20261129000000_catchup_ranking.sql dans le SQL Editor AVANT le Push origin, puis vérifier un classement de rattrapages (places et boussoles différentes selon le score).
 
-- [ ] **Agrandir les banques de questions** : Top 10 (fait en v64 : 14 par difficulté), Voisins, Connexions (fait en v65 : 14 grilles par difficulté), Rebus (6 par case), Carte, Frise, Qui suis-je (4 par case), puis les 12 jeux de culture (8 par case, viser 24). Elles reviennent dès le 2e passage (~41 jours).
+- [ ] **Agrandir les banques de questions** : Top 10 (fait en v64 : 14 par difficulté), Voisins, Connexions (fait en v65 : 14 grilles par difficulté), Rebus (fait en v66 : 12 par case), Carte, Frise, Qui suis-je (4 par case), puis les 12 jeux de culture (8 par case, viser 24). Elles reviennent dès le 2e passage (~41 jours).
