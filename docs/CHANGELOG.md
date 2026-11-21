@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v71 (21 nov. 2026)** — **Jeux de culture, 1re partie : Histoire de France et Histoire du monde, +144 questions** (`src/pQ_bank2.js`, ajouté à `scripts/order.json`, helper `AQ`) : 16 questions par case au lieu de 8 (3 catégories × 3 difficultés × 2 jeux). Une question revient après environ 110 jours au lieu de 55, avec l'ordre propre à chaque groupe. Vérifié par script : 4 réponses distinctes, explication présente, aucune question en double dans un jeu. Il reste 11 jeux de culture à agrandir (même fichier). Aucune migration.
+
 - **v70 (21 nov. 2026)** — **Voisins : 24 pays en plus** (`NEIGHBORS`, `d2_content.js`) : 14 pays par difficulté au lieu de 6 (retour d'un pays après environ 96 jours au lieu de 41). Facile : Luxembourg, Tchéquie, Mexique, Thaïlande, Viêt Nam, Norvège, Finlande, Grèce. Moyen : Hongrie, Roumanie, Ukraine, Colombie, Pérou, Afrique du Sud, Kazakhstan, Bolivie. Difficile : Éthiopie, Soudan, Mali, Afghanistan, Irak, Ouzbékistan, Iran, Cameroun. Vérifié par script : codes pays valides, aucun doublon, et **symétrie** (si A liste B, B liste A) sur les 42 pays. Aucune migration.
 
 - **v69 (21 nov. 2026)** — **Qui suis-je : 60 énigmes en plus** (`CLUES`, `d2_content.js`) : 8 énigmes par case (5 thèmes × 3 difficultés) au lieu de 4 ; une énigme revient après environ 82 jours au lieu de 41. Vérifié par script : 4 indices, explication, aucun doublon dans un thème, et aucun indice ne contient la réponse, sauf le dernier indice voulu (surnom ou nom d'usage, comme « Roi-Soleil »). Aucune migration.
