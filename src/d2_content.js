@@ -288,7 +288,15 @@ const TOPS = [
     { t: "Les 5 membres permanents du Conseil de sécurité de l'ONU", items: ["@USA", "@CHN", "@RUS", "@FRA", "@GBR"], f: "Chacun dispose d'un droit de veto." },
     { t: "Les 8 pays voisins de la France métropolitaine", items: ["@BEL", "@LUX", "@DEU", "@CHE", "@ITA", "@MCO", "@ESP", "@AND"], f: "Hors métropole, la plus longue frontière de la France est celle entre la Guyane et le Brésil, environ 730 km." },
     { t: "Les 5 océans", items: ["Pacifique", "Atlantique", "Indien|océan indien", "Arctique|glacial arctique", "Austral|antarctique|glacial antarctique"], f: "Le Pacifique, à lui seul, couvre environ un tiers de la planète." },
-    { t: "Les 7 pays du G7", items: ["@USA", "@JPN", "@DEU", "@GBR", "@FRA", "@ITA", "@CAN"], f: "L'Union européenne participe aussi aux sommets, sans en être membre à part entière." }
+    { t: "Les 7 pays du G7", items: ["@USA", "@JPN", "@DEU", "@GBR", "@FRA", "@ITA", "@CAN"], f: "L'Union européenne participe aussi aux sommets, sans en être membre à part entière." },
+    { t: "Les 7 continents", items: ["Afrique", "Amérique du Nord|amérique nord", "Amérique du Sud|amérique sud", "Antarctique", "Asie", "Europe", "Océanie|australie"], f: "L'Asie est le plus grand continent, l'Océanie le plus petit." },
+    { t: "Les 5 couleurs des anneaux olympiques", items: ["Bleu", "Jaune", "Noir", "Vert", "Rouge"], f: "Avec le blanc du fond du drapeau, chaque pays du monde y retrouve au moins une couleur de son propre drapeau." },
+    { t: "Les 7 nains de Blanche-Neige", items: ["Simplet", "Grincheux", "Timide", "Prof|professeur", "Joyeux", "Dormeur", "Atchoum"], f: "Le film de Disney est sorti en 1937." },
+    { t: "Les 12 signes du zodiaque", items: ["Bélier", "Taureau", "Gémeaux", "Cancer", "Lion", "Vierge", "Balance", "Scorpion", "Sagittaire", "Capricorne", "Verseau", "Poissons"], f: "Le zodiaque partage le ciel en 12 secteurs de 30 degrés." },
+    { t: "Les 7 notes de la gamme", items: ["Do|ut", "Ré", "Mi", "Fa", "Sol", "La", "Si"], f: "Ces noms viennent des premières syllabes d'un hymne latin à saint Jean-Baptiste ; « ut » est devenu « do »." },
+    { t: "Les 5 sens", items: ["Vue", "Ouïe|audition", "Odorat", "Goût", "Toucher"], f: "Certains scientifiques en comptent davantage, comme l'équilibre." },
+    { t: "Les 7 couleurs de l'arc-en-ciel", items: ["Rouge", "Orange", "Jaune", "Vert", "Bleu", "Indigo", "Violet"], f: "Le nombre sept est une convention héritée de Newton : le spectre de la lumière est en réalité continu." },
+    { t: "Les 5 pays voisins de la Suisse", items: ["@DEU", "@FRA", "@ITA", "@AUT", "@LIE"], f: "La Suisse n'a pas d'accès à la mer." }
   ],
   [
     { t: "Les 10 plus grands pays du monde par la superficie", items: ["@RUS", "@CAN", "@USA", "@CHN", "@BRA", "@AUS", "@IND", "@ARG", "@KAZ", "@DZA"], f: "L'Algérie est le plus grand pays d'Afrique depuis l'indépendance du Soudan du Sud, en 2011." },
@@ -296,7 +304,15 @@ const TOPS = [
     { t: "Les 7 merveilles du monde antique", items: ["Pyramide de Khéops|khéops|kheops|pyramide|pyramides|gizeh", "Jardins suspendus de Babylone|jardins suspendus|babylone", "Statue de Zeus|zeus", "Temple d'Artémis|artémis|artemis|éphèse|ephese", "Mausolée d'Halicarnasse|mausolée|halicarnasse", "Colosse de Rhodes|colosse|rhodes", "Phare d'Alexandrie|phare|alexandrie"], f: "Seule la pyramide de Khéops existe encore aujourd'hui." },
     { t: "Les 12 pays d'Amérique du Sud", items: ["@BRA", "@ARG", "@CHL", "@PER", "@COL", "@VEN", "@ECU", "@BOL", "@PRY", "@URY", "@GUY", "@SUR"], f: "La Guyane, territoire français, se trouve aussi en Amérique du Sud." },
     { t: "Les 9 pays qui bordent la mer Baltique", items: ["@SWE", "@FIN", "@RUS", "@EST", "@LVA", "@LTU", "@POL", "@DEU", "@DNK"], f: "Elle est peu salée : environ 7 g de sel par litre, contre 35 dans l'océan." },
-    { t: "Les 12 pays fondateurs de l'OTAN (1949)", items: ["@USA", "@CAN", "@GBR", "@FRA", "@BEL", "@NLD", "@LUX", "@NOR", "@DNK", "@ISL", "@ITA", "@PRT"], f: "Le traité est signé à Washington le 4 avril 1949." }
+    { t: "Les 12 pays fondateurs de l'OTAN (1949)", items: ["@USA", "@CAN", "@GBR", "@FRA", "@BEL", "@NLD", "@LUX", "@NOR", "@DNK", "@ISL", "@ITA", "@PRT"], f: "Le traité est signé à Washington le 4 avril 1949." },
+    { t: "Les 9 pays voisins de l'Allemagne", items: ["@DNK", "@POL", "@CZE", "@AUT", "@CHE", "@FRA", "@LUX", "@BEL", "@NLD"], f: "Elle compte neuf voisins terrestres, un de plus que la France métropolitaine." },
+    { t: "Les 10 plus grandes communes de France (2021)", items: ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Montpellier", "Strasbourg", "Bordeaux", "Lille"], f: "Paris compte environ 2,1 millions d'habitants, Marseille un peu plus de 870 000." },
+    { t: "Les 5 pays d'Asie centrale issus de l'ex-URSS", items: ["@KAZ", "@UZB", "@TKM", "@KGZ", "@TJK"], f: "Leurs noms se terminent tous par « -stan », qui signifie « pays » en persan." },
+    { t: "Les 5 Grands Lacs d'Amérique du Nord", items: ["Supérieur|lac supérieur", "Michigan|lac michigan", "Huron|lac huron", "Érié|lac érié", "Ontario|lac ontario"], f: "Ensemble, ils contiennent environ un cinquième de l'eau douce de surface de la planète." },
+    { t: "Les 5 pays nordiques", items: ["@DNK", "@NOR", "@SWE", "@FIN", "@ISL"], f: "Au sens strict, la Scandinavie ne comprend que la Norvège, la Suède et le Danemark." },
+    { t: "Les 8 présidents de la Ve République", items: ["De Gaulle|charles de gaulle", "Pompidou|georges pompidou", "Giscard d'Estaing|giscard|valéry giscard d'estaing", "Mitterrand|françois mitterrand", "Chirac|jacques chirac", "Sarkozy|nicolas sarkozy", "Hollande|françois hollande", "Macron|emmanuel macron"], f: "Charles de Gaulle est le premier, élu en 1958 par un collège de grands électeurs. L'élection au suffrage universel direct date de 1962." },
+    { t: "Les 6 plus grandes îles du monde", items: ["Groenland", "Nouvelle-Guinée|papouasie", "Bornéo", "Madagascar", "Baffin|île de baffin", "Sumatra"], f: "L'Australie n'est pas comptée : elle est considérée comme un continent." },
+    { t: "Les 7 péchés capitaux", items: ["Orgueil|fierté", "Avarice|cupidité", "Luxure", "Envie|jalousie", "Gourmandise|gloutonnerie", "Colère", "Paresse"], f: "La liste a été fixée par le pape Grégoire Ier, à la fin du VIe siècle." }
   ],
   [
     { t: "Les 9 pays de plus de 140 millions d'habitants (2024)", items: ["@IND", "@CHN", "@USA", "@IDN", "@PAK", "@NGA", "@BRA", "@BGD", "@RUS"], f: "L'Inde a dépassé la Chine en 2023. Elle compte environ 1,45 milliard d'habitants." },
@@ -304,7 +320,15 @@ const TOPS = [
     { t: "Les 8 plus hauts sommets du monde", items: ["Everest", "K2", "Kangchenjunga|kanchenjunga|kangchendzonga", "Lhotse", "Makalu", "Cho Oyu", "Dhaulagiri", "Manaslu"], f: "Les 14 sommets de plus de 8 000 m se trouvent tous dans l'Himalaya et le Karakoram." },
     { t: "Les 7 pays d'Amérique centrale", items: ["@GTM", "@BLZ", "@HND", "@SLV", "@NIC", "@CRI", "@PAN"], f: "Le Costa Rica a supprimé son armée en 1948." },
     { t: "Les 5 pays qui bordent la mer Caspienne", items: ["@RUS", "@KAZ", "@TKM", "@IRN", "@AZE"], f: "Malgré son nom, la Caspienne est le plus grand lac du monde." },
-    { t: "Les 12 pays d'Afrique de plus d'un million de km²", items: ["@DZA", "@COD", "@SDN", "@LBY", "@TCD", "@NER", "@AGO", "@MLI", "@ZAF", "@ETH", "@MRT", "@EGY"], f: "L'Algérie est la plus grande, avec près de 2,4 millions de km²." }
+    { t: "Les 12 pays d'Afrique de plus d'un million de km²", items: ["@DZA", "@COD", "@SDN", "@LBY", "@TCD", "@NER", "@AGO", "@MLI", "@ZAF", "@ETH", "@MRT", "@EGY"], f: "L'Algérie est la plus grande, avec près de 2,4 millions de km²." },
+    { t: "Les 7 collines de Rome", items: ["Palatin", "Capitole|capitolin", "Quirinal", "Viminal", "Esquilin", "Célius|caelius", "Aventin"], f: "Selon la légende, Romulus fonde Rome sur le Palatin en 753 avant J.-C." },
+    { t: "Les 9 muses de la mythologie grecque", items: ["Calliope", "Clio", "Érato", "Euterpe", "Melpomène", "Polymnie", "Terpsichore", "Thalie", "Uranie"], f: "Ce sont les filles de Zeus et de Mnémosyne, la déesse de la mémoire." },
+    { t: "Les 5 pays de l'Union européenne sans accès à la mer", items: ["@AUT", "@CZE", "@HUN", "@LUX", "@SVK"], f: "Le Luxembourg est le plus petit des cinq." },
+    { t: "Les 6 plus petits pays d'Europe", items: ["@VAT", "@MCO", "@SMR", "@LIE", "@MLT", "@AND"], f: "Le Vatican, environ 0,44 km², est le plus petit État du monde." },
+    { t: "Les 6 pays du Conseil de coopération du Golfe", items: ["@SAU", "@ARE", "@QAT", "@KWT", "@BHR", "@OMN"], f: "Ce conseil a été créé en 1981." },
+    { t: "Les 6 pays traversés par le Rhin", items: ["@CHE", "@LIE", "@AUT", "@DEU", "@FRA", "@NLD"], f: "Il se jette dans la mer du Nord, aux Pays-Bas." },
+    { t: "Les 12 travaux d'Hercule", items: ["Lion de Némée|lion|némée", "Hydre de Lerne|hydre|lerne", "Biche de Cérynie|biche|cérynie", "Sanglier d'Érymanthe|sanglier|érymanthe", "Écuries d'Augias|écuries|augias", "Oiseaux du lac Stymphale|oiseaux|stymphale", "Taureau de Crète|taureau|crète", "Juments de Diomède|juments|diomède|chevaux de diomède", "Ceinture d'Hippolyté|ceinture|hippolyté|hippolyte", "Troupeau de Géryon|troupeau|bœufs de géryon|géryon", "Pommes des Hespérides|pommes|hespérides", "Cerbère|chien des enfers"], f: "Hercule les accomplit pour expier ses crimes, au service du roi Eurysthée." },
+    { t: "Les 5 pays les plus peuplés d'Afrique", items: ["@NGA", "@ETH", "@EGY", "@COD", "@TZA"], f: "Le Nigéria compte plus de 220 millions d'habitants." }
   ]
 ];
 
