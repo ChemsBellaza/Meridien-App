@@ -369,4 +369,99 @@ cine: [
   ]
 ]
 });
+/* Frise : suite (v68), 8 événements par case au lieu de 4. [événement, année, min, max, le saviez-vous] (années négatives = av. J.-C.) */
+{
+  const add = (th, lvl, ...rows) => DATA.frise[th][lvl].push(...rows);
+  add("hist", 0,
+    ["Bataille de Marignan", 1515, 1400, 1700, "François Ier y remporte sa première grande victoire, quelques mois après son accession au trône."],
+    ["Début de la Première Guerre mondiale", 1914, 1850, 1990, "L'assassinat de l'archiduc François-Ferdinand, à Sarajevo, le 28 juin 1914, déclenche l'engrenage des alliances."],
+    ["Sacre de Napoléon Ier", 1804, 1700, 1900, "Il se couronne lui-même empereur, à Notre-Dame de Paris, le 2 décembre 1804."],
+    ["Capitulation de l'Allemagne nazie", 1945, 1900, 1990, "Le 8 mai 1945 marque la fin de la Seconde Guerre mondiale en Europe."]);
+  add("hist", 1,
+    ["Mort de Louis XIV", 1715, 1600, 1800, "Il a régné 72 ans, un record pour un monarque européen."],
+    ["Chute de Constantinople", 1453, 1300, 1600, "La prise de la ville par les Ottomans met fin à l'Empire byzantin."],
+    ["Proclamation de la Ire République", 1792, 1700, 1900, "La Convention abolit la royauté en France le 21 septembre 1792."],
+    ["Traité de Versailles", 1919, 1850, 1990, "Il est signé le 28 juin 1919 dans la galerie des Glaces, cinq ans jour pour jour après Sarajevo."]);
+  add("hist", 2,
+    ["Bataille de Hastings", 1066, 800, 1300, "Guillaume le Conquérant devient roi d'Angleterre après sa victoire sur Harold."],
+    ["Sac de Rome par les Wisigoths", 410, 200, 700, "Alaric prend Rome en 410, un choc immense dans tout l'Empire romain."],
+    ["Révolution russe d'Octobre", 1917, 1850, 1990, "Les bolcheviks prennent le pouvoir à Petrograd, en novembre selon le calendrier grégorien."],
+    ["Mort de Charlemagne", 814, 700, 1000, "Il meurt à Aix-la-Chapelle, sa capitale, à environ 71 ans."]);
+  add("geopo", 0,
+    ["Élection de Barack Obama", 2008, 1980, 2026, "Il devient le premier président noir des États-Unis."],
+    ["Référendum sur le Brexit", 2016, 1990, 2026, "Le 23 juin 2016, 51,9 % des votants choisissent de quitter l'Union européenne."],
+    ["Nelson Mandela devient président de l'Afrique du Sud", 1994, 1960, 2010, "Il est élu lors des premières élections multiraciales du pays, après la fin de l'apartheid."],
+    ["Traité de Maastricht", 1992, 1960, 2010, "Signé en février 1992, il crée l'Union européenne et prépare la monnaie unique."]);
+  add("geopo", 1,
+    ["Guerre des Six Jours", 1967, 1930, 2000, "En six jours de juin 1967, Israël s'empare du Sinaï, de Gaza, de la Cisjordanie et du Golan."],
+    ["Crise des missiles de Cuba", 1962, 1930, 1995, "Pendant treize jours d'octobre 1962, le monde frôle la guerre nucléaire."],
+    ["Marche sur Washington", 1963, 1930, 1995, "Martin Luther King y prononce son discours « I have a dream » le 28 août 1963."],
+    ["Élargissement de l'Union européenne à dix pays", 2004, 1980, 2026, "Le 1er mai 2004, dix pays, dont la Pologne et la Hongrie, rejoignent l'Union."]);
+  add("geopo", 2,
+    ["Congrès de Vienne", 1815, 1750, 1900, "Il redessine l'Europe après la chute de Napoléon."],
+    ["Création de la Société des Nations", 1920, 1880, 1960, "Cette ancêtre de l'ONU est née du traité de Versailles."],
+    ["Conférence de Yalta", 1945, 1910, 1990, "En février 1945, Churchill, Roosevelt et Staline y préparent l'après-guerre."],
+    ["Proclamation de l'État d'Israël", 1948, 1900, 2000, "David Ben Gourion la proclame à Tel-Aviv le 14 mai 1948."]);
+  add("geo", 0,
+    ["Traversée de l'Atlantique par Lindbergh", 1927, 1880, 1980, "Charles Lindbergh relie New York à Paris sans escale en un peu plus de 33 heures."],
+    ["Inauguration de la tour Eiffel", 1889, 1800, 1950, "Elle est construite pour l'Exposition universelle de Paris."],
+    ["Inauguration de la statue de la Liberté", 1886, 1800, 1950, "Offerte par la France, elle est inaugurée à New York le 28 octobre 1886."],
+    ["Ouverture du tunnel sous la Manche", 1994, 1950, 2026, "Le tunnel est inauguré en mai 1994 par la reine Élisabeth II et François Mitterrand."]);
+  add("geo", 1,
+    ["Découverte du tombeau de Toutânkhamon", 1922, 1850, 1990, "L'archéologue Howard Carter découvre la tombe dans la Vallée des Rois, en novembre 1922."],
+    ["Découverte de la grotte de Lascaux", 1940, 1880, 1990, "Quatre adolescents y découvrent des peintures vieilles d'environ 17 000 ans."],
+    ["Redécouverte du Machu Picchu par Hiram Bingham", 1911, 1850, 1990, "La cité inca était connue des habitants de la région, mais pas du reste du monde."],
+    ["James Cook atteint la Nouvelle-Zélande", 1769, 1700, 1850, "Il en dresse la carte presque complète lors de son premier voyage."]);
+  add("geo", 2,
+    ["Le Néerlandais Willem Janszoon aborde l'Australie", 1606, 1500, 1750, "C'est le premier débarquement européen documenté sur le continent."],
+    ["Fondation de Québec par Champlain", 1608, 1500, 1750, "Samuel de Champlain y établit un comptoir sur le Saint-Laurent, le 3 juillet 1608."],
+    ["Éruption du Vésuve et destruction de Pompéi", 79, -100, 400, "Les cendres figent Pompéi et Herculanum, redécouvertes au XVIIIe siècle."],
+    ["Expédition du Kon-Tiki", 1947, 1900, 2000, "Thor Heyerdahl traverse le Pacifique sur un radeau pour défendre une théorie sur le peuplement de la Polynésie."]);
+  add("cine", 0,
+    ["Sortie du Roi lion", 1994, 1970, 2015, "C'est l'un des plus grands succès de l'animation Disney."],
+    ["Sortie du premier Toy Story", 1995, 1970, 2015, "C'est le premier long métrage entièrement réalisé en images de synthèse."],
+    ["Sortie du film Avatar", 2009, 1990, 2026, "James Cameron détrône son propre Titanic au box-office mondial."],
+    ["Sortie d'Intouchables", 2011, 1990, 2026, "Le film attire plus de 19 millions de spectateurs en France."]);
+  add("cine", 1,
+    ["Sortie de Psychose d'Alfred Hitchcock", 1960, 1920, 2000, "La scène de la douche compte une cinquantaine de coupes pour moins d'une minute à l'écran."],
+    ["Sortie des Dents de la mer", 1975, 1940, 2010, "Le film de Steven Spielberg est considéré comme le premier grand blockbuster d'été."],
+    ["Sortie de Pulp Fiction", 1994, 1960, 2015, "Le film de Quentin Tarantino remporte la Palme d'or à Cannes en 1994."],
+    ["Sortie du Parrain", 1972, 1940, 2010, "Le film de Francis Ford Coppola remporte l'Oscar du meilleur film."]);
+  add("cine", 2,
+    ["Sortie du Cuirassé Potemkine", 1925, 1890, 1960, "Le film d'Eisenstein est célèbre pour sa scène de l'escalier d'Odessa."],
+    ["Sortie de Citizen Kane", 1941, 1900, 1980, "Orson Welles n'a que 25 ans lorsqu'il réalise ce film souvent classé parmi les plus grands."],
+    ["Sortie d'À bout de souffle", 1960, 1920, 2000, "Le premier long métrage de Jean-Luc Godard est un manifeste de la Nouvelle Vague."],
+    ["Sortie de Metropolis de Fritz Lang", 1927, 1890, 1970, "Ce film muet de science-fiction est l'un des plus coûteux de son époque."]);
+  add("sport", 0,
+    ["Victoire de la France à l'Euro de football 1984", 1984, 1950, 2000, "Michel Platini marque neuf buts, un record pour un Euro à l'époque."],
+    ["La France remporte l'Euro de football 2000", 2000, 1970, 2026, "Les Bleus battent l'Italie en finale, à Rotterdam, avec un but en or de David Trezeguet."],
+    ["Jeux olympiques de Pékin", 2008, 1980, 2026, "Ils s'ouvrent le 8 août 2008, à 8 h 08, pour porter bonheur."],
+    ["L'Argentine remporte la Coupe du monde au Qatar", 2022, 2000, 2026, "Elle bat la France aux tirs au but après une finale à 3-3, le 18 décembre."]);
+  add("sport", 1,
+    ["Premier Tournoi des Cinq Nations de rugby", 1910, 1870, 1960, "L'Angleterre, l'Écosse, l'Irlande, le pays de Galles et la France y participent."],
+    ["Premier Tour d'Italie cycliste", 1909, 1870, 1960, "Luigi Ganna remporte la première édition."],
+    ["Début de l'ère Open du tennis", 1968, 1920, 2020, "Les joueurs professionnels sont admis dans les tournois du Grand Chelem."],
+    ["Jesse Owens remporte quatre médailles d'or aux Jeux de Berlin", 1936, 1900, 1980, "L'Américain s'impose au 100 m, au 200 m, au saut en longueur et au relais 4 x 100 m."]);
+  add("sport", 2,
+    ["Premier match international de football, Écosse-Angleterre", 1872, 1830, 1920, "Le match se joue à Glasgow le 30 novembre 1872 et se termine sur un 0-0."],
+    ["Invention du basket-ball par James Naismith", 1891, 1850, 1950, "Il utilise d'abord des paniers de pêches fixés à un balcon."],
+    ["Première Coupe d'Europe des clubs champions", 1956, 1920, 1990, "Le Real Madrid remporte la première édition, face au Stade de Reims."],
+    ["Roger Bannister court le mile en moins de quatre minutes", 1954, 1900, 1990, "Le 6 mai 1954, à Oxford, il réalise 3 min 59 s 4."]);
+  add("sciences", 0,
+    ["Ampoule électrique d'Edison", 1879, 1800, 1950, "Thomas Edison met au point une lampe à filament de carbone assez durable pour être commercialisée."],
+    ["Naissance de la brebis Dolly", 1996, 1970, 2015, "C'est le premier mammifère cloné à partir d'une cellule adulte."],
+    ["Brevet du téléphone par Alexander Graham Bell", 1876, 1800, 1950, "Il dépose le brevet en mars 1876 aux États-Unis."],
+    ["Lancement du télescope spatial Hubble", 1990, 1960, 2020, "Il est mis en orbite en avril 1990 par la navette spatiale Discovery."]);
+  add("sciences", 1,
+    ["Découverte de la structure en double hélice de l'ADN", 1953, 1900, 1990, "James Watson et Francis Crick publient leur modèle dans la revue Nature."],
+    ["Première image d'un trou noir", 2019, 1990, 2026, "Le télescope Event Horizon rend publique l'image du trou noir de la galaxie M87 le 10 avril 2019."],
+    ["Einstein publie la relativité restreinte", 1905, 1850, 1950, "Il publie la même année trois autres articles majeurs, d'où le nom d'« année miraculeuse »."],
+    ["Alessandro Volta invente la pile électrique", 1800, 1750, 1850, "Elle empile des disques de zinc et de cuivre séparés par du carton imbibé d'eau salée."]);
+  add("sciences", 2,
+    ["Mendeleïev publie son tableau périodique des éléments", 1869, 1800, 1950, "Il laisse des cases vides pour des éléments encore inconnus, dont il prédit les propriétés."],
+    ["Découverte du radium par Pierre et Marie Curie", 1898, 1850, 1950, "Ils l'extraient de la pechblende, un minerai d'uranium."],
+    ["Copernic publie son modèle héliocentrique", 1543, 1450, 1650, "Dans De revolutionibus, il place le Soleil, et non la Terre, au centre du monde."],
+    ["Découverte du boson de Higgs", 2012, 1990, 2026, "Elle est annoncée par le CERN, à Genève, le 4 juillet 2012."]);
+}
+
 REGIONS.oceania = { box: [110, 180, -48, -5], k: 600, label: "Océanie" };

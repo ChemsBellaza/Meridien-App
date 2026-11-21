@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v68 (21 nov. 2026)** — **Frise : 72 événements en plus** (`DATA.frise`, `d3_bank.js`) : 8 événements par case (6 thèmes × 3 difficultés) au lieu de 4 ; un événement revient après environ 82 jours au lieu de 41. Vérifié par script : année dans sa plage, plage valide, explication présente, aucun doublon dans un thème. Aucune migration.
+
 - **v67 (21 nov. 2026)** — **Carte : 60 lieux en plus** (`DATA.carte`, `d3_bank.js`) : 8 lieux par case (5 thèmes × 3 difficultés) au lieu de 4 ; un lieu revient après environ 82 jours au lieu de 41. Vérifié par script : chaque point est dans le cadre de sa région, aucun nom en double dans un thème, explication présente. Aucune migration.
 
 - **v66 (21 nov. 2026)** — **Rébus : 54 énigmes en plus** (`REBUS.*.push(...)`, `d2_content.js`) : 12 par case (cinéma, lieux, expressions × 3 difficultés) au lieu de 6, soit 108 au total ; une énigme revient après environ 82 jours au lieu de 41. Vérifié par script : 4 réponses sans doublon, une explication, aucun emoji en double dans une case. Aucune migration.
