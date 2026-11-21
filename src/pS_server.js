@@ -138,18 +138,25 @@ async function srvLoadHub() {
   }
   if (changed) { savePhotos(); if (ui.view === "hub" && !game) render(); }
 }
+// image par défaut du jeu du jour tant qu'il n'est pas révélé : carte du monde et point d'interrogation
+function artMystery() {
+  const map = typeof MAP !== "undefined" && MAP.ready ? countriesSVG([-170, 180, -56, 78], "", null, () => "", "") : "";
+  return `<span class="mysart" aria-hidden="true">${map}<b>?</b></span>`;
+}
 function vHub() {
   if (ui.joinLink && srvOn() && !ui.sheet) { ui.sheet = "groups"; ui.gadd = { mode: "join", msg: "", value: ui.joinLink }; ui.joinLink = null; } // lien d'invitation ouvert : on propose de rejoindre
   const k = today(), prog = progress(), h = SRV.hub, groups = SRV.groups, uid = myUid();
   const loading = !groups.length && !SRV.syncedAt;
   const cards = groups.map(g => {
     const f = fmtOfFor(k, g), F = FORMATS[f], r = h && h.rows[g.id], mem = (h && h.members[g.id]) || [], played = !!(r && r.played_today);
+    // tant que le joueur n'a pas ouvert ce groupe (animation de révélation), le nouveau jeu reste une surprise : image par défaut, pas de nom
+    const mystery = !played && tutoState().done && (store.profile.revealSeen || {})[g.id] !== k;
     const av = mem.slice(0, 8).map(m => avatar({ id: m.user_id, name: m.profiles ? m.profiles.pseudo : "Joueur", color: colorOf(m.user_id), pet: (m.profiles && m.profiles.pet) || defaultPet("renard"), photo: m.user_id === uid ? store.profile.photo : (SRV.photos[m.user_id] || {}).d }, "md")).join("");
     const more = mem.length > 8 ? `<span class="avmore num">+${mem.length - 8}</span>` : "";
-    return `<button class="gcard" data-act="gopen" data-v="${esc(g.id)}" aria-label="${esc(g.name)}, ${esc(F ? F.name : "")}, ${played ? "déjà joué aujourd'hui" : "à jouer aujourd'hui"}${r && r.my_rank ? ", rang " + r.my_rank : ""}">
-      <span class="gcover">${F ? art(f, k) : ""}<span class="gstat ${played ? "done" : ""}">${played ? `✓ Joué · ${fmtNum(r.best_today)} pts` : "À jouer"}</span></span>
+    return `<button class="gcard" data-act="gopen" data-v="${esc(g.id)}" aria-label="${esc(g.name)}, ${mystery ? "nouveau jeu surprise" : esc(F ? F.name : "")}, ${played ? "déjà joué aujourd'hui" : "à jouer aujourd'hui"}${r && r.my_rank ? ", rang " + r.my_rank : ""}">
+      <span class="gcover">${mystery ? artMystery() : F ? art(f, k) : ""}<span class="gstat ${played ? "done" : ""}">${played ? `✓ Joué · ${fmtNum(r.best_today)} pts` : "À jouer"}</span></span>
       <span class="gavs">${av}${more}</span>
-      <span class="gbody"><span class="gtxt"><b>${esc(g.name)}</b><small>${esc(F ? F.name : "")}${mem.length ? ` · ${mem.length} joueur${mem.length > 1 ? "s" : ""}` : ""}</small></span>
+      <span class="gbody"><span class="gtxt"><b>${esc(g.name)}</b><small>${mystery ? "Nouveau jeu · surprise" : esc(F ? F.name : "")}${mem.length ? ` · ${mem.length} joueur${mem.length > 1 ? "s" : ""}` : ""}</small></span>
       <span class="gbadges"><i class="num">${prog.streak} ${I.fire(14)}</i>${r && r.my_rank ? `<i class="num">#${r.my_rank} ${I.trophy(14)}</i>` : ""}</span></span></button>`;
   }).join("");
   return `<header class="top hubhead"><span class="hubbrand">${logoMark(34)}<b>Méridien</b></span><span class="hubicons"><button class="plain hist" data-act="history" aria-label="Historique de mes jeux">${I.history}<small>Historique</small></button><button class="plain" data-act="menu" aria-label="Menu">${I.menu}</button></span></header>

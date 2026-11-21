@@ -1,5 +1,7 @@
 # Journal des versions
 
+- **v62 (21 nov. 2026)** — (1) **Jeu surprise sur l'accueil « Mes groupes »** : tant que le joueur n'a pas ouvert le groupe (animation de révélation) et n'a pas joué, la carte du groupe affiche une carte du monde avec un « ? » et « Nouveau jeu · surprise » au lieu de l'image et du nom du jeu (`artMystery`, `mystery` dans `vHub`). (2) **Barre de message** : bouton emoji rond, badge « GIF » contouré, champ « Écrire un message… », bouton d'envoi rond avec flèche (atténué quand le champ est vide). Aucune migration.
+
 - **v61 (20 nov. 2026)** — Profil : section « Ce que tu as appris » (les « Le saviez-vous ? » des jeux terminés, 60 au plus, `store.learned`, les 8 derniers + « Voir tout »). Course : le curseur de jour passe au-dessus des barres. Accueil du groupe : pastille Classement et série passent au-dessus de la carte du jeu. `supabase/stats.sql` : requêtes 7 et 8 (points par difficulté, coefficients actuels) pour calibrer les coefficients. Aucune migration.
 
 - **v60 (20 nov. 2026)** — **Classement avec rattrapages** : un rattrapage n'était comparé qu'aux joueurs « du jour », jamais aux autres rattrapages ; deux rattrapages de 545 et 528 pts avaient donc la même place et les mêmes boussoles. Maintenant ils sont classés aussi entre eux (place et boussoles), les joueurs du jour ne bougent pas. La liste est triée par score, la place affichée tient compte de tout le monde. Migration `20261129000000_catchup_ranking.sql` (`_group_scores`, `submit_score`, recalcul des rattrapages passés) à appliquer AVANT de publier le code.
