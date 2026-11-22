@@ -27,7 +27,7 @@ const STORY = {
 // section « Histoire » de la fiche du familier : un chapitre par stade débloqué, « le sens » une fois les trois lus
 function petStory(pet) {
   const S = STORY[pet.species]; if (!S) return "";
-  const names = SPECIES[pet.species].names, prog = progress(), got = ITEMS.stage.list.filter(it => isUnlocked(it, prog)).length;
+  const names = SPECIES[pet.species].names, prog = petProg(pet.species), got = ITEMS.stage.list.filter(it => isUnlocked(it, prog)).length;
   const ch = S.c.map((txt, i) => i < got
     ? `<li class="chap"><b>Chapitre ${i + 1} · ${esc(names[i])}</b><p>${esc(txt)}</p></li>`
     : `<li class="chap lock"><b>Chapitre ${i + 1} · ???</b><p>${I.lock}<span> Se débloque à l'évolution (${esc(reqText(EVO_NEED[i]))}).</span></p></li>`).join("");

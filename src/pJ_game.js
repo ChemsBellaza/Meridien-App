@@ -138,9 +138,14 @@ function finishTry() {
   const st = store.stats; st.fmts[g.fmt] = (st.fmts[g.fmt] || 0) + 1;
   g.manches.forEach((m, i) => { if (g.roundPts[i] >= FORMATS[g.fmt].max * CONFIG.mult[g.diffs[i] ?? 0] * .999) st.perfect++; });
   { // déblocages et évolution : aussi après une partie d'entraînement
+    petBookSeed();
+    { // l'expérience va au familier équipé, et à lui seul
+      const X = petXPOf(store.profile.pet.species); X.games++;
+      if (!X.days.includes(g.k)) { X.days.push(g.k); X.days.sort(); if (X.days.length > 60) X.days.splice(0, X.days.length - 60); }
+    }
     const prog = progress(), seen = store.profile.seen || [];
     const now = unlockedIds(prog);
-    g.newUnlocks = now.filter(id => !seen.includes(id)).map(id => { const [cat, iid] = id.split(":"); return { cat, it: ITEMS[cat].list.find(i => i.id === iid) }; });
+    g.newUnlocks = now.filter(id => !seen.includes(id)).map(id => { const [cat, iid] = id.split("@")[0].split(":"); return { cat, it: ITEMS[cat].list.find(i => i.id === iid) }; });
     store.profile.seen = now;
     // évolution automatique quand un nouveau stade se débloque
     const evo = g.newUnlocks.filter(u => u.cat === "stage").map(u => +u.it.id);

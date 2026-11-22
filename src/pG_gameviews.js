@@ -84,7 +84,7 @@ function revealBox() {
 
 /* carte « prochaine étape » : progression vers l'évolution du familier, puis vers le prochain déblocage une fois au stade 3 */
 function endProgress() {
-  const pet = store.profile.pet, Sp = SPECIES[pet.species], prog = progress();
+  const pet = store.profile.pet, Sp = SPECIES[pet.species], prog = petProg(pet.species); // expérience de CE familier
   const maxStage = ITEMS.stage.list.filter(it => isUnlocked(it, prog)).length; // dernier stade débloqué (on peut en choisir un plus bas)
   const bar = (have, total, label) => `<div class="bar" role="progressbar" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${have}"><i style="--w:${Math.round(have / total * 100)}%"></i></div>`;
   if (maxStage < 3) {

@@ -18,6 +18,7 @@ function render() {
   if (typeof vGalerie === "function" && /[?&]galerie/.test(location.search)) { setAppHTML(vGalerie()); return; } // page de présentation des familiers (propositions)
   if (typeof vBestiaire === "function" && /[?&]bestiaire/.test(location.search)) { setAppHTML(vBestiaire()); return; } // bestiaire : familiers, évolutions, histoires
   clearLater();
+  petBookSeed(); // v77 : expérience par familier (sans effet une fois initialisée)
   if (store.profile && store.profile.pet && !store.profile.pet.stage) { // anciens familiers : on garde l'espèce, on calcule l'évolution
     const pp = progress(); Object.assign(store.profile.pet, { stage: String(ITEMS.stage.list.filter(it => isUnlocked(it, pp)).length), shiny: "normal", bg: "type" }); save();
   }
@@ -288,10 +289,10 @@ function vSeason() {
 }
 
 function vPet() {
-  const pet = store.profile.pet, S = SPECIES[pet.species], prog = progress(), cat = ["species", "shiny", "bg"].includes(ui.petTab) ? ui.petTab : "species", nx = nextUnlock(prog);
+  const pet = store.profile.pet, S = SPECIES[pet.species], prog = progress(), pp = petProg(pet.species), cat = ["species", "shiny", "bg"].includes(ui.petTab) ? ui.petTab : "species";
   const me = meP(), st = stageOf(pet), T = TYPES[S.type];
   const evo = [1, 2, 3].map(n => {
-    const it = ITEMS.stage.list[n - 1], open = isUnlocked(it, prog), on = st === n, p2 = { ...pet, stage: String(n) };
+    const it = ITEMS.stage.list[n - 1], open = isUnlocked(it, pp), on = st === n, p2 = { ...pet, stage: String(n) };
     return `${n > 1 ? `<span class="evoarr" aria-hidden="true">›</span>` : ""}<${open ? "button" : "div"} class="evo ${on ? "on" : ""} ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="stage|${n}" aria-pressed="${on}"` : ""}>
       ${petAv(p2, "lg", S.names[n - 1], { sil: !open })}<b>${open ? esc(S.names[n - 1]) : "???"}</b><span>${open ? `Stade ${n}` : reqText(it.need)}</span></${open ? "button" : "div"}>`;
   }).join("");
@@ -309,13 +310,13 @@ function vPet() {
   ${(() => {
     const all = cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list;
     const card = it => {
-      const open = isUnlocked(it, prog), on = pet[cat] === it.id, sil = cat === "species" && !open;
-      const shown = { ...pet, [cat]: it.id };
-      const lbl = cat === "species" ? SPECIES[it.id].names[stageOf(pet) - 1] : it.label;
+      const open = isUnlocked(it, cat === "species" ? prog : pp), on = cat === "species" ? pet.species === it.id : pet[cat] === it.id, sil = cat === "species" && !open;
+      const shown = cat === "species" ? petStateOf(it.id) : { ...pet, [cat]: it.id }; // chaque familier s'affiche avec SON évolution et SES couleurs
+      const lbl = cat === "species" ? SPECIES[it.id].names[stageOf(shown) - 1] : it.label;
       return `<${open ? "button" : "div"} class="item ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="${cat}|${it.id}" aria-pressed="${on}"` : ""}>
       ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
     };
-    const opened = all.filter(it => isUnlocked(it, prog)), locked = all.filter(it => !isUnlocked(it, prog));
+    const pr = cat === "species" ? prog : pp, opened = all.filter(it => isUnlocked(it, pr)), locked = all.filter(it => !isUnlocked(it, pr));
     // les familiers et options à débloquer sont repliés : la fiche reste courte
     return `<div class="items">${opened.map(card).join("")}</div>${locked.length ? `<details class="fold"><summary>À débloquer (${locked.length})</summary><div class="foldbody"><div class="items">${locked.map(card).join("")}</div></div></details>` : ""}`;
   })()}
@@ -546,7 +547,15 @@ document.addEventListener("click", e => {
     case "msgdel": srvAskMod("del", v); break;
     case "unblock": srvUnblock(v); break;
     case "react": { if (srvOn()) { const [rid, remo] = v.split("|"); srvReact(rid, remo); break; } const [id, emo] = v.split("|"), k = today(), m = store.react[k] = store.react[k] || {}; m[id] = m[id] === emo ? undefined : emo; if (!m[id]) delete m[id]; ui.reactOpen = null; save(); render(); break; }
-    case "equip": { const [c, id] = v.split("|"); if (c === "species") { store.profile.pet.species = id; } else store.profile.pet[c] = id; save(); render(); break; }
+    case "equip": {
+      const [c, id] = v.split("|"), P = store.profile;
+      if (c === "species") { // chaque familier garde son évolution, ses couleurs et son fond
+        const cur = P.pet, X = petXPOf(cur.species); Object.assign(X, { stage: cur.stage, shiny: cur.shiny, bg: cur.bg });
+        P.pet = { ...petStateOf(id), species: id };
+        P.seen = [...new Set([...(P.seen || []), ...unlockedIds(progress())])]; // pas de faux « nouveau déblocage » au changement
+      } else P.pet[c] = id;
+      save(); render(); break;
+    }
     case "back": go(["season", "pet", "profile", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : (srvOn() ? "hub" : "group")) : (srvOn() ? "hub" : "group")); break;
     case "day": go("day", { dayKey: v }); break;
     case "histsel": ui.histSel = v; render(); break;

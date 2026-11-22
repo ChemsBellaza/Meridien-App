@@ -271,17 +271,56 @@ function progress() {
 }
 const wallet = prog => srvOn() ? onlineWallet() : Math.max(0, (prog || progress()).gems - (store.spent || 0));
 const isUnlocked = (it, prog) => !it.need || prog[it.need.k] >= it.need.v;
+/* ---------- progression PAR familier (v77) ----------
+   L'expérience (parties terminées, jours de série) se gagne avec le familier équipé et ne profite qu'à lui :
+   évolutions, couleurs chromatiques et fonds à série sont propres à chaque familier. Les boussoles, victoires,
+   podiums et titres restent ceux du joueur. `profile.petBook[espèce]` = { games, days, stage, shiny, bg } ;
+   pour le familier équipé, stage / shiny / bg vivent dans `profile.pet` (la copie du carnet sert quand on change). */
+function petBookSeed() {
+  const P = store.profile; if (!P || !P.pet || P.petBookV) return;
+  if (srvOn() && !SRV.sum) return; // série du serveur pas encore connue : on attend
+  const B = P.petBook = P.petBook || {}, sp = P.pet.species, pr = progress();
+  const X = B[sp] = B[sp] || { games: 0, days: [] };
+  X.games = Math.max(X.games || 0, pr.games); // le familier déjà joué garde toute son expérience
+  const end = playsOf(today()).length ? today() : addDays(today(), -1);
+  for (let i = 0; i < pr.streak; i++) { const d = addDays(end, -i); if (!X.days.includes(d)) X.days.push(d); }
+  X.days.sort();
+  P.seen = (P.seen || []).map(id => id.includes("@") || id.startsWith("species:") ? id : id + "@" + sp);
+  P.petBookV = 1; save();
+}
+function petXPOf(sp) {
+  petBookSeed();
+  const B = store.profile.petBook = store.profile.petBook || {};
+  return B[sp] = B[sp] || { games: 0, days: [] };
+}
+function petStreakOf(X) {
+  const has = new Set(X.days || []); let d = today(); if (!has.has(d)) d = addDays(d, -1);
+  let n = 0; while (has.has(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+function petProg(sp) { const X = petXPOf(sp || store.profile.pet.species); return { ...progress(), games: X.games, streak: petStreakOf(X) }; }
+// état (évolution, couleurs, fond) d'une espèce : celle du familier équipé, ou celle gardée dans le carnet
+function petStateOf(sp) {
+  const cur = store.profile.pet; if (cur.species === sp) return cur;
+  const m = (store.profile.petBook || {})[sp] || {};
+  return { species: sp, stage: m.stage || "1", shiny: m.shiny || "normal", bg: m.bg || "type" };
+}
 function unlockedIds(prog) {
-  const out = [];
-  PET_CATS.forEach(c => ITEMS[c].list.forEach(it => { if (it.need && isUnlocked(it, prog)) out.push(`${c}:${it.id}`); }));
+  const out = [], P = store.profile, sp = P && P.pet ? P.pet.species : null, pp = sp ? petProg(sp) : prog;
+  PET_CATS.forEach(c => ITEMS[c].list.forEach(it => {
+    if (!it.need) return;
+    if (c === "species") { if (isUnlocked(it, prog)) out.push(`${c}:${it.id}`); }
+    else if (sp && isUnlocked(it, pp)) out.push(`${c}:${it.id}@${sp}`);
+  }));
   return out;
 }
 function nextUnlock(prog) {
-  let best = null;
+  let best = null; const pp = store.profile && store.profile.pet ? petProg() : prog;
   PET_CATS.forEach(c => ITEMS[c].list.forEach(it => {
-    if (!it.need || isUnlocked(it, prog)) return;
-    const left = it.need.v - prog[it.need.k], frac = left / it.need.v;
-    if (!best || frac < best.frac) best = { cat: c, it, left, frac, have: prog[it.need.k] };
+    const pr = c === "species" ? prog : pp;
+    if (!it.need || isUnlocked(it, pr)) return;
+    const left = it.need.v - pr[it.need.k], frac = left / it.need.v;
+    if (!best || frac < best.frac) best = { cat: c, it, left, frac, have: pr[it.need.k] };
   }));
   return best;
 }
