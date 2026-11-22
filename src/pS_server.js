@@ -254,13 +254,15 @@ async function srvVerifyLoginCode(email, code) {
 // reconstruit le profil local à partir du compte en ligne (pseudo, familier, groupe)
 async function srvRestoreProfile() {
   const uid = SRV.sess.user.id;
-  const pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,created_at,photo&id=eq." + uid);
+  let pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,pet_book,created_at,photo&id=eq." + uid);
+  if (!pr.ok) pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,created_at,photo&id=eq." + uid); // colonne pet_book pas encore créée
   if (!pr.ok || !Array.isArray(pr.data) || !pr.data.length) return { ok: false, error: pr.error || "no_profile" };
   const g = await srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members,fmt_offset,fmt_stride)&user_id=eq." + uid + "&order=joined_at");
   const grp = g.ok && Array.isArray(g.data) && g.data[0] ? g.data[0].groups : null, p = pr.data[0];
   if (g.ok && Array.isArray(g.data)) { SRV.groups = g.data.filter(x => x.groups).map(x => ({ ...x.groups, role: x.role })); }
   store.profile = { name: p.pseudo, group: grp ? grp.name : "Sans groupe", code: grp ? grp.code : "", created: (p.created_at || "").slice(0, 10) || today(), pet: p.pet, tuto: { done: true, seen: { joker: true, carnet: true, trophees: true } }, srv: { uid }, seen: [] };
   if (p.photo) store.profile.photo = p.photo; // ma photo suit mon compte
+  if (p.pet_book) petBookMerge(p.pet_book); // expérience de chaque familier, retrouvée sur le nouvel appareil
   store.profile.seen = unlockedIds(progress());
   save(); SRV.group = grp; SRV.members = null;
   return { ok: true };
@@ -410,6 +412,7 @@ async function srvSync(force) {
       if (att.ok && Array.isArray(att.data)) SRV.attempts[day] = att.data;
       if (sum && sum.gems_total !== undefined) SRV.sum = sum;
       SRV.syncedAt = performance.now();
+      if (!SRV.petLoaded) { SRV.petLoaded = true; srvPullPet().catch(() => {}).then(() => { SRV.petPulled = true; petBookSeed(); }); }
       if (!SRV.trLoaded) { SRV.trLoaded = true; srvLoadTrophies().then(() => { if (!game && ["pet", "profile"].includes(ui.view) && !ui.sheet) render(); }); }
       if (!PUSH.checked) pushStatus().then(() => { if (!game && !ui.sheet && ["group", "hub"].includes(ui.view)) render(); });
       if (ui.pendingChat) { const pc = ui.pendingChat; ui.pendingChat = null; setTimeout(() => pushOpenChat(pc.gid, pc.msg), 200); } else
@@ -443,6 +446,52 @@ async function srvPushPhoto() {
   if (!srvOn() || srvLost()) return;
   const tok = await srvToken(); if (!tok) return;
   await srvFetch("/rest/v1/profiles?id=eq." + myUid(), { method: "PATCH", token: tok, prefer: "return=minimal", body: { photo: store.profile.photo || null, photo_v: Math.floor((srvNowMs() || Date.now()) / 1000) } });
+}
+/* ---------- familiers synchronisés entre appareils (v78) ----------
+   Avant, le familier et son expérience n'existaient que sur l'appareil : un autre téléphone ou le PC repartait de zéro et
+   les amis voyaient le familier du premier jour. Maintenant le familier équipé (profiles.pet) et le carnet d'expérience
+   (profiles.pet_book) sont envoyés au compte, et fusionnés au lancement : on garde le plus avancé de chaque côté. */
+function petBookFull() {
+  const P = store.profile, B = JSON.parse(JSON.stringify(P.petBook || {})), c = P.pet;
+  const X = B[c.species] = B[c.species] || { games: 0, days: [] };
+  Object.assign(X, { stage: c.stage, shiny: c.shiny, bg: c.bg });
+  return B;
+}
+let petPushT = 0;
+function srvPushPet() {
+  clearTimeout(petPushT);
+  petPushT = setTimeout(async () => {
+    if (!srvOn() || srvLost() || !store.profile || !store.profile.pet) return;
+    const tok = await srvToken(); if (!tok) return;
+    await srvFetch("/rest/v1/profiles?id=eq." + myUid(), { method: "PATCH", token: tok, prefer: "return=minimal", body: { pet: store.profile.pet, pet_book: petBookFull() } });
+  }, 1500);
+}
+function petBookMerge(rem) {
+  const P = store.profile; if (!P || !P.pet || !rem || typeof rem !== "object") return false;
+  const B = P.petBook = P.petBook || {}; let changed = false;
+  for (const sp in rem) {
+    if (!(sp in SPECIES)) continue;
+    const r = rem[sp] || {}, l = B[sp] = B[sp] || { games: 0, days: [] };
+    const g = Math.max(l.games || 0, r.games || 0); if (g !== l.games) { l.games = g; changed = true; }
+    const days = [...new Set([...(l.days || []), ...(Array.isArray(r.days) ? r.days : [])])].sort().slice(-60); if (days.length !== (l.days || []).length) { l.days = days; changed = true; }
+    if (sp === P.pet.species) {
+      const st = String(Math.max(+P.pet.stage || 1, +r.stage || 1)); if (st !== P.pet.stage) { P.pet.stage = st; changed = true; }
+      if (P.pet.shiny !== "shiny" && r.shiny === "shiny") { P.pet.shiny = "shiny"; changed = true; }
+    } else {
+      const st = String(Math.max(+l.stage || 1, +r.stage || 1)); if (st !== l.stage) { l.stage = st; changed = true; }
+      if ((!l.shiny || l.shiny === "normal") && r.shiny === "shiny") { l.shiny = "shiny"; changed = true; }
+      if ((!l.bg || l.bg === "type") && r.bg && r.bg !== "type") { l.bg = r.bg; changed = true; }
+    }
+  }
+  P.petBookV = 1; // le carnet vient du compte : plus de reprise « d'office » de l'ancien total sur le familier équipé
+  return changed;
+}
+async function srvPullPet() {
+  const r = await srvGet("/rest/v1/profiles?select=pet_book&id=eq." + myUid());
+  if (!r.ok || !Array.isArray(r.data) || !r.data[0]) return; // colonne absente (migration pas encore appliquée) : tout reste local
+  const changed = r.data[0].pet_book ? petBookMerge(r.data[0].pet_book) : false;
+  if (changed) { save(); if (!game && ["pet", "profile", "group", "hub"].includes(ui.view) && !ui.sheet) render(); }
+  srvPushPet();
 }
 async function srvFetchPhotos() {
   let changed = false; const uid = myUid();

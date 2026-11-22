@@ -278,7 +278,7 @@ const isUnlocked = (it, prog) => !it.need || prog[it.need.k] >= it.need.v;
    pour le familier équipé, stage / shiny / bg vivent dans `profile.pet` (la copie du carnet sert quand on change). */
 function petBookSeed() {
   const P = store.profile; if (!P || !P.pet || P.petBookV) return;
-  if (srvOn() && !SRV.sum) return; // série du serveur pas encore connue : on attend
+  if (srvOn() && (!SRV.sum || !SRV.petPulled)) return; // série et carnet du compte pas encore connus : on attend
   const B = P.petBook = P.petBook || {}, sp = P.pet.species, pr = progress();
   const X = B[sp] = B[sp] || { games: 0, days: [] };
   X.games = Math.max(X.games || 0, pr.games); // le familier déjà joué garde toute son expérience

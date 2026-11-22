@@ -164,4 +164,5 @@ function finishTry() {
   }
   g.newAch = checkAchievements();
   save();
+  if (srvOn()) srvPushPet(); // familier et expérience suivent le compte (v78)
 }

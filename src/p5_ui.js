@@ -322,6 +322,10 @@ function vPet() {
   })()}
   <details class="fold"><summary>Évolutions · stade ${st} sur 3</summary><div class="foldbody"><div class="evos">${evo}</div>${st > 1 ? `<button class="smallbtn" data-act="evoreplay">Revoir l'évolution</button>` : ""}</div></details>
   ${petStory(pet)}
+  ${(() => { // sécurité : expérience rattachée à un autre familier que celui qu'on joue
+    const mine = petXPOf(pet.species).games || 0, d = Object.entries(store.profile.petBook || {}).filter(([sp, x]) => sp !== pet.species && sp in SPECIES && (x.games || 0) > mine);
+    return d.length ? `<details class="fold"><summary>Expérience au mauvais endroit ?</summary><div class="foldbody"><p class="note">Si l'expérience gagnée avec ${esc(petName(pet))} s'est retrouvée sur un autre familier, déplace-la ici. L'autre repart de zéro.</p>${d.map(([sp, x]) => `<button class="smallbtn" data-act="petmove" data-v="${sp}">Reprendre l'expérience de ${esc(SPECIES[sp].names[0])} (${x.games} parties)</button>`).join("")}</div></details>` : "";
+  })()}
 `;
 }
 
@@ -554,7 +558,15 @@ document.addEventListener("click", e => {
         P.pet = { ...petStateOf(id), species: id };
         P.seen = [...new Set([...(P.seen || []), ...unlockedIds(progress())])]; // pas de faux « nouveau déblocage » au changement
       } else P.pet[c] = id;
-      save(); render(); break;
+      save(); if (srvOn()) srvPushPet(); render(); break;
+    }
+    case "petmove": { // l'expérience a été rattachée au mauvais familier : on la déplace sur celui qui est équipé
+      const P = store.profile, from = (P.petBook || {})[v], to = petXPOf(P.pet.species); if (!from) break;
+      to.games = from.games || 0; to.days = (from.days || []).slice();
+      Object.assign(P.pet, { stage: from.stage || "1", shiny: from.shiny || "normal", bg: from.bg || "type" });
+      Object.assign(from, { games: 0, days: [], stage: "1", shiny: "normal", bg: "type" });
+      P.seen = [...new Set([...(P.seen || []), ...unlockedIds(progress())])];
+      save(); if (srvOn()) srvPushPet(); announce("Expérience déplacée."); render(); break;
     }
     case "back": go(["season", "pet", "profile", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : (srvOn() ? "hub" : "group")) : (srvOn() ? "hub" : "group")); break;
     case "day": go("day", { dayKey: v }); break;

@@ -2,7 +2,7 @@
 -- Méridien : schéma COMPLET à jour (reconstruction d'une base VIDE). GÉNÉRÉ par scripts/gen-apply-all.ps1 : ne pas modifier à la main.
 -- À coller dans Supabase > SQL Editor d'un projet NEUF, puis Run. NE JAMAIS le lancer sur une base qui contient déjà des données :
 -- les tables existent déjà (erreur) et les réglages seraient remis à zéro.
--- Contenu, dans l'ordre : 20261112, 20261113, 20261114, 20261115, 20261116, 20261117, 20261118, 20261119, 20261120, 20261121, 20261122, 20261123, 20261124, 20261125, 20261126, 20261127, 20261128, 20261129 (réglages et liste des jeux insérés juste après la première).
+-- Contenu, dans l'ordre : 20261112, 20261113, 20261114, 20261115, 20261116, 20261117, 20261118, 20261119, 20261120, 20261121, 20261122, 20261123, 20261124, 20261125, 20261126, 20261127, 20261128, 20261129, 20261130 (réglages et liste des jeux insérés juste après la première).
 -- Après l'exécution : Authentication > Providers > activer « Anonymous sign-ins » ; régler les modèles d'e-mail (voir CLAUDE.md).
 -- =====================================================================================
 
@@ -2254,4 +2254,15 @@ from (select distinct day, group_id from attempts where catchup and submitted_at
 cross join lateral public._group_scores(x.group_id, x.day, x.day) s
 where s.user_id in (select t.user_id from attempts t where t.group_id = x.group_id and t.day = x.day and t.catchup and t.submitted_at is not null)
 on conflict (user_id, day, (coalesce(group_id, '00000000-0000-0000-0000-000000000000'::uuid))) do update set amount = excluded.amount;
+
+-- ######## 20261130000000_pet_book.sql ########
+-- =====================================================================================
+-- Familiers synchronisés entre appareils (v78).
+-- profiles.pet (déjà présent) reçoit désormais le familier équipé à chaque changement ; pet_book garde l'expérience de
+-- chaque familier ({ espèce: { games, days, stage, shiny, bg } }). Lecture : soi-même (le client ne le demande que pour
+-- son propre profil) ; écriture : le joueur sur son propre profil (règle profiles_update existante).
+-- À appliquer AVANT de publier le code v78 ; sans effet sur les données existantes.
+-- =====================================================================================
+alter table public.profiles
+  add column if not exists pet_book jsonb check (pet_book is null or pg_column_size(pet_book) < 20000);
 
