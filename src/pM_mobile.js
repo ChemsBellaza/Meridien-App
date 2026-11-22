@@ -13,7 +13,11 @@
   // un clavier n'existe que si un champ de saisie a le focus : sur iPhone, visualViewport garde parfois l'ancienne hauteur après la fermeture du clavier,
   // ce qui coupait l'écran en deux (jeu ou barre de message arrêtés à mi-hauteur)
   const editing = () => { const a = document.activeElement; return !!(a && a.matches && a.matches('input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]),textarea,[contenteditable="true"]')); };
+  // la barre de message se cale sur le BAS DE L'ÉCRAN VISIBLE (et non sur celui de la page) : sur iPhone, après le clavier, la page peut garder
+  // une hauteur « raccourcie » et la barre restait flottante au milieu ; le bas de visualViewport, lui, est toujours juste
+  const pin = () => { document.documentElement.style.setProperty("--vvb", Math.round(vv.offsetTop + vv.height) + "px"); document.documentElement.classList.add("hasvv"); };
   const update = () => {
+    pin();
     const raw = Math.round(window.innerHeight - vv.height - vv.offsetTop);
     const kb = raw > 140 && editing() ? raw : 0; // en dessous : barre d'adresse qui bouge, pas un clavier
     if (kb === last) return; last = kb;
@@ -21,7 +25,8 @@
     document.documentElement.classList.toggle("kbopen", kb > 0);
     if (kb > 0) setTimeout(() => { const a = document.activeElement; if (a && a.matches && a.matches("input,textarea")) a.scrollIntoView({ block: "nearest", behavior: "auto" }); }, 80);
   };
-  vv.addEventListener("resize", update); vv.addEventListener("scroll", update); update();
+  vv.addEventListener("resize", update); vv.addEventListener("scroll", pin); vv.addEventListener("resize", pin); update();
+  window.addEventListener("scroll", pin, { passive: true }); window.addEventListener("orientationchange", () => { setTimeout(update, 120); setTimeout(update, 500); });
   document.addEventListener("focusin", () => { setTimeout(update, 60); setTimeout(update, 350); });
   document.addEventListener("focusout", () => { setTimeout(update, 60); setTimeout(update, 400); });
   window.addEventListener("pageshow", update); document.addEventListener("visibilitychange", update);
