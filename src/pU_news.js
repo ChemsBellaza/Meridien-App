@@ -13,6 +13,7 @@ const MUST = [
   ["Pas à jour ?", "Ferme l’appli et rouvre-la, deux fois."]
 ];
 const NEWS = [
+  { id: "v80", date: "23 nov.", title: "Rattrapage exceptionnel", text: "Aujourd’hui seulement, tu peux rattraper tous les jeux de la saison que tu n’as pas joués. Un seul essai par jeu, ton score est classé sans changer la place des autres." },
   { id: "v78", date: "22 nov.", title: "Ton familier te suit", text: "Ton familier et son expérience sont enregistrés sur ton compte : tu les retrouves sur ton autre téléphone ou sur l’ordinateur. Tes amis voient aussi le familier que tu joues vraiment." },
   { id: "v77", date: "22 nov.", title: "Un familier, sa progression", text: "Chaque familier gagne son expérience tout seul : évolution, couleurs chromatiques et fonds se débloquent avec celui que tu joues. Change de familier quand tu veux, chacun garde son niveau." },
   { id: "v54", date: "20 nov.", title: "Graphique de saison", text: "Deux affichages : Course, avec une barre par joueur et un curseur pour revoir chaque jour, ou Courbes. Touche un joueur dans la liste pour l’afficher ou le masquer." },
