@@ -195,8 +195,11 @@ function vRanking(k) {
 
 // historique en ligne : tous mes jeux joués (tous groupes), sur le mois glissant (30 jours) ou depuis le début
 function vHistoryOnline() {
-  const k = today(), all = ui.hmode === "all", h = SRV.hist;
-  const rows = (h || []).filter(r => all || diffDays(r.play_day, k) < 30), S = seasonOf(k);
+  const k = today(), all = ui.hmode === "all", h = SRV.hist, groups = SRV.groups || [];
+  // un groupe à la fois (par défaut le groupe actif) pour ne pas mélanger les classements ; « Tous » les réunit
+  const gsel = ui.hgrp === "all" || groups.some(g => g.id === ui.hgrp) ? ui.hgrp : (SRV.gid || "all");
+  const rows = (h || []).filter(r => (gsel === "all" || r.group_id === gsel) && (all || diffDays(r.play_day, k) < 30)), S = seasonOf(k);
+  const grpPick = groups.length > 1 ? `<div class="chips" role="group" aria-label="Groupe">${groups.map(g => `<button data-act="hgrp" data-v="${g.id}" aria-pressed="${gsel === g.id}">${esc(g.name)}</button>`).join("")}<button data-act="hgrp" data-v="all" aria-pressed="${gsel === "all"}">Tous</button></div>` : "";
   const wins = rows.filter(r => r.pos === 1 && r.n >= 2).length;
   const card = r => {
     const f = r.fmt, F = FORMATS[f]; if (!F) return "";
@@ -211,6 +214,7 @@ function vHistoryOnline() {
     <div class="sheetbody">
       <h1 class="bigtitle">Mes jeux joués</h1>
       <div class="hstats"><div class="hs"><b class="num">${rows.length}</b><span>Joués</span></div><div class="hs"><b class="num">${wins}</b><span>Gagnés</span></div><div class="hs"><b class="num">${SRV.groups.length}</b><span>Groupe${SRV.groups.length > 1 ? "s" : ""}</span></div></div>
+      ${grpPick}
       <div class="seg light" role="group" aria-label="Période"><button data-act="hmode" data-v="month" aria-pressed="${!all}">30 derniers jours</button><button data-act="hmode" data-v="all" aria-pressed="${all}">Depuis le début</button></div>
       <button class="row" data-act="season">${I.trophy(26)}<span class="grow">Stats de la saison</span>${I.chev}</button>
       <p class="note center">Un seul jeu par jour et par groupe, et c'est la surprise : les jeux passés se consultent, mais ne se rejouent pas.</p>
@@ -571,6 +575,7 @@ document.addEventListener("click", e => {
     case "back": go(["season", "pet", "profile", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : (srvOn() ? "hub" : "group")) : (srvOn() ? "hub" : "group")); break;
     case "day": go("day", { dayKey: v }); break;
     case "histsel": ui.histSel = v; render(); break;
+    case "hgrp": ui.hgrp = v; ui.histSel = null; render(); break;
     case "tab": ui.tab = v; render(); break;
     case "hapticpref": store.prefs = Object.assign({ time: 1 }, store.prefs, { haptics: v === "true" }); save(); render(); buzz(30); break;
     case "install": installNow(); break;
