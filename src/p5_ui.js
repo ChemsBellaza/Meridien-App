@@ -66,7 +66,7 @@ function vOnboard() {
     <ol class="wsteps">
       <li><span class="wic" aria-hidden="true">🌍</span><div><b>Un jeu par jour</b><span>Un seul jeu de culture générale, une surprise chaque matin. 3 manches, 2 essais.</span></div></li>
       <li><span class="wic" aria-hidden="true">👥</span><div><b>Un groupe d'amis</b><span>Crée ton groupe ou rejoins celui d'un ami avec son code. Même jeu, même classement.</span></div></li>
-      <li><span class="wic" aria-hidden="true">🧭</span><div><b>Des boussoles à gagner</b><span>Plus tu devances d'amis, plus tu en gagnes, et plus la saison avance, plus elles valent.</span></div></li>
+      <li><span class="wic" aria-hidden="true">🧭</span><div><b>Des boussoles à gagner</b><span>Ta place et ton score t'en rapportent, et plus la saison avance, plus elles valent.</span></div></li>
       <li><span class="wic" aria-hidden="true">🦊</span><div><b>Un familier à faire grandir</b><span>Il évolue à chaque partie, réagit à tes scores et se débloque en jouant.</span></div></li>
     </ol>
     <button class="btn" data-act="onbstart">C'est parti</button>
@@ -289,7 +289,7 @@ function vSeason() {
     return `<${CHART_STYLE === "modes" ? `button type="button" data-act="chartpick" data-v="${esc(r.id)}" aria-pressed="${on}" aria-label="${esc(r.name)} : ${on ? "masquer du" : "afficher sur le"} graphique"` : "div"} class="srow ${on ? "" : "off"}" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">#${r.rank} ${mv}${r.me ? toi : ""}</div><b>${esc(r.name)}</b><span>${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""} (sur ${r.played})</span></div><div class="tot">${I.compass(34)}<b class="num">${fmtNum(r.total)}</b></div></${CHART_STYLE === "modes" ? "button" : "div"}>`;
   }).join("")}
   ${st.list.length > 6 && !seasonMasked(k) ? `<button class="smallbtn ghost rkall" data-act="seasonall">${ui.seasonAll ? "Voir le top 5" : `Voir les ${st.list.length - st.list.filter((r, i) => i < 5 || r.me).length} autres`}</button>` : ""}
-  <p class="note center light">Chaque jour, ${CONFIG.gemsPerRank} boussoles par place devancée, avec un bonus qui monte au fil de la saison (+5 % par jour, jusqu'à +100 % le dernier jour)${srvOn() ? ". Les boussoles du jour sont provisoires jusqu'à la fin de la journée." : ". Les jours précédant ton arrivée sont simulés pour la démo."}</p></div>`;
+  <p class="note center light">Chaque jour, jusqu'à ${CONFIG.gemsMax} boussoles : la moitié selon ta place (en pourcentage, donc juste quelle que soit la taille du groupe), l'autre moitié selon ton score, avec un bonus qui monte au fil de la saison (+5 % par jour, jusqu'à +100 % le dernier jour)${srvOn() ? ". Les boussoles du jour sont provisoires jusqu'à la fin de la journée." : ". Les jours précédant ton arrivée sont simulés pour la démo."}</p></div>`;
 }
 
 function vPet() {
@@ -409,7 +409,7 @@ function vDetailSheet() {
   const d = ui.detail || {}, k = d.k || today(), res = dayResults(k), r = res.played.find(x => String(x.id) === String(d.pid));
   if (!r) return `<div class="scrim" data-act="closesheet"><div class="sheet" role="dialog" aria-label="Détail" data-stop><p class="note">Ce score n'est plus disponible.</p><button class="btn ghost" data-act="closesheet">Fermer</button></div></div>`;
   const tot = (standings(k).list.find(x => String(x.id) === String(r.id)) || {}).total;
-  const g = CONFIG.gemsPerRank, f = fmtOf(k), n = r.beaten || 0;
+  const f = fmtOf(k), N = r.n || res.N, rk = gemRankPts(N, r.pos); // moitié des boussoles selon la place (en %), moitié selon le score
   const line = (ic, label, v) => `<li class="dline"><span class="dic" aria-hidden="true">${ic}</span><span>${label}</span><b class="num">${v}</b></li>`;
   return `<div class="scrim" data-act="closesheet"><div class="sheet detail" role="dialog" aria-label="Détail des points de ${esc(r.name)}" data-stop>
     <div class="dhead">${avatar(r, "lg")}<div><h3>${esc(r.name)}${r.me ? toi : ""}</h3><div class="muted">${esc(FORMATS[f].name)} · ${shortDate(k)}</div></div></div>
@@ -418,8 +418,8 @@ function vDetailSheet() {
     <div class="dscore"><b class="num">${fmtNum(r.best)} pts</b><span>${r.tries > 1 ? `meilleur de ${r.tries} essais` : "1 essai"}</span></div>
     ${tryList(r) ? `<ul class="dtries" aria-label="Score de chaque essai">${tryList(r).map((s, i) => `<li class="${s === r.best ? "top" : ""}"><span>Essai ${i + 1}</span><b class="num">${fmtNum(s)} pts</b>${s === r.best ? `<i>meilleur</i>` : ""}</li>`).join("")}</ul>` : ""}
     ${res.N >= 2 ? `<ul class="dlines">
-      ${line("✓", "Partie jouée", "+" + g)}
-      ${line(I.trophy(16), `${n} autre${n > 1 ? "s" : ""} battu${n > 1 ? "s" : ""}`, "+" + (g * n))}
+      ${line(I.trophy(16), `Ta place : ${r.pos}${r.pos === 1 ? "er" : "e"} sur ${N}`, "+" + rk)}
+      ${line("✓", `Ton score : ${fmtNum(r.best)} pts`, "+" + Math.max(0, (r.base || 0) - rk))}
       ${r.mult === 2 ? line("☀", "Jeu du dimanche : boussoles ×2", "+" + (r.base || 0)) : ""}
       ${line("↗", `Jour ${dayInSeason(k)} (+${r.pct != null ? r.pct : dayBonusPct(k)} %)`, "+" + (r.bonus || 0))}
       <li class="dline total"><span class="dic" aria-hidden="true">${I.compass(18)}</span><span>Total</span><b class="num">+${r.gems}</b></li>

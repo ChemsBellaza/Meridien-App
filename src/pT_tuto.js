@@ -113,7 +113,7 @@ function vEndTuto() {
   const g = game, pet = store.profile.pet, good = g.score >= 200;
   const next = [
     ["🎯", "Un jeu par jour", "Ton meilleur essai compte."],
-    ["🧭", "Des boussoles", "Plus tu devances d'amis, plus tu en gagnes."],
+    ["🧭", "Des boussoles", "Ta place et ton score t'en rapportent."],
     ["🔓", "À débloquer", "Jokers dès le 3e jour, carnet au 5e."]
   ];
   return `<div class="react"><span class="rtile">${petSVG(pet, { mood: good ? "joy" : null })}</span><div class="say3"><b>${esc(petName(pet))}</b><span>${fr(good ? "Bien joué ! Tu as compris le principe." : "Tu as compris le principe, et tu t'amélioreras vite !")}</span></div></div>

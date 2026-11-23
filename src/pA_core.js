@@ -219,6 +219,13 @@ function myPlays(k) {
 }
 
 /* ---------- résultats du jour et saison ---------- */
+// boussoles de base d'un jeu (v82), identique à _group_scores côté serveur : moitié selon la place en pourcentage, moitié selon le score
+const gemRankPts = (N, pos) => N >= 2 ? Math.round(CONFIG.gemsMax * .5 * (N - pos) / (N - 1)) : 0;
+function gemBase(N, pos, best, f) {
+  if (N < 2) return 0;
+  const mx = 3 * (FORMATS[f] ? FORMATS[f].max : 100) * CONFIG.mult[2];
+  return Math.round(CONFIG.gemsMax * (.5 * (N - pos) / (N - 1) + .5 * Math.min(1, best / Math.max(1, mx))));
+}
 function dayResults(k) {
   if (srvOn()) return onlineDayResults(k);
   const live = k === today(), now = minutesNow();
@@ -233,7 +240,7 @@ function dayResults(k) {
   played.forEach(r => {
     r.pos = played.findIndex(x => x.best === r.best) + 1;
     const worst = played.filter(x => x.best >= r.best).length;
-    r.base = N >= 2 ? CONFIG.gemsPerRank * (N - worst + 1) : 0; r.beaten = N - worst; r.pct = dayBonusPct(k); r.mult = isSunday(k) ? 2 : 1; r.bonus = Math.round(r.base * r.mult * r.pct / 100);
+    r.base = gemBase(N, r.pos, r.best, fmtOf(k)); r.beaten = N - worst; r.pct = dayBonusPct(k); r.mult = isSunday(k) ? 2 : 1; r.bonus = Math.round(r.base * r.mult * r.pct / 100);
     r.gems = r.base * r.mult + r.bonus;
     r.win = r.pos === 1;
   });

@@ -5,7 +5,8 @@
 const CONFIG = {
   tries: 2,                         // essais par jour
   mult: [1, 1.25, 1.5],             // multiplicateurs Facile / Moyen / Difficile
-  gemsPerRank: 16,                  // boussoles gagnées par place devancée
+  gemsPerRank: 16,                  // ancienne règle (par place devancée), gardée pour le seed : plus utilisée pour le calcul
+  gemsMax: 200,                     // v82 : boussoles de base du 1er avec le score maximal ; moitié selon la place (en %), moitié selon le score
   seasonDays: 21,                   // durée d'une saison ; bonus de boussoles : +5 % par jour (jour 1 = 0 %, jour 21 = +100 %)
   dayStartMin: 870,                 // le jeu du jour change à 14 h 30, heure de Barcelone (870 min) : un jour de jeu va de 14 h 30 à 14 h 30
   seasonAnchor: "2026-10-19",       // début de la saison 1 (et défi n°1)
