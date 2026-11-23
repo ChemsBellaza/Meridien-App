@@ -34,12 +34,12 @@ from public.profiles group by 1 order by 1 desc;
 -- 6. Notifications activées (appareils)
 select count(*) appareils, count(distinct user_id) joueurs from public.push_subs;
 
--- 7. Points par difficulté (pour calibrer les coefficients) : manches jouées, points moyens, et taux de réussite (points / maximum possible à cette difficulté)
+-- 7. Points par difficulté (pour calibrer les coefficients) : manches jouées, points moyens, et taux de réussite (points / maximum possible à cette difficulté, avec les coefficients du jour de chaque partie : v84). Pour une seule saison, ajouter  and a.day >= date 'AAAA-MM-JJ'  dans le where.
 select (r ->> 'diff')::int as difficulte,
        count(*) as manches,
        round(avg((r ->> 'pts')::numeric)) as points_moyens,
        round(avg((r ->> 'pts')::numeric / f.max_points) * 100, 1) as pct_du_max_de_base,
-       round(avg((r ->> 'pts')::numeric / (f.max_points * c.mult[(r ->> 'diff')::int + 1])) * 100, 1) as taux_reussite_pct
+       round(avg((r ->> 'pts')::numeric / (f.max_points * (public._mult_at(a.day))[(r ->> 'diff')::int + 1])) * 100, 1) as taux_reussite_pct
 from public.attempts a
 cross join lateral jsonb_array_elements(a.rounds) r
 join public.formats f on f.key = a.fmt
@@ -48,4 +48,4 @@ where a.submitted_at is not null and a.rounds is not null and c.id = 1
 group by 1 order by 1;
 
 -- 8. Coefficients actuels
-select mult as coefficients_par_difficulte, gems_per_rank from public.app_config where id = 1;
+select mult as coefficients_avant, mult_new as coefficients_apres, mult_from as a_partir_du, gems_max from public.app_config where id = 1;
