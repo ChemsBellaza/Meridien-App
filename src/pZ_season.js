@@ -147,7 +147,7 @@ function cerStep(c) {
     <div class="btnline cerend"><button class="btn" data-act="cershare">Partager ma saison</button></div>
     <p class="note center">La saison ${d.season + 1} commence avec un bonus à +0 %. Bonne chance !</p>`;
 }
-function vCeremony() {
+function vCeremonyOld() { // ancienne cérémonie en fenêtre (remplacée par le récap plein cadre, pX_recap.js)
   const c = ui.cer; if (!c) return "";
   const last = c.step === CER_STEPS.length - 1, first = c.step === 0;
   const dots = CER_STEPS.map((s, i) => `<i class="${i === c.step ? "on" : i < c.step ? "past" : ""}"></i>`).join("");
@@ -157,6 +157,8 @@ function vCeremony() {
     <div class="btnline cernav">${first ? `<button class="smallbtn ghost" data-act="cerclose">Passer</button>` : `<button class="smallbtn ghost" data-act="cerprev">Retour</button>`}${last ? `<button class="smallbtn" data-act="cerclose">Terminer</button>` : `<button class="smallbtn" data-act="cernext">${first ? "Révéler le podium" : "Suivant"}</button>`}</div>
   </div></div>`;
 }
+
+function vCeremony() { return vRecapReal(); } // récap de saison plein cadre : carnet de voyage
 
 /* ---------- palmarès du groupe ---------- */
 function vHall() {

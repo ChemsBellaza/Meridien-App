@@ -126,7 +126,7 @@ function focusKey(el) {
 /* fenêtres modales : focus piégé, Échap pour fermer, retour du focus à l'ouverture */
 let dlgOpener = null, dlgOpen = false, dlgLabel = "";
 const FOCUSABLE = 'button:not([disabled]),a[href],input:not([disabled]):not([type=hidden]),select,textarea,[tabindex]:not([tabindex="-1"])';
-function currentDialog() { return document.querySelector(".confirm [role=dialog]") || document.querySelector(".sheet[role=dialog]"); }
+function currentDialog() { return document.querySelector(".confirm [role=dialog]") || document.querySelector(".sheet[role=dialog]") || document.querySelector(".rcp[role=dialog]"); }
 function manageDialog(openerKey) {
   const d = currentDialog();
   if (d && (!dlgOpen || d.getAttribute("aria-label") !== dlgLabel)) {
@@ -144,7 +144,7 @@ document.addEventListener("keydown", e => {
   const d = currentDialog(); if (!d) return;
   if (e.key === "Escape") {
     e.preventDefault();
-    const b = d.querySelector('[data-act="confirm-no"],[data-act="closesheet"],[data-act="evoclose"]'); if (b) b.click();
+    const b = d.querySelector('[data-act="confirm-no"],[data-act="closesheet"],[data-act="evoclose"],[data-act="cerclose"]'); if (b) b.click();
   } else if (e.key === "Tab") {
     const f = [...d.querySelectorAll(FOCUSABLE)].filter(n => !n.hidden && n.type !== "file" && n.offsetParent !== null); if (!f.length) return;
     const first = f[0], last = f[f.length - 1];

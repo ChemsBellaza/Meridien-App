@@ -13,6 +13,7 @@ const MUST = [
   ["Pas à jour ?", "Ferme l’appli et rouvre-la, deux fois."]
 ];
 const NEWS = [
+  { id: "v83", date: "23 nov.", title: "Récap de saison", text: "À la fin de la saison, ton récap s’ouvre en plein écran : ton classement, la route face à tes rivaux, ta carte postale, les médailles du groupe, l’évolution de ton familier et l’équipage de tous. Tu peux le revoir depuis le palmarès." },
   { id: "v82", date: "23 nov.", title: "Boussoles plus justes", text: "Les boussoles d’un jeu dépendent maintenant de ta place en pourcentage et de ton score, plus du nombre de joueurs : finir premier rapporte autant dans un petit groupe que dans un grand. Les jours déjà passés de la saison sont recalculés." },
   { id: "v81", date: "23 nov.", title: "Historique par groupe", text: "Dans Mes jeux joués, choisis un groupe : les jeux et les classements ne se mélangent plus. Le bouton Tous les réunit si tu préfères." },
   { id: "v78", date: "22 nov.", title: "Ton familier te suit", text: "Ton familier et son expérience sont enregistrés sur ton compte : tu les retrouves sur ton autre téléphone ou sur l’ordinateur. Tes amis voient aussi le familier que tu joues vraiment." },

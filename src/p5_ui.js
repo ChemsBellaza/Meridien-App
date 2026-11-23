@@ -506,7 +506,7 @@ document.addEventListener("click", e => {
     case "rxwho": ui.rxEv = v; ui.sheet = "rxwho"; render(); break;
     case "revskip": if (ui.reveal && !ui.reveal.skip) { ui.reveal.skip = true; render(); } break;
     case "revgo": ui.reveal = null; ui.sheet = false; render(); break;
-    case "cernext": if (ui.cer && ui.cer.step < CER_STEPS.length - 1) { ui.cer.step++; render(); } break;
+    case "cernext": if (ui.cer && ui.cer.step < (ui.cer.n || CER_STEPS.length) - 1) { ui.cer.step++; render(); } break;
     case "cerprev": if (ui.cer && ui.cer.step > 0) { ui.cer.step--; render(); } break;
     case "cerclose": ui.cer = null; ui.sheet = false; render(); setTimeout(srvCheckCeremony, 400); break;
     case "ceropen": { const [cg, cs] = String(v).split("|"); cerOpen(cg, cs); break; }
@@ -576,7 +576,7 @@ document.addEventListener("click", e => {
     case "back": go(["season", "pet", "profile", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : (srvOn() ? "hub" : "group")) : (srvOn() ? "hub" : "group")); break;
     case "day": go("day", { dayKey: v }); break;
     case "histsel": ui.histSel = v; render(); break;
-    case "rc": ui.rc = Math.max(0, Math.min(RC_N - 1, (ui.rc || 0) + (+v))); render(); break;
+    case "rc": ui.rc = Math.max(0, Math.min(rcDemoSlides().length - 1, (ui.rc || 0) + (+v))); render(); break;
     case "hgrp": ui.hgrp = v; ui.histSel = null; render(); break;
     case "tab": ui.tab = v; render(); break;
     case "hapticpref": store.prefs = Object.assign({ time: 1 }, store.prefs, { haptics: v === "true" }); save(); render(); buzz(30); break;
