@@ -20,6 +20,12 @@ const CONFIG = {
     "chaine", "voisins", "citations", "classement", "blocs"]
 };
 
+/* v84 : « gros risque, grosse récompense ». Les multiplicateurs dépendent du JOUR DE JEU : ×1 / ×1,25 / ×1,5 jusqu'au 29 novembre 2026,
+   ×1 / ×1,5 / ×2 à partir du 30 novembre (début de la saison 3). Le serveur applique la même règle (app_config.mult_from / mult_new, _mult_at).
+   `mult` ci-dessus reste l'ancienne valeur (le seed la lit) ; CONFIG.mult rend celle du jour de la partie en cours, sinon d'aujourd'hui. */
+const MULT_OLD = CONFIG.mult.slice(), MULT_NEW = [1, 1.5, 2], MULT_FROM = "2026-11-30";
+const multAt = k => (k >= MULT_FROM ? MULT_NEW : MULT_OLD);
+Object.defineProperty(CONFIG, "mult", { enumerable: true, get() { const k = (typeof game !== "undefined" && game && game.k) || (typeof today === "function" ? today() : "0"); return multAt(k); } });
 const THEMES = {
   hist:     { label: "Histoire",       color: "#E8664F" },
   geopo:    { label: "Géopolitique",   color: "#4A72E0" },
