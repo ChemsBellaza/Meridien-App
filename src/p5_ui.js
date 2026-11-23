@@ -17,6 +17,7 @@ function render() {
   if (game) { renderGame(); return; }
   if (typeof vGalerie === "function" && /[?&]galerie/.test(location.search)) { setAppHTML(vGalerie()); return; } // page de présentation des familiers (propositions)
   if (typeof vBestiaire === "function" && /[?&]bestiaire/.test(location.search)) { setAppHTML(vBestiaire()); return; } // bestiaire : familiers, évolutions, histoires
+  if (typeof vRecap === "function" && /[?&]recap/.test(location.search)) { setAppHTML(vRecap()); return; } // récap de saison (aperçu)
   clearLater();
   petBookSeed(); // v77 : expérience par familier (sans effet une fois initialisée)
   if (store.profile && store.profile.pet && !store.profile.pet.stage) { // anciens familiers : on garde l'espèce, on calcule l'évolution
@@ -575,6 +576,7 @@ document.addEventListener("click", e => {
     case "back": go(["season", "pet", "profile", "carnet", "trophees"].includes(ui.view) ? (ui.prevView && ui.prevView !== ui.view ? ui.prevView : (srvOn() ? "hub" : "group")) : (srvOn() ? "hub" : "group")); break;
     case "day": go("day", { dayKey: v }); break;
     case "histsel": ui.histSel = v; render(); break;
+    case "rc": ui.rc = Math.max(0, Math.min(RC_N - 1, (ui.rc || 0) + (+v))); render(); break;
     case "hgrp": ui.hgrp = v; ui.histSel = null; render(); break;
     case "tab": ui.tab = v; render(); break;
     case "hapticpref": store.prefs = Object.assign({ time: 1 }, store.prefs, { haptics: v === "true" }); save(); render(); buzz(30); break;
