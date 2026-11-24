@@ -19,10 +19,10 @@ function cerMarkSeen(gid, n) { if (!store.profile) return; store.profile.seasonS
 // au lancement : une cérémonie à voir pour chaque groupe dont une saison est terminée depuis ma dernière visite
 async function srvCheckCeremony() {
   if (!srvOn() || srvLost() || SRV.cerBusy || game || ui.sheet || ui.confirm) return;
-  const cur = seasonOf(today()).n; if (cur < 2) return;
   SRV.cerBusy = true;
   try {
     for (const g of SRV.groups) {
+      const cur = seasonOfIn(sAnchorOf(g), today()).n; if (cur < 2) continue; // chaque groupe a sa propre saison (v85)
       const last = cur - 1; if ((cerSeen()[g.id] || 0) >= last) continue;
       const r = await srvRpc("season_recap", { p_group: g.id, p_season: last });
       if (!r || r.error === "not_final" || r.error === "offline") continue; // on réessaiera

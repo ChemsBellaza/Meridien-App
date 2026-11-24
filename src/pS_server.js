@@ -113,7 +113,8 @@ function srvPickActive() {
   return g;
 }
 async function srvLoadGroups() {
-  const r = await srvGet("/rest/v1/group_members?select=role,joined_at,groups(id,name,code,max_members,fmt_offset,fmt_stride)&user_id=eq." + myUid() + "&order=joined_at");
+  let r = await srvGet("/rest/v1/group_members?select=role,joined_at,groups(id,name,code,max_members,fmt_offset,fmt_stride,season_anchor)&user_id=eq." + myUid() + "&order=joined_at");
+  if (!r.ok) r = await srvGet("/rest/v1/group_members?select=role,joined_at,groups(id,name,code,max_members,fmt_offset,fmt_stride)&user_id=eq." + myUid() + "&order=joined_at"); // migration v85 pas encore appliquée
   if (!r.ok || !Array.isArray(r.data)) return false;
   SRV.groups = r.data.filter(x => x.groups).map(x => ({ ...x.groups, role: x.role }));
   srvPickActive(); return true;
@@ -257,7 +258,8 @@ async function srvRestoreProfile() {
   let pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,pet_book,created_at,photo&id=eq." + uid);
   if (!pr.ok) pr = await srvGet("/rest/v1/profiles?select=pseudo,pet,created_at,photo&id=eq." + uid); // colonne pet_book pas encore créée
   if (!pr.ok || !Array.isArray(pr.data) || !pr.data.length) return { ok: false, error: pr.error || "no_profile" };
-  const g = await srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members,fmt_offset,fmt_stride)&user_id=eq." + uid + "&order=joined_at");
+  let g = await srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members,fmt_offset,fmt_stride,season_anchor)&user_id=eq." + uid + "&order=joined_at");
+  if (!g.ok) g = await srvGet("/rest/v1/group_members?select=role,groups(id,name,code,max_members,fmt_offset,fmt_stride)&user_id=eq." + uid + "&order=joined_at");
   const grp = g.ok && Array.isArray(g.data) && g.data[0] ? g.data[0].groups : null, p = pr.data[0];
   if (g.ok && Array.isArray(g.data)) { SRV.groups = g.data.filter(x => x.groups).map(x => ({ ...x.groups, role: x.role })); }
   store.profile = { name: p.pseudo, group: grp ? grp.name : "Sans groupe", code: grp ? grp.code : "", created: (p.created_at || "").slice(0, 10) || today(), pet: p.pet, tuto: { done: true, seen: { joker: true, carnet: true, trophees: true } }, srv: { uid }, seen: [] };

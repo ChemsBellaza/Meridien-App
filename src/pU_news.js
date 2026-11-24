@@ -13,6 +13,7 @@ const MUST = [
   ["Pas à jour ?", "Ferme l’appli et rouvre-la, deux fois."]
 ];
 const NEWS = [
+  { id: "v85", date: "24 nov.", title: "Une saison par groupe", text: "Chaque groupe a sa propre saison de 21 jours, qui commence le jour de son lancement. Les groupes déjà créés gardent leur saison en cours. Une victoire du jour ne compte pour débloquer un familier qu’une fois le jour terminé." },
   { id: "v84", date: "23 nov.", title: "Difficulté : gros risque, grosse récompense", text: "À partir du 30 novembre, début de la saison 3, Moyen vaut ×1,5 et Difficile ×2 (Facile reste ×1). Un bon score en Difficile rapporte beaucoup plus, mais rater coûte plus cher que de rester en Facile." },
   { id: "v83", date: "23 nov.", title: "Récap de saison", text: "À la fin de la saison, ton récap s’ouvre en plein écran : ton classement, la route face à tes rivaux, ta carte postale, les médailles du groupe, l’évolution de ton familier et l’équipage de tous. Tu peux le revoir depuis le palmarès." },
   { id: "v82", date: "23 nov.", title: "Boussoles plus justes", text: "Les boussoles d’un jeu dépendent maintenant de ta place en pourcentage et de ton score, plus du nombre de joueurs : finir premier rapporte autant dans un petit groupe que dans un grand. Les jours déjà passés de la saison sont recalculés." },

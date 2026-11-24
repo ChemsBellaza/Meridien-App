@@ -171,14 +171,18 @@ const fmtOfFor = (k, g) => {
   return CONFIG.formatOrder[mod((g ? +g.fmt_offset || 0 : 0) + (g ? +g.fmt_stride || 1 : 1) * diffDays(CONFIG.formatAnchor, k), n)];
 };
 const fmtOf = k => fmtOfFor(k, typeof srvGroupNow === "function" && srvOn() ? srvGroupNow() : null);
-function seasonOf(k) {
-  const i = Math.max(0, Math.floor(diffDays(CONFIG.seasonAnchor, k) / CONFIG.seasonDays));
-  const start = addDays(CONFIG.seasonAnchor, i * CONFIG.seasonDays);
+// v85 : chaque groupe a sa propre saison de 21 jours, qui commence à son lancement (groups.season_anchor ; repli : l'ancre globale)
+const sAnchorOf = g => (g && g.season_anchor) || CONFIG.seasonAnchor;
+const sAnchor = () => sAnchorOf(typeof srvGroupNow === "function" && srvOn() ? srvGroupNow() : null);
+function seasonOfIn(a, k) {
+  const i = Math.max(0, Math.floor(diffDays(a, k) / CONFIG.seasonDays));
+  const start = addDays(a, i * CONFIG.seasonDays);
   return { n: i + 1, start, end: addDays(start, CONFIG.seasonDays - 1) };
 }
+const seasonOf = k => seasonOfIn(sAnchor(), k);
 // bonus de boussoles selon l'avancement de la saison : jour 1 = 0 %, +5 % par jour, jour 21 = +100 %
-const dayBonusPct = k => 5 * mod(diffDays(CONFIG.seasonAnchor, k), CONFIG.seasonDays);
-const dayInSeason = k => mod(diffDays(CONFIG.seasonAnchor, k), CONFIG.seasonDays) + 1;
+const dayBonusPct = k => 5 * mod(diffDays(sAnchor(), k), CONFIG.seasonDays);
+const dayInSeason = k => mod(diffDays(sAnchor(), k), CONFIG.seasonDays) + 1;
 function manchesOf(seed, fmt) {
   const F = FORMATS[fmt], r = rng(seed + "|" + fmt + "|man");
   if (F.man === "themes") return shuffle(F.themes, r).slice(0, 3).map(t => ({ type: "theme", key: t, label: THEMES[t].label, color: THEMES[t].color }));
@@ -268,7 +272,7 @@ function progress() {
   let gems = 0, wins = 0;
   for (let d = CONFIG.seasonAnchor; d <= k; d = addDays(d, 1)) {
     const me = dayResults(d).played.find(r => r.me);
-    if (me) { gems += me.gems; if (me.win) wins++; }
+    if (me) { gems += me.gems; if (me.win && d < k) wins++; } // une victoire ne compte qu'une fois le jour clos (v85)
   }
   let d = k; if (!myPlays(d).length) d = addDays(d, -1);
   let streak = 0; while (d >= CONFIG.seasonAnchor && myPlays(d).length) { streak++; d = addDays(d, -1); }
