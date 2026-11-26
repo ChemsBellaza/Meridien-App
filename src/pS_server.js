@@ -412,9 +412,9 @@ async function srvSync(force) {
       if (mem.ok && Array.isArray(mem.data)) { SRV.members = mem.data; await srvFetchPhotos(); }
       if (Array.isArray(ov)) SRV.ov = ov;
       if (att.ok && Array.isArray(att.data)) SRV.attempts[day] = att.data;
-      if (sum && sum.gems_total !== undefined) SRV.sum = sum;
+      if (sum && sum.gems_total !== undefined) { SRV.sum = sum; if (SRV.petPulled && keepUnlocks()) srvPushPet(); }
       SRV.syncedAt = performance.now();
-      if (!SRV.petLoaded) { SRV.petLoaded = true; srvPullPet().catch(() => {}).then(() => { SRV.petPulled = true; petBookSeed(); }); }
+      if (!SRV.petLoaded) { SRV.petLoaded = true; srvPullPet().catch(() => {}).then(() => { SRV.petPulled = true; petBookSeed(); if (SRV.sum && keepUnlocks()) srvPushPet(); }); }
       if (!SRV.trLoaded) { SRV.trLoaded = true; srvLoadTrophies().then(() => { if (!game && ["pet", "profile"].includes(ui.view) && !ui.sheet) render(); }); }
       if (!PUSH.checked) pushStatus().then(() => { if (!game && !ui.sheet && ["group", "hub"].includes(ui.view)) render(); });
       if (ui.pendingChat) { const pc = ui.pendingChat; ui.pendingChat = null; setTimeout(() => pushOpenChat(pc.gid, pc.msg), 200); } else
@@ -457,6 +457,7 @@ function petBookFull() {
   const P = store.profile, B = JSON.parse(JSON.stringify(P.petBook || {})), c = P.pet;
   const X = B[c.species] = B[c.species] || { games: 0, days: [] };
   Object.assign(X, { stage: c.stage, shiny: c.shiny, bg: c.bg });
+  B._kept = P.kept || [];
   return B;
 }
 let petPushT = 0;
@@ -471,6 +472,7 @@ function srvPushPet() {
 function petBookMerge(rem) {
   const P = store.profile; if (!P || !P.pet || !rem || typeof rem !== "object") return false;
   const B = P.petBook = P.petBook || {}; let changed = false;
+  if (Array.isArray(rem._kept)) { const s = new Set([...(P.kept || []), ...rem._kept.filter(x => typeof x === "string")]); if (s.size !== (P.kept || []).length) { P.kept = [...s]; changed = true; } }
   for (const sp in rem) {
     if (!(sp in SPECIES)) continue;
     const r = rem[sp] || {}, l = B[sp] = B[sp] || { games: 0, days: [] };

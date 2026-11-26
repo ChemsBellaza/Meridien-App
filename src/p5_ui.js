@@ -19,6 +19,7 @@ function render() {
   if (typeof vBestiaire === "function" && /[?&]bestiaire/.test(location.search)) { setAppHTML(vBestiaire()); return; } // bestiaire : familiers, évolutions, histoires
   if (typeof vRecap === "function" && /[?&]recap/.test(location.search)) { setAppHTML(vRecap()); return; } // récap de saison (aperçu)
   clearLater();
+  if (store.profile && store.profile.pet && !srvOn()) keepUnlocks();
   petBookSeed(); // v77 : expérience par familier (sans effet une fois initialisée)
   if (store.profile && store.profile.pet && !store.profile.pet.stage) { // anciens familiers : on garde l'espèce, on calcule l'évolution
     const pp = progress(); Object.assign(store.profile.pet, { stage: String(ITEMS.stage.list.filter(it => isUnlocked(it, pp)).length), shiny: "normal", bg: "type" }); save();
@@ -316,13 +317,13 @@ function vPet() {
   ${(() => {
     const all = cat === "species" ? SPECIES_ORDER().map(id => ITEMS.species.list.find(i => i.id === id)) : ITEMS[cat].list;
     const card = it => {
-      const open = isUnlocked(it, cat === "species" ? prog : pp), on = cat === "species" ? pet.species === it.id : pet[cat] === it.id, sil = cat === "species" && !open;
+      const open = isOpen(cat, it, cat === "species" ? prog : pp), on = cat === "species" ? pet.species === it.id : pet[cat] === it.id, sil = cat === "species" && !open;
       const shown = cat === "species" ? petStateOf(it.id) : { ...pet, [cat]: it.id }; // chaque familier s'affiche avec SON évolution et SES couleurs
       const lbl = cat === "species" ? SPECIES[it.id].names[stageOf(shown) - 1] : it.label;
       return `<${open ? "button" : "div"} class="item ${open ? "" : "locked"}" ${open ? `data-act="equip" data-v="${cat}|${it.id}" aria-pressed="${on}"` : ""}>
       ${petAv(shown, "", lbl, { sil })}<span class="lbl">${esc(sil ? "???" : lbl)}</span>${cat === "species" && !sil ? `<span class="req">${esc(TYPES[SPECIES[it.id].type].label)}</span>` : ""}${open ? (on ? `<span class="req on">Choisi</span>` : "") : `<span class="req">${reqText(it.need)}</span><span class="lock">${I.lock}</span>`}</${open ? "button" : "div"}>`;
     };
-    const pr = cat === "species" ? prog : pp, opened = all.filter(it => isUnlocked(it, pr)), locked = all.filter(it => !isUnlocked(it, pr));
+    const pr = cat === "species" ? prog : pp, opened = all.filter(it => isOpen(cat, it, pr)), locked = all.filter(it => !isOpen(cat, it, pr));
     // les familiers et options à débloquer sont repliés : la fiche reste courte
     return `<div class="items">${opened.map(card).join("")}</div>${locked.length ? `<details class="fold"><summary>À débloquer (${locked.length})</summary><div class="foldbody"><div class="items">${locked.map(card).join("")}</div></div></details>` : ""}`;
   })()}

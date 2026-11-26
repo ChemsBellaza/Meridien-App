@@ -325,11 +325,25 @@ function unlockedIds(prog) {
   }));
   return out;
 }
+/* v88 : ce qui a été débloqué le reste, même quand les boussoles ou les victoires sont recalculées. `profile.kept` (et l'ancien `seen`)
+   retiennent les déblocages ; ils suivent le compte avec le carnet des familiers. L'évolution (parties jouées) n'est pas concernée. */
+function isKept(cat, id) {
+  const P = store.profile; if (!P || !P.pet) return false;
+  const key = cat === "species" ? `species:${id}` : `${cat}:${id}@${P.pet.species}`;
+  return (P.kept || []).includes(key) || (P.seen || []).includes(key);
+}
+const isOpen = (cat, it, prog) => isUnlocked(it, prog) || isKept(cat, it.id);
+function keepUnlocks() {
+  const P = store.profile; if (!P || !P.pet) return false;
+  const all = new Set([...(P.kept || []), ...(P.seen || []), ...unlockedIds(progress())]);
+  if (all.size === (P.kept || []).length) return false;
+  P.kept = [...all]; save(); return true;
+}
 function nextUnlock(prog) {
   let best = null; const pp = store.profile && store.profile.pet ? petProg() : prog;
   PET_CATS.forEach(c => ITEMS[c].list.forEach(it => {
     const pr = c === "species" ? prog : pp;
-    if (!it.need || isUnlocked(it, pr)) return;
+    if (!it.need || isOpen(c, it, pr)) return;
     const left = it.need.v - pr[it.need.k], frac = left / it.need.v;
     if (!best || frac < best.frac) best = { cat: c, it, left, frac, have: pr[it.need.k] };
   }));

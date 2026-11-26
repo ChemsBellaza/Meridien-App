@@ -146,7 +146,8 @@ function finishTry() {
     const prog = progress(), seen = store.profile.seen || [];
     const now = unlockedIds(prog);
     g.newUnlocks = now.filter(id => !seen.includes(id)).map(id => { const [cat, iid] = id.split("@")[0].split(":"); return { cat, it: ITEMS[cat].list.find(i => i.id === iid) }; });
-    store.profile.seen = now;
+    store.profile.seen = [...new Set([...seen, ...now])]; // rien ne se retire (v88)
+    keepUnlocks();
     // évolution automatique quand un nouveau stade se débloque
     const evo = g.newUnlocks.filter(u => u.cat === "stage").map(u => +u.it.id);
     if (evo.length && store.profile.pet) store.profile.pet.stage = String(Math.max(...evo));
