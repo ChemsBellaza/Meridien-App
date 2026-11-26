@@ -255,6 +255,15 @@ function sprintEnd() {
 }
 
 /* ===================== SPRINT CAPITALES ===================== */
+// v90 : orthographe souple, comme le Top 10 (1 faute dès 4 lettres, 2 dès 7, 3 dès 12, deux lettres inversées = 1 faute, espaces et
+// traits d'union ignorés). La capitale d'un AUTRE pays écrite juste n'est jamais prise pour une faute de frappe (Rome / Lomé).
+function capMatch(val, c) {
+  const x = norm(val); if (!x) return false;
+  const flat = s => s.replace(/ /g, ""), fx = flat(x), keys = capKeys(c).map(flat);
+  if (keys.includes(fx)) return true;
+  if (COUNTRIES.some(o => o.id !== c.id && o.cap && capKeys(o).map(flat).includes(fx))) return false;
+  return listDist(fx, keys) >= 0;
+}
 ENG.capitales = {
   board: true, focus: "typein",
   build(g, m, d) { return [{ queue: countryQueue(m.key, d, roundRng(g), c => !!c.cap).map(c => c.id) }]; },
@@ -270,7 +279,7 @@ ENG.capitales = {
   },
   type(g, val, submit) {
     const st = g.st, c = CBY[g.qs[0].queue[st.i]], keys = capKeys(c);
-    if (submit ? matchKeys(val, keys) : exactKeys(val, keys)) {
+    if (submit ? capMatch(val, c) : exactKeys(val, keys)) {
       st.found.push(c.id); flashMsg("typemsg", `${okIco} ${esc(c.cap)}`, "ok");
       const fl = document.getElementById("foundlist"); if (fl) fl.insertAdjacentHTML("afterbegin", `<span class="pchip ok">${esc(c.cap)}</span>`);
       capNext(g); return true;
@@ -695,7 +704,7 @@ ENG.connex = {
     const left = st.words.filter(x => !st.solved.includes(x.gi));
     return `<p class="qsub">Trouve quatre groupes de quatre mots qui vont ensemble.</p>
       <div class="cxsolved">${solved}</div>
-      <div class="cxgrid">${left.map(x => { const i = st.words.indexOf(x); return `<button class="cxw ${st.sel.includes(i) ? "on" : ""}" data-g="cxw" data-v="${i}" id="cx${i}">${esc(x.w)}</button>`; }).join("")}</div>
+      <div class="cxgrid">${left.map(x => { const i = st.words.indexOf(x); return `<button class="cxw ${st.sel.includes(i) ? "on" : ""}" data-g="cxw" data-v="${i}" id="cx${i}" aria-pressed="${st.sel.includes(i)}">${esc(x.w)}</button>`; }).join("")}</div>
       <div class="cxmist"><span class="mono">Erreurs</span>${[0, 1, 2, 3].map(k => `<i class="${k < st.mist ? "off" : ""}"></i>`).join("")}</div>
       <div class="typemsg" id="cxmsg" role="status"></div>
       <div class="btnrow3"><button class="btn ghost" data-g="cxmix">Mélanger</button><button class="btn ghost" data-g="cxclr">Effacer</button><button class="btn" data-g="cxok" id="cxok" ${st.sel.length === 4 ? "" : "disabled"}>Valider</button></div>`;
@@ -706,7 +715,7 @@ ENG.connex = {
     if (a === "cxw") {
       const i = +v, p = st.sel.indexOf(i);
       if (p >= 0) st.sel.splice(p, 1); else if (st.sel.length < 4) st.sel.push(i);
-      const el = document.getElementById("cx" + i); if (el) el.classList.toggle("on", st.sel.includes(i));
+      const el = document.getElementById("cx" + i); if (el) { el.classList.toggle("on", st.sel.includes(i)); el.setAttribute("aria-pressed", String(st.sel.includes(i))); }
       const ok = document.getElementById("cxok"); if (ok) ok.disabled = st.sel.length !== 4;
       return true;
     }
