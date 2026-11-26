@@ -36,7 +36,7 @@ async function pushEnable() {
     let perm = Notification.permission;
     if (perm !== "denied") perm = await Notification.requestPermission();
     if (perm === "denied") { PUSH.busy = false; PUSH.checked = true; ui.sheet = "pushhelp"; render(); return; } // bloquées : le navigateur ne redemande plus, on explique comment les rouvrir
-    else if (perm !== "granted") PUSH.msg = "Tu n'as pas répondu : touche « Activer » pour réessayer.";
+    else if (perm !== "granted") PUSH.msg = "Pas de réponse à la demande : touche à nouveau pour réessayer.";
     else {
       const key = await pushKey();
       if (!key) PUSH.msg = "Les notifications ne sont pas encore prêtes sur le serveur. Réessaie un peu plus tard.";
@@ -48,6 +48,7 @@ async function pushEnable() {
     }
   } catch (e) { PUSH.msg = "Ton navigateur n'a pas pu activer les notifications."; }
   PUSH.busy = false; PUSH.checked = true; if (!game) render();
+  if (PUSH.msg) announce(PUSH.msg);
 }
 async function pushDisable() {
   PUSH.busy = true; if (!game) render();

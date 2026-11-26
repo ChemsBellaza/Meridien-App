@@ -14,7 +14,8 @@ const MUST = [
 ];
 const NEWS = [
   { id: "v87", date: "26 nov.", title: "Pourquoi le classement a changé", text: "Un rattrapage pouvait rapporter plus de boussoles que le gagnant du jour, sans que personne n’en perde. Ce n’était pas juste, on a corrigé. Il n’y a plus qu’un classement par jour : si un rattrapage fait mieux que toi, tu recules. Le calcul change aussi : jusqu’à 200 boussoles par jeu, la moitié selon ta place, la moitié selon ton score, quel que soit le nombre de joueurs. Le bonus de saison et le dimanche doublé restent. Toute la saison en cours est recalculée avec ces règles, pour tout le monde : des totaux, des places et des victoires du jour changent, à la hausse comme à la baisse. Les scores que tu as joués ne changent pas, et les familiers, couleurs et fonds déjà débloqués restent à toi. La règle complète, avec un exemple, est dans Réglages, «\u00a0Comment sont comptés les points\u00a0?\u00a0»." },
-  { id: "v85", date: "24 nov.", title: "Une saison par groupe", text: "Chaque groupe a sa propre saison de 21 jours, qui commence le jour de son lancement. Les groupes déjà créés gardent leur saison en cours. Une victoire du jour ne compte pour débloquer un familier qu’une fois le jour terminé." },
+  { id: "v89", date: "26 nov.", title: "Notifications", text: "La ligne « Active les notifications » dit maintenant ce qui se passe : en attente de ta réponse, bloquées sur l’appareil, ou à réessayer. Si tu avais refusé, touche-la pour voir comment les rouvrir." },
+  { id: "v85",date: "24 nov.", title: "Une saison par groupe", text: "Chaque groupe a sa propre saison de 21 jours, qui commence le jour de son lancement. Les groupes déjà créés gardent leur saison en cours. Une victoire du jour ne compte pour débloquer un familier qu’une fois le jour terminé." },
   { id: "v84", date: "23 nov.", title: "Difficulté : gros risque, grosse récompense", text: "À partir du 30 novembre, début de la saison 3, Moyen vaut ×1,5 et Difficile ×2 (Facile reste ×1). Un bon score en Difficile rapporte beaucoup plus, mais rater coûte plus cher que de rester en Facile." },
   { id: "v83", date: "23 nov.", title: "Récap de saison", text: "À la fin de la saison, ton récap s’ouvre en plein écran : ton classement, la route face à tes rivaux, ta carte postale, les médailles du groupe, l’évolution de ton familier et l’équipage de tous. Tu peux le revoir depuis le palmarès." },
   { id: "v82", date: "23 nov.", title: "Boussoles plus justes", text: "Les boussoles d’un jeu dépendent maintenant de ta place en pourcentage et de ton score, plus du nombre de joueurs : finir premier rapporte autant dans un petit groupe que dans un grand. Les jours déjà passés de la saison sont recalculés." },
@@ -60,11 +61,18 @@ function vMustSheet() { // « Les indispensables » : uniquement ce qu'il faut p
 }
 
 /* ---------- « Les indispensables » sur l'accueil : les 3 réglages qui comptent, cochés quand c'est fait ---------- */
+// la ligne « notifications » dit toujours ce qui se passe : sans ça, un toucher sans résultat ressemblait à un bouton mort (v89)
+function pushRowText(base) {
+  if (PUSH.on || pushNeedsInstall()) return base;
+  if (PUSH.busy) return "Activation… réponds à la question du navigateur (parfois une cloche près de l’adresse).";
+  if (pushSupported() && Notification.permission === "denied") return "Bloquées sur cet appareil : touche pour voir comment les rouvrir.";
+  return PUSH.msg || base;
+}
 function mustState() { // [{ ok, title, small, act }] : seulement ce qui s'applique à cet appareil
   const rows = [];
   if (srvOn()) rows.push({ ok: !!(SRV.sess && SRV.sess.user && SRV.sess.user.email), title: "Relie ton e-mail", small: "Sans ça, un téléphone perdu, c’est un profil perdu.", act: "acct" });
   if (typeof installWanted === "function" && isMobileDev()) rows.push({ ok: isStandalone(), title: "Installe l’appli", small: "Sur l’écran d’accueil, en plein écran.", act: "installpage" });
-  if (srvOn() && typeof pushSupported === "function" && PUSH.checked && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, title: "Active les notifications", small: "Jeu à 14\u00a0h\u00a030, messages du groupe.", act: pushNeedsInstall() ? "installpage" : "pushon" });
+  if (srvOn() && typeof pushSupported === "function" && PUSH.checked && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, title: "Active les notifications", small: pushRowText("Jeu à 14\u00a0h\u00a030, messages du groupe."), act: pushNeedsInstall() ? "installpage" : "pushon" });
   return rows;
 }
 function vMust() {
@@ -88,7 +96,7 @@ function vAcctSheet() {
 function vEssentiel() {
   const online = srvOn(), email = online && SRV.sess && SRV.sess.user && SRV.sess.user.email, rows = [];
   if (online) rows.push({ ok: !!email, t: "Compte", v: email ? `E-mail relié · ${maskEmail(email)}` : "E-mail à relier", act: email ? "" : "acct" });
-  if (online && typeof pushSupported === "function" && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, t: "Notifications", v: PUSH.on ? "Activées" : "À activer", act: PUSH.on ? "" : (pushNeedsInstall() ? "installpage" : "pushon") });
+  if (online && typeof pushSupported === "function" && (pushSupported() || pushNeedsInstall())) rows.push({ ok: !!PUSH.on, t: "Notifications", v: PUSH.on ? "Activées" : pushRowText("À activer"), act: PUSH.on ? "" : (pushNeedsInstall() ? "installpage" : "pushon") });
   if (isMobileDev()) rows.push({ ok: isStandalone(), t: "Application", v: isStandalone() ? "Installée" : "À installer sur l’écran d’accueil", act: isStandalone() ? "" : "installpage" });
   if (!rows.length) return "";
   return `<div class="essentiel" role="group" aria-label="État du compte et des notifications">${rows.map(r => `<${r.act ? "button" : "div"} class="mrow ${r.ok ? "ok" : ""}" ${r.act ? `data-act="${r.act}"` : ""}><span class="mchk" aria-hidden="true">${r.ok ? "✓" : ""}</span><span class="ntx"><b>${esc(r.t)}</b><small>${esc(r.v)}</small></span>${r.act ? `<span class="nchev" aria-hidden="true">›</span>` : ""}</${r.act ? "button" : "div"}>`).join("")}</div>`;
