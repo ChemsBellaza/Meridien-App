@@ -290,7 +290,8 @@ function vSeason() {
     return `<${CHART_STYLE === "modes" ? `button type="button" data-act="chartpick" data-v="${esc(r.id)}" aria-pressed="${on}" aria-label="${esc(r.name)} : ${on ? "masquer du" : "afficher sur le"} graphique"` : "div"} class="srow ${on ? "" : "off"}" style="--c:${r.color}">${avatar(r, "lg")}<div class="info"><div class="rk num">#${r.rank} ${mv}${r.me ? toi : ""}</div><b>${esc(r.name)}</b><span>${r.wins} jeu${r.wins > 1 ? "x" : ""} gagné${r.wins > 1 ? "s" : ""} (sur ${r.played})</span></div><div class="tot">${I.compass(34)}<b class="num">${fmtNum(r.total)}</b></div></${CHART_STYLE === "modes" ? "button" : "div"}>`;
   }).join("")}
   ${st.list.length > 6 && !seasonMasked(k) ? `<button class="smallbtn ghost rkall" data-act="seasonall">${ui.seasonAll ? "Voir le top 5" : `Voir les ${st.list.length - st.list.filter((r, i) => i < 5 || r.me).length} autres`}</button>` : ""}
-  <p class="note center light">Chaque jour, jusqu'à ${CONFIG.gemsMax} boussoles : la moitié selon ta place (en pourcentage, donc juste quelle que soit la taille du groupe), l'autre moitié selon ton score, avec un bonus qui monte au fil de la saison (+5 % par jour, jusqu'à +100 % le dernier jour)${srvOn() ? ". Les boussoles du jour sont provisoires jusqu'à la fin de la journée." : ". Les jours précédant ton arrivée sont simulés pour la démo."}</p></div>`;
+  <p class="note center light">Le total additionne tes boussoles de chaque jour : la moitié vient de ta place, l'autre de ton score, avec +5 % par jour de saison${srvOn() ? ". Les boussoles du jour sont provisoires jusqu'à la fin de la journée." : ". Les jours précédant ton arrivée sont simulés pour la démo."}</p>
+  ${pointsLink()}</div>`;
 }
 
 function vPet() {
@@ -371,6 +372,7 @@ function vSheet() {
   if (ui.sheet === "install") return vInstallSheet();
   if (ui.sheet === "cer") return vCeremony();
   if (ui.sheet === "hall") return vHall();
+  if (ui.sheet === "points") return vPointsSheet();
   if (ui.sheet === "groups") return vGroupsSheet();
   if (ui.sheet === "detail") return vDetailSheet();
   if (ui.sheet === "recap") return vRecapSheet();
@@ -390,6 +392,7 @@ function vSheet() {
     </nav>
     ${vEssentiel()}
     <div class="walletline">${I.compass(18)}<span>${featureOn("joker") ? "Boussoles disponibles pour les jokers" : "Tes boussoles"} : <b class="num">${fmtNum(wallet())}</b></span></div>
+    ${pointsLink("btn ghost")}
     <div class="fold plus"><button type="button" class="foldhead" data-act="plustoggle" aria-expanded="${!!ui.plusOpen}" aria-controls="plusbody"><span>Plus de réglages</span><span class="fchev" aria-hidden="true">›</span></button><div id="plusbody" class="foldbody" ${ui.plusOpen ? "" : "hidden"}>
     <section class="sect">${reminderBlock()}</section>
     <section class="sect"><h4>Application</h4>${mobileSheetBlocks() || `<p class="note">Rien à régler pour l'instant.</p>`}</section>
@@ -426,6 +429,7 @@ function vDetailSheet() {
       <li class="dline total"><span class="dic" aria-hidden="true">${I.compass(18)}</span><span>Total</span><b class="num">+${r.gems}</b></li>
     </ul>` : `<p class="note">Il faut au moins 2 joueurs ce jour-là pour gagner des boussoles.</p>`}
     <p class="note">Plus la saison avance, plus les boussoles rapportent : les derniers jours comptent le plus.</p>
+    ${pointsLink()}
     <button class="btn ghost" data-act="closesheet">Fermer</button>
   </div></div>`;
 }
@@ -543,6 +547,7 @@ document.addEventListener("click", e => {
     case "recoveragain": ui.rec = { step: 0, email: (ui.rec && ui.rec.email) || "", msg: "" }; render(); break;
     case "acctagain": ui.acct = { step: 0, email: (ui.acct && ui.acct.email) || "", msg: "" }; render(); break;
     case "closesheet": ui.sheet = false; render(); break;
+    case "points": ui.sheet = "points"; render(); break;
     case "history": ui.sheet = false; go("history"); if (srvOn()) srvLoadHistory(); break;
     case "hmode": ui.hmode = v; render(); break;
     case "season": go("season"); break;

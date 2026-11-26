@@ -518,7 +518,7 @@ function onlineDayResults(k) {
     const p = r.player_id === uid ? pl[0] : (pl.find(x => x.id === r.player_id) || { id: r.player_id, name: r.pseudo, color: colorOf(r.player_id), pet: defaultPet("renard") });
     return { ...p, plays: [{ at: minutesOfIso(r.at), score: r.best }], best: r.best, tries: r.tries, pos: r.pos, gems: r.gems, tryScores: Array.isArray(r.try_scores) ? r.try_scores : null, mult: r.mult || 1, boost: !!r.boost, base: r.base || 0, bonus: r.bonus || 0, pct: r.pct || 0, beaten: r.beaten || 0, win: r.pos === 1 && r.n >= 2, slow: !!r.slow, sk: r.score_key || `${r.player_id}-${r.play_day}` };
   }).sort((a, b) => b.best - a.best || String(a.name).localeCompare(String(b.name), "fr"));
-  // la liste est triée par score ; la place affichée tient compte de tout le monde (les rattrapages comptent entre eux, v60)
+  // un seul classement par jour, rattrapages compris (v86) : même règle que le serveur
   played.forEach(p => { p.pos = 1 + played.filter(q => q.best > p.best).length; p.win = p.pos === 1 && played.length >= 2; });
   const ids = new Set(played.map(p => p.id));
   return { played, waiting: pl.filter(p => !ids.has(p.id)), N: played.length };
@@ -680,7 +680,7 @@ async function playCatchup(day) {
 }
 function vCatchup() { // cartes « Jeux à rattraper » de l'accueil
   const list = SRV.catchup || []; if (!list.length || !srvOn()) return "";
-  return `<section class="catchup" aria-label="Jeux à rattraper"><div class="cuhead"><span class="cubadge" aria-hidden="true">${list.length}</span><span class="cutx"><b>Jeux à rattraper</b><small>1 seul essai chacun</small></span></div><p class="note">Tu as manqué un jeu ? Rattrape-le (hier, ou les derniers avant ton arrivée, jusqu'à 3) : un seul essai chacun. Ton score est classé sans changer la place des autres.</p><div class="cgrid">${list.map(x => { const F = FORMATS[x.fmt]; if (!F) return ""; return `<button class="hcard sq" data-act="catchup" data-v="${x.day}" aria-label="Rattraper ${esc(F.name)}, ${longDate(x.day)}">${art(x.fmt, x.day)}${labels(`${shortDate(x.day)} · à rattraper`, F.name)}</button>`; }).join("")}</div></section>`;
+  return `<section class="catchup" aria-label="Jeux à rattraper"><div class="cuhead"><span class="cubadge" aria-hidden="true">${list.length}</span><span class="cutx"><b>Jeux à rattraper</b><small>1 seul essai chacun</small></span></div><p class="note">Tu as manqué un jeu ? Rattrape-le (hier, ou les derniers avant ton arrivée, jusqu'à 3) : un seul essai chacun. Ton score entre dans le même classement que les autres : s'il est meilleur, ils reculent.</p><div class="cgrid">${list.map(x => { const F = FORMATS[x.fmt]; if (!F) return ""; return `<button class="hcard sq" data-act="catchup" data-v="${x.day}" aria-label="Rattraper ${esc(F.name)}, ${longDate(x.day)}">${art(x.fmt, x.day)}${labels(`${shortDate(x.day)} · à rattraper`, F.name)}</button>`; }).join("")}</div></section>`;
 }
 // boost : une fois par saison, ×1,5 sur le score d'un jeu ; à activer avant le premier essai du jour dans ce groupe
 function vBoost() {

@@ -160,6 +160,43 @@ function vCeremonyOld() { // ancienne cérémonie en fenêtre (remplacée par le
 
 function vCeremony() { return vRecapReal(); } // récap de saison plein cadre : carnet de voyage
 
+/* ---------- « Comment sont comptés les points ? » (v86) : la règle complète, dans le jeu ---------- */
+const pointsLink = (cls = "smallbtn ghost rkall") => `<button type="button" class="${cls}" data-act="points">Comment sont comptés les points ?</button>`;
+function vPointsSheet() {
+  const k = today(), now = multAt(k), half = CONFIG.gemsMax / 2;
+  const coef = m => `Facile ${fmtMult(m[0])}, Moyen ${fmtMult(m[1])}, Difficile ${fmtMult(m[2])}`;
+  const sec = (t, items) => `<section class="ptsec"><h4>${t}</h4><ul>${items.map(x => `<li>${x}</li>`).join("")}</ul></section>`;
+  return `<div class="scrim" data-act="closesheet"><div class="sheet points" role="dialog" aria-label="Comment sont comptés les points" data-stop>
+    <div class="sheethead"><div><h3>Comment sont comptés les points ?</h3><div class="muted">Des points à chaque jeu, puis des boussoles pour le classement.</div></div></div>
+    ${sec("1. Ton score du jour", [
+      "Un jeu compte 3 manches. Tu choisis la difficulté avant chacune.",
+      `Chaque manche est multipliée selon la difficulté : <b>${coef(now)}</b>.${k < MULT_FROM ? ` À partir du ${shortDate(MULT_FROM)} : ${coef(MULT_NEW)}.` : ""}`,
+      "Tu as 2 essais : le meilleur compte. (Méga-quiz du dimanche : 1 essai.)",
+      "Boost (une fois par saison, à activer avant de jouer) : ton score du jour compte ×1,5."
+    ])}
+    ${sec(`2. Les boussoles du jeu (jusqu'à ${CONFIG.gemsMax})`, [
+      `<b>Ta place, jusqu'à ${half}</b> : le 1er a tout, le dernier 0, quel que soit le nombre de joueurs. Ex æquo : même place.`,
+      `<b>Ton score, jusqu'à ${half}</b> : ton score comparé au maximum possible du jeu (3 manches réussies à 100 % en Difficile).`,
+      "<b>Bonus de saison</b> : +5 % par jour (jour 1 : +0 %, jour 21 : +100 %).",
+      "<b>Dimanche</b> : les boussoles sont doublées.",
+      "Il faut au moins 2 joueurs pour gagner des boussoles."
+    ])}
+    <div class="ptex"><b>Exemple</b><span>En semaine, au jour 11 de la saison : tu finis 2e sur 10, avec 700 points sur 1 350 possibles.</span>
+      <span>Place : 89. Score : 52. Base : <b>141</b>. Bonus +50 % : 71. Total : <b>212 boussoles</b>.</span></div>
+    ${sec("3. Les rattrapages", [
+      "Un jeu rattrapé entre dans <b>le même classement</b> que les autres : si tu fais mieux, ils reculent. Leurs boussoles et la victoire du jour peuvent donc changer.",
+      "Un seul essai. Tu touches les boussoles et le bonus du jour rattrapé. Un rattrapage ne compte pas dans la série."
+    ])}
+    ${sec("4. Le classement de la saison", [
+      "C'est <b>l'addition de tes boussoles</b> sur les 21 jours. Une victoire ne rapporte rien de plus que ses boussoles : la régularité compte autant.",
+      "Les 3 derniers jours, le classement général est masqué.",
+      "En fin de saison : +150, +100 et +60 boussoles pour le podium, et +20 à partir de 14 jours joués (pour ton portefeuille).",
+      "Les boussoles dépensées en jokers ne font pas reculer au classement.",
+      "Pour les succès et les familiers, une victoire ne compte qu'une fois le jour terminé."
+    ])}
+    <button class="btn ghost" data-act="closesheet">Fermer</button>
+  </div></div>`;
+}
 /* ---------- palmarès du groupe ---------- */
 function vHall() {
   const g = SRV.group, hall = g && SRV.hall[g.id], uid = myUid();
